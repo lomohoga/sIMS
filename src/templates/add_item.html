@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block main %}
+
+<div id="main">
+    <p class="main-header">New Item Form</p>
+
+    <form method="post">
+        <label for="name">Item name:</label><br>
+        <input type="text" id="name" name="name" required><br>
+
+        <label for="code">Item code:</label><br>
+        <input type="text" id="code" name="code" required><br>
+
+        <label for="desc">Item description:</label><br>
+        <textarea id="desc" name="desc" required></textarea><br>
+
+        <label for="life">Estimated useful life:</label><br>
+        <input type="number" id="life" name="life" min="0" step=any required>
+        <select name="quantifier" id="quantifier">
+            <!-- We express shell life in hours (i.e. 1 minute = 0.017 hours) -->
+            <option value="0.017">minutes</option>
+            <option value="1">hours</option>
+            <option value="24">days</option>
+            <option value="168">weeks</option>
+            <option value="720">months</option>
+            <option value="8760">years</option>
+            <option value="-1">not applicable</option>
+        </select><br>
+
+        <label for="unit">Unit:</label><br>
+        <input type="text" id="unit" name="unit" required><br>
+
+        <label for="price">Unit Price:</label><br>
+        <input type="number" id="price" name="price" min="0" step=any required><br>
+
+        <label for="available">Available quantity:</label><br>
+        <input type="number" id="available" name="available" min="1" step="1" required><br>
+
+        <input type="submit" id="submit"><br>
+    </form>
+</div>
+
+{% endblock %}

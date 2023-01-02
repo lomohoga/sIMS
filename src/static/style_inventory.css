@@ -1,0 +1,113 @@
+/* FOR base.html */
+#header {
+    height: 85px;
+    background: #164168;
+    display: flex;
+}
+
+#sims-header{
+    font-family: 'Arial';
+    font-weight: 800;
+    font-size: 55px;
+    line-height: 77px;
+    margin-left: 20px;
+
+    color: #FFFFFF;
+
+    text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+}
+
+#profile{
+    height: 50px;
+    text-align: right;
+}
+
+.info{
+    font-family: 'Arial';
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 24px;
+    text-align: right;
+
+    color: #FFFFFF;
+    margin: 0px;
+}
+
+#content{
+    display:flex;
+    height: 1000px;
+}
+
+#nav {
+    width: 15%;
+    background: rgba(217, 217, 217, 0.2);
+}
+
+.link{
+    font-family: 'Arial';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 30px;
+    text-align: center;
+
+    color: #000000;
+}
+
+#footer{
+    height:100px;
+    background: #164168;
+    text-align: center;
+}
+
+.footer-notes{
+    font-family: 'Arial';
+    font-weight: 100;
+    margin:auto; 
+    color:white; 
+}
+
+/* FOR OTHER HTML FILES */
+
+#main{
+    flex-grow: 1;
+    background: #FFFFFF;
+}
+
+.main-header{
+    font-family: 'Arial';
+    font-style: normal;
+    font-weight: 600;
+    font-size: 44px;
+    line-height: 53px;
+    margin-left: 40px;
+
+    color: #000000;
+}
+
+#search_button{
+    background: #EDEFF2;
+    border: 1px solid #000000;
+    border-radius: 12px;
+    zoom: 2;
+    padding: 5px;
+    margin-left: 20px;
+}
+
+#add_button{
+    background: rgba(87, 218, 92, 0.66);
+    border: 1px solid #000000;
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+    border-radius: 10px;
+    height: 50px;
+    width: 100px;
+}
+
+#delete_button{
+    background: rgba(253, 135, 135, 0.9);
+    border: 1px solid #000000;
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+    border-radius: 10px;
+    height: 50px;
+    width: 100px;
+}

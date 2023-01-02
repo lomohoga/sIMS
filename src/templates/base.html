@@ -1,0 +1,35 @@
+<html>
+    <head>
+        <title>sIMS</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style_inventory.css') }}">
+    </head>
+
+    <body style="margin:0px; width:100%">
+        <div id="header">
+            <span id="sims-header">sIMS</span>
+            <div id="profile">
+                <!-- session['user'] = (role_id, username, password, firstName, lastName, role_name) of the CURRENT user -->
+                <p class="info">{{ (session['user'])[3] }} {{ (session['user'])[4] }}</p>
+                <p class="info">{{ (session['user'])[5] }}</p>
+            </div>
+        </div>
+
+        <div id="content">
+            <div id="nav">
+                <a class="link" href="{{ url_for('inventory') }}">Inventory</a><br>
+                <a class="link" href="{{ url_for('transactions') }}">Transactions</a><br>
+                <a class="link" href="{{ url_for('logout') }}">Log out</a>
+            </div>
+
+            <!-- THIS SECTION CHANGES BASED ON THE REQUEST -->
+            {% block main %}
+            {% endblock %}
+            <!--   -->
+        </div>
+
+        <div id="footer">
+            <p class="footer-notes">© 2022 sIMS</p>
+            <p class="footer-notes">All rights reserved</p>
+        </div>
+    </body>
+</html>

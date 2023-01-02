@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block main %}
+<!-- session['user'] = (role_id, username, password, firstName, lastName, role_name) of the CURRENT user -->
+<!-- items is the list of items -->
+
+<div id="main">
+    <p class="main-header">Inventory</p>
+
+    <!-- Search button -->
+    <form method="get" action="{{ url_for('search') }}">
+        <input type="search" id="search_button" placeholder="Search item..." name="keyword">
+    </form>
+
+    <!-- User is custodian -->
+    {% if (session['user'])[0] == 1 %}
+        <!-- Add item button -->
+        <a href="{{ url_for('add_item') }}">
+            <button id="add_button"><span id="login_text">Add item</span></button>
+        </a>
+
+        <!-- Delete item button -->
+        <a href="{{ url_for('delete_form') }}">
+            <button id="delete_button"><span id="login_text">Delete item</span></button>
+        </a>
+    <!-- User is personnel -->
+    {% else %}
+        <!-- Request item button -->
+        <a href="{{ url_for('request_form') }}">
+            <button id="add_button"><span id="login_text">Request item</span></button>
+        </a>
+    {% endif %}
+
+    {% if items|length == 0 %}
+        <p>There are no items in the inventory.</p>
+    {% else %}
+        <table>
+            <!-- Generate header for table -->
+            <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Shell Life (in hours)</th>
+                <th>Unit</th>
+                <th>Unit Price</th>
+                <th>Available Quantity</th>
+            </tr>
+
+            <!-- Generate each row -->
+            {% for a in items %}
+            <tr>
+                <th>{{ a[0] }}</th>
+                <th>{{ a[1] }}</th>
+                <th>{{ a[2] }}</th>
+                <th>{{ a[3] }}</th>
+                <th>{{ a[4] }}</th>
+                <th>{{ a[5] }}</th>
+                <th>{{ a[6] }}</th>
+            </tr>
+            {% endfor %}
+        </table>
+    {% endif %}
+</div>
+
+{% endblock %}

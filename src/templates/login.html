@@ -1,0 +1,23 @@
+<html>
+    <head>
+        <title>sIMS</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style_login.css') }}">
+    </head>
+
+    <body>
+        <p id="title">sIMS</p>
+        <p id="description">simple inventory management system</p>
+
+        <form method="post">
+            <!-- DO NOT CHANGE THE name attribute! Code will break -->
+            <input type="text" class="field" placeholder="Username" name="uname" required><br>
+            <input type="password" class="field" placeholder="Password" name="pword" required><br>
+            <input type="submit" id="login_button" value="Log in">
+        </form>
+
+        <!-- shows whether login is successful or not -->
+        {% if msg|length != 0 %}
+            <p> {{msg}} </p>
+        {% endif %}
+    </body>
+</html>

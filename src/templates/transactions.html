@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block main %}
+<!-- tran is the list of transactions -->
+
+<div id="main">
+    <p class="main-header">Transactions</p>
+
+    {% if tran|length == 0 %}
+        <p>There are no transactions.</p>
+    {% else %}
+        <table>
+            <!-- Generate column header -->
+            <tr>
+                <th>Transaction ID</th>
+                <th>Item Code</th>
+                <th>Requested Quantity</th>
+                <th>Username</th>
+                <th>Date</th>
+            </tr>
+
+            <!-- Generate each row -->
+            {% for a in tran %}
+            <tr>
+                <th>{{ a[0] }}</th>
+                <th>{{ a[1] }}</th>
+                <th>{{ a[2] }}</th>
+                <th>{{ a[3] }}</th>
+                <th>{{ a[4] }}</th>
+            </tr>
+            {% endfor %}
+        </table>
+    {% endif %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block main %}
+<!-- items is the list of items -->
+
+<div id="main">
+    <p class="main-header">Delete Item Form</p>
+
+    {% if items|length == 0 %}
+        <p>No items to delete</p><br>
+        <a class="link" href="{{ url_for('inventory') }}">Go back to inventory</a>
+    {% else %}
+        <p>Select item to delete</p><br>
+
+        <form method="get" action="{{ url_for('delete_item') }}">
+            <!-- Generate checklist here -->
+            {% for a in items %}
+                <input type="radio" id="{{ a[0] }}" name="choice" value="{{ a[0] }}">
+                <label for="{{ a[0] }}"> {{ a[0] }} | {{ a[2] }} | Available: {{ a[6] }} {{ a[4] }} </label><br>
+            {% endfor %}
+            
+            <input type="submit" id="submit">
+        </form>
+    {% endif %}
+</div>
+
+{% endblock %}
