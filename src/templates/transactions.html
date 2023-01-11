@@ -1,36 +1,48 @@
 {% extends "base.html" %}
 
 {% block main %}
+
+<div id="content-top">
+    <h1 class="main-header">{{ "My " if session['user'][0] == 2 }}Transactions</h1>
+</div>
+
 <!-- tran is the list of transactions -->
 
-<div id="main">
-    <p class="main-header">Transactions</p>
-
-    {% if tran|length == 0 %}
-        <p>There are no transactions.</p>
-    {% else %}
-        <table>
-            <!-- Generate column header -->
-            <tr>
-                <th>Transaction ID</th>
-                <th>Item Code</th>
-                <th>Requested Quantity</th>
-                <th>Username</th>
-                <th>Date</th>
-            </tr>
+{% if tran|length == 0 %}
+    <p>{{ "You have not yet made any transactions." if session['user'][0] == 2 else "There have been no transactions so far." }}</p>
+{% else %}
+    <div id="table-wrapper">
+        <table id="transactions">
+            <!-- Generate header for table -->
+            <thead>
+                <tr>
+                    {% if session['user'][0] == 2 %}
+                        <th width="25%">Transaction ID</th>
+                        <th width="25%">Item Code</th>
+                        <th width="25%">Requested Quantity</th>
+                        <th width="25%">Date</th>
+                    {% else %}
+                        <th width="20%">Transaction ID</th>
+                        <th width="20%">Item Code</th>
+                        <th width="20%">Requested Quantity</th>
+                        <th width="20%">Username</th>
+                        <th width="20%">Date</th>
+                    {% endif %}
+                </tr>
+            </thead>
 
             <!-- Generate each row -->
             {% for a in tran %}
             <tr>
-                <th>{{ a[0] }}</th>
-                <th>{{ a[1] }}</th>
-                <th>{{ a[2] }}</th>
-                <th>{{ a[3] }}</th>
-                <th>{{ a[4] }}</th>
+                <td>{{ a[0] }}</td>
+                <td>{{ a[1] }}</td>
+                <td>{{ a[2] }}</td>
+                <td>{{ a[3] }}</td>
+                <td>{{ a[4] }}</td>
             </tr>
             {% endfor %}
         </table>
-    {% endif %}
-</div>
+    </div>
+{% endif %}
 
 {% endblock %}

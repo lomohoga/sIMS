@@ -2,13 +2,23 @@ import os
 import hashlib
 import functools
 import math
+import locale
 
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from flask_mysqldb import MySQL
+
+locale.setlocale(locale.LC_ALL, 'en_PH')
 
 #session['user'] = (role_id, username, password, firstName, lastName, role_name) of the CURRENT user
 #role_id: 1(Custodian), 2(Personnel)
 
+def format_values (values):
+    formatted = [];
+
+    for item in values:
+        formatted.append((item[0], item[1], item[2], locale.format("%d", item[3], grouping=True) if item[3] > 0 else "\u2014", item[4], locale.currency(item[5], grouping=True), locale.format("%d", item[6], grouping=True)))
+
+    return formatted;
 
 def create_app(test_config=None):
     #create and configure the app
@@ -41,6 +51,7 @@ def create_app(test_config=None):
     @app.route('/login', methods=('GET', 'POST'))
     def login():
         error = ""
+
         if request.method == 'POST':
             username = request.form['uname']
             password = request.form['pword']
@@ -52,10 +63,10 @@ def create_app(test_config=None):
 
             if user is None:
                 error = 'Incorrect username.'
-            elif (generateHash(password) != user[2]):
+            elif (username != "" and password != "" and generateHash(password) != user[2]):
                 error = 'Incorrect password.'
 
-            if len(error) == 0:
+            if error == "":
                 session.clear()
                 session['user'] = user
                 return redirect(url_for('inventory'))
@@ -84,7 +95,7 @@ def create_app(test_config=None):
         items = db.fetchall()
         db.close()
 
-        return render_template("inventory.html", items=items)
+        return render_template("inventory.html", items=format_values(items), active="inventory")
 
     #route for adding an item
     @app.route('/add-item', methods=('GET', 'POST'))
@@ -92,33 +103,51 @@ def create_app(test_config=None):
     def add_item():
         if request.method == 'GET':
             if (session['user'])[0] == 2:
-                return render_template('error_1.html', msg="This page is for custodian only.")
+                return jsonify({ "redirect": url_for("inventory") })
 
         if request.method == 'POST':
-            name = request.form['name']
-            code = request.form['code']
-            desc = request.form['desc']
-            life = float(request.form['life'])
-            quantifier = float(request.form['quantifier'])
+            values = request.get_json()
 
-            if(quantifier == -1):
-                life = -1
-            else:
-                life = math.ceil(life * quantifier)
-            
-            unit = request.form['unit']
-            price = request.form['price']
-            available = request.form['available']
+            db = mysql.connection.cursor()
+            db.execute("SELECT code FROM item")
+            codes = [x[0] for x in db.fetchall()]
 
             try:
-                db = mysql.connection.cursor()
-                result = db.execute("INSERT INTO item VALUES (%s, %s, %s, %s, %s, %s, %s);", (code, name, desc, life, unit, price, available))
-                mysql.connection.commit()
-                return redirect(url_for('inventory'))
+                for v in values["values"]:
+                    if v[0] in codes: return jsonify({ "redirect": url_for("add_item") })
+                    db.execute("INSERT INTO item VALUES (%s, %s, %s, %s, %s, %s, %s);", v)
             except Exception as e:
-                return render_template("error_1.html", msg="Item code already exists.")
+                return jsonify({ "redirect": url_for("add_item") })
             finally:
-                db.close()  
+                mysql.connection.commit()
+                db.close()
+
+            return jsonify({ "redirect": url_for("inventory") })
+
+            # name = request.form['name']
+            # code = request.form['code']
+            # desc = request.form['desc']
+            # life = float(request.form['life'])
+            # quantifier = float(request.form['quantifier'])
+
+            # if quantifier == -1:
+            #     life = -1
+            # else:
+            #     life = math.ceil(life * quantifier)
+            
+            # unit = request.form['unit']
+            # price = request.form['price']
+            # available = request.form['available']
+
+            # try:
+            #     db = mysql.connection.cursor()
+            #     result = db.execute("INSERT INTO item VALUES (%s, %s, %s, %s, %s, %s, %s);", (code, name, desc, life, unit, price, available))
+            #     mysql.connection.commit()
+            #     return redirect(url_for('inventory'))
+            # except Exception as e:
+            #     return render_template("error_1.html", msg="Item code already exists.")
+            # finally:
+            #     db.close()  
 
         return render_template("add_item.html")
 
@@ -127,43 +156,41 @@ def create_app(test_config=None):
     @login_required
     def delete_form():
         if (session['user'])[0] == 2:
-            return render_template('error_1.html', msg="This page is for custodian only.")
+            return render_template('error_1.html', msg="This page is for Custodians only.")
         else:
             db = mysql.connection.cursor()
             db.execute("SELECT * FROM item;")
             items = db.fetchall()
             db.close()
-            return render_template("delete_form.html", items=items)
+            return render_template("delete_form.html", items=format_values(items))
         
     #route for actually deleting the item
-    @app.route('/delete-item')
+    @app.route('/delete-item', methods=('POST',))
     @login_required
     def delete_item():
         if (session['user'])[0] == 2:
-            return render_template('error_1.html', msg="This page is for custodian only.")
+            return jsonify({ "redirect": url_for("inventory") })
         else:
-            choice = request.args.get('choice')
-
-            if(choice == None):
-                return render_template("error_1.html", msg="No selected item.")
+            items = request.get_json()["items"]
+            choices = [(x,) for x in items]
 
             try:
                 db = mysql.connection.cursor()
-                db.execute("DELETE FROM item WHERE code=%s;", [choice])
+                db.executemany("DELETE FROM item WHERE code=%s;", choices)
                 mysql.connection.commit()
-                db.close()
-                return redirect(url_for('inventory'))
             except Exception as e:
-                return render_template("error_1.html", msg="Cannot delete item.")
+                return jsonify({ "redirect": url_for("delete_form") })
             finally:
                 db.close()
+
+        return jsonify({ "redirect": url_for("inventory") })
 
     #route for request form (which item to request)
     @app.route('/request-form')
     @login_required
     def request_form():
         if (session['user'])[0] == 1:
-            return render_template('error_1.html', msg="This page is for personnels only.")
+            return render_template('error_1.html', msg="This page is for Personnel only.")
 
         db = mysql.connection.cursor()
         db.execute("SELECT * FROM item WHERE available > 0;")
@@ -173,44 +200,55 @@ def create_app(test_config=None):
         if(len(items) == 0):
             return render_template("error_1.html", msg="No available items")
         else:
-            return render_template("req_form.html", items=items)
+            return render_template("req_form.html", items=format_values(items), active="inventory")
 
     #route for issuing request
-    @app.route('/request-item')
+    @app.route('/request-item', methods=('POST',))
     @login_required
     def request_item():
         if (session['user'])[0] == 1:
-            return render_template('error_1.html', msg="This page is for personnels only.")
+            return jsonify({ "redirect": url_for('inventory') })
 
-        choice = request.args.get('choice')
-        req = int(request.args['req'])
-
-        if(choice == None):
-            return render_template("error_1.html", msg="No item selected.")
-
-        if(req == 0):
-            return render_template("error_1.html", msg="Requested quantity can't be 0.")
+        req = request.get_json()["items"]
 
         try:
+            username = session['user'][1]
             db = mysql.connection.cursor()
-            db.execute("SELECT available FROM item WHERE code=%s;", [choice])
-            stock = int((db.fetchone())[0])
-            if(req <= stock):
-                #update db
-                new = stock - req
-                db.execute("UPDATE item SET available=%s WHERE code=%s;", (new, choice))
-                username = (session['user'])[1]
-                db.execute("INSERT INTO transaction (code, req, username, date) VALUES (%s, %s, %s, CURDATE());", (choice, req, username))
-                mysql.connection.commit()
-                db.close()
-                return redirect(url_for('transactions'))
-            else:
-                db.close()
-                return render_template("error_1.html", msg="Requested quantity exceeds available.")
+
+            for x in req:
+                db.execute("UPDATE item SET available=%s WHERE code=%s;", [x[1], x[0]])
+                db.execute("INSERT INTO transaction (code, req, username, date) VALUES (%s, %s, %s, CURDATE());", [x[0], x[1], username]);
+            
+            mysql.connection.commit()
+            db.close()
         except Exception as e:
-            return render_template("error_1.html", msg="Cannot request item.")
+            print(e)
+            return jsonify({ "redirect": url_for('request_form') })
         finally:
             db.close()
+
+        return jsonify({ "redirect": url_for('inventory') })
+
+        # try:
+        #     db = mysql.connection.cursor()
+        #     db.execute("SELECT available FROM item WHERE code=%s;", [choice])
+        #     stock = int((db.fetchone())[0])
+        #     if(req <= stock):
+        #         #update db
+        #         new = stock - req
+        #         db.execute("UPDATE item SET available=%s WHERE code=%s;", (new, choice))
+        #         username = (session['user'])[1]
+        #         db.execute("INSERT INTO transaction (code, req, username, date) VALUES (%s, %s, %s, CURDATE());", (choice, req, username))
+        #         mysql.connection.commit()
+        #         db.close()
+        #         return redirect(url_for('transactions'))
+        #     else:
+        #         db.close()
+        #         return render_template("error_1.html", msg="Requested quantity exceeds available stock.")
+        # except Exception as e:
+        #     return render_template("error_1.html", msg="Cannot request item.")
+        # finally:
+        #     db.close()
 
     #route for searching an item
     @app.route('/search')
@@ -218,26 +256,28 @@ def create_app(test_config=None):
     def search():
         keyword = request.args.get('keyword')
         keyword = keyword.lower().split()
-        if(len(keyword) == 0):
-            return render_template("error_1.html", msg="No keyword indicated")
+
+        print(f"keyword [{keyword}]")
 
         cond = ""
-        for a in keyword:
-            cond = cond + "("
-            cond = cond + "(LOWER(code) LIKE '%" + a + "%') OR "
-            cond = cond + "(LOWER(name) LIKE '%" + a + "%') OR "
-            cond = cond + "(LOWER(description) LIKE '%" + a + "%') OR "
-            cond = cond[:-4]
-            cond = cond + ") "
-            cond = cond + "AND "
-        
-        cond = cond[:-5]
+        if len(keyword) > 0:
+            for a in keyword:
+                cond = cond + "("
+                cond = cond + "(LOWER(code) LIKE '%" + a + "%') OR "
+                cond = cond + "(LOWER(name) LIKE '%" + a + "%') OR "
+                cond = cond + "(LOWER(description) LIKE '%" + a + "%') OR "
+                cond = cond[:-4]
+                cond = cond + ") "
+                cond = cond + "AND "
+            cond = cond[:-5]
+            
         db = mysql.connection.cursor()
-        query = "SELECT * FROM item WHERE " + cond + ";"
+        query = "SELECT * FROM item WHERE " + cond + ";" if cond != '' else "SELECT * FROM item"
         db.execute(query)
         items = db.fetchall()
         db.close()
-        return render_template("inventory.html", items=items)
+
+        return jsonify(format_values(items))
     
     #route for transactions
     @app.route('/transactions')
@@ -250,17 +290,33 @@ def create_app(test_config=None):
             db.execute("SELECT * FROM transaction;")
         else:
             username = (session['user'])[1]
-            db.execute("SELECT * FROM transaction WHERE username=%s;", [username])
+            db.execute("SELECT transaction_id, code, req, date FROM transaction WHERE username=%s;", [username])
         
         tran = db.fetchall()
         db.close()
 
-        return render_template("transactions.html", tran=tran)
+        return render_template("transactions.html", tran=tran, active="transactions")
     
     #route for logging out
     @app.route('/logout')
     def logout():
         session.clear()
         return redirect(url_for('login'))
+
+    # # 400 - bad request
+    # @app.errorhandler(400)
+    # def error_400 (e):
+    #     print(e.get_response().data)
+    #     return render_template("error_1.html", errcode = 400, errmsg="Bad request.")
+
+    # # 403 - forbidden
+    # @app.errorhandler(403)
+    # def error_403 (e):
+    #     return render_template("error_1.html", errcode = 403, errmsg="Forbidden.")
+
+    # # 404 - page not found
+    # @app.errorhandler(404)
+    # def error_404 (e):
+    #     return render_template("error_1.html", errcode = 404, errmsg="Not found.")
 
     return app

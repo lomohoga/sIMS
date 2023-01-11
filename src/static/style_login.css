@@ -1,69 +1,66 @@
-body{
-    position: fixed;
-    top: 40%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
+#login-main {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: 100%;
+    align-items: center;
+    gap: 2rem;
 }
 
-#title{
+#login-left {
+    text-align: right;
+    font-size: 1.25rem;
+}
 
-    font-family: 'Arial';
-    font-style: normal;
+#login-title {
+    margin: 0;
+    font-size: 6rem;
     font-weight: 800;
-    font-size: 128px;
-    line-height: 155px;
-    letter-spacing: 0em;
-
-    color: #000000;
-    margin: 0em;
-
-    text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+    line-height: 90%;
 }
 
-#description{
-    font-family: 'Arial';
-    font-style: italic;
-    font-weight: 300;
-    font-size: 28px;
-    line-height: 39px;
-    /* identical to box height */
-    letter-spacing: 0.1em;
-    margin: 0em;
-
-    color: #000000;
-
-    text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+#login-subtitle {
+    font-variation-settings: 'slnt' -10;
+    font-size: 1.1rem;
+    margin: 0;
 }
 
-.field{
-    height: 50px;
-    width: 350px;
-    background: #EDEFF2;
-    border: 2px solid #000000;
-    border-radius: 12px;
-    padding: 5px;
-    margin-top: 15px;
-
-    font-family: 'Arial';
-    font-style: normal;
-    font-weight: 500;
-    font-size: 20px;
+#login-title span, #login-subtitle span {
+    color: var(--dark-blue);
+    font: inherit;
 }
 
-#login_button{
-    background: #164168;
-    border: 1px solid #000000;
-    border-radius: 20px;
-    height: 50px;
-    width: 100px;
+#login-subtitle span {
+    font-weight: bold;
+}
 
-    font-family: 'Arial';
-    font-style: normal;
-    font-weight: 600;
-    font-size: 18px;
-    line-height: 24px;
+#login-right {
+    display: flex;
+    align-items: center;
+}
 
-    color: #FFFFFF;
-    margin-top: 15px;
+#login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0;
+}
+
+#login-form > span {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    margin-top: 0.25rem;
+}
+
+#login-form input[type=text], #login-form input[type=password] {
+    width: clamp(10rem, 100%, 15rem);
+}
+
+#login-submit {
+    margin-top: 0.5rem;
+}
+
+#login-error {
+    color: var(--red);
+    font-variation-settings: 'slnt' -10;
 }

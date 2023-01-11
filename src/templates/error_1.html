@@ -3,9 +3,11 @@
 {% block main %}
 <!-- msg is the string to be displayed (used when there is error) -->
 
-<div id="main">
-    <p class="main-header">{{ msg }}</p><br>
-    <a class="link" href="{{ url_for('inventory') }}">Go back to inventory</a>
+<div id="err-wrapper">
+    <span>
+        <h1 id="err-code">{{ errcode }}</h1>
+        <p id="err-msg">{{ errmsg }}</p>
+    </span>
 </div>
 
 {% endblock %}

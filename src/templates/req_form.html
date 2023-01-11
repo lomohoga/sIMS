@@ -2,24 +2,67 @@
 
 {% block main %}
 <!-- items is the list of items -->
+<div id="content-top">
+    <h1 class="main-header">Item Request</h1>
+</div>
 
-<div id="main">
-    <p class="main-header">Request Item Form</p>
-    <p>Select item to request</p><br>
+{% if items|length == 0 %}
+    <p>There are currently no items in the database.</p>
+{% else %}
+    <p>Please specify the quantities of the items you wish to request. For items not to be requested, please leave the <span style="font-variation-settings: 'slnt' -10;">Request Quantity</span> fields 0.</p>
 
-    <form method="get" action="{{ url_for('request_item') }}">
-        <!-- Generate checklist here -->
-        {% for a in items %}
-            <input type="radio" id="{{ a[0] }}" name="choice" value="{{ a[0] }}">
-            <label for="{{ a[0] }}"> {{ a[0] }} | {{ a[2] }} | Available: {{ a[6] }}{{ a[4] }} </label><br>
-        {% endfor %}
+    <form id="req-form">
+        <div id="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th width="3%">Request Quantity</th>
+                        <th width="5%">Code</th>
+                        <th width="12%">Name</th>
+                        <th width="30%">Description</th>
+                        <th width="15%">Shelf Life<br><span style="font-weight: initial; font-variation-settings: 'slnt' -10; font-size: 80%;">(in hours)</span></th>
+                        <th width="5%">Unit</th>
+                        <th width="15%">Unit Price</th>
+                        <th width="10%">Available Quantity</th>
+                    </tr>
+                </thead>
 
-        <!-- Get quantity -->
-        <label for="req">Requested quantity:</label>
-        <input type="number" id="req" name="req" min="1" step="1" required><br>
-
+                <!-- Generate checklist here -->
+                {% for a in items %}
+                    <tr>
+                        <td><input type="number" id="{{ a[0] }}" name="choice" value="0" min="0" max="{{ a[6] }}"></td>
+                        <td>{{ a[0] }}</td>
+                        <td>{{ a[1] }}</td>
+                        <td>{{ a[2] }}</td>
+                        <td>{{ a[3] }}</td>
+                        <td>{{ a[4] }}</td>
+                        <td>{{ a[5] }}</td>
+                        <td>{{ a[6] }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+        
         <input type="submit" id="submit">
     </form>
-</div>
+{% endif %}
+
+<script>
+    const form = document.querySelector("#req-form");
+
+    if (form !== null) {
+        form.addEventListener("submit", e => {
+            e.preventDefault();
+
+            const items = { "items": Array.from(document.querySelectorAll("input[type=number]")).filter(x => +x.value > 0).map(x => [x.id, +x.value]) };
+
+            fetch("{{ url_for('request_item') }}", {
+                "method": "POST",
+                "headers": { "Content-Type": "application/json" },
+                "body": JSON.stringify(items)
+            }).then(d => d.json()).then(j => window.location = j.redirect);
+        });
+    }
+</script>
 
 {% endblock %}

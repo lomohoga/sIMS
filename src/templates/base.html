@@ -1,35 +1,41 @@
 <html>
     <head>
         <title>sIMS</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='style_inventory.css') }}">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:slnt,wght@-10,400;-10,700;0,400;0,700;0,800&display=swap" rel="stylesheet">
     </head>
 
-    <body style="margin:0px; width:100%">
-        <div id="header">
-            <span id="sims-header">sIMS</span>
+    <body>
+        <header>
+            <h1 id="title"><span>s</span>IMS</h1>
             <div id="profile">
                 <!-- session['user'] = (role_id, username, password, firstName, lastName, role_name) of the CURRENT user -->
-                <p class="info">{{ (session['user'])[3] }} {{ (session['user'])[4] }}</p>
-                <p class="info">{{ (session['user'])[5] }}</p>
+                <p class="info" id="profile-name">{{ (session['user'])[3] }} {{ (session['user'])[4] }}</p>
+                <p class="info" id="profile-role">{{ (session['user'])[5] }}</p>
             </div>
+        </header>
+
+        <div id="sidebar">
+            <nav>
+                <a class="link {{ 'active' if active == 'inventory' }}" href="{{ url_for('inventory') }}">Inventory</a>
+                <a class="link {{ 'active' if active == 'transactions' }}" href="{{ url_for('transactions') }}">{{ "My " if session['user'][0] == 2 }}Transactions</a>
+                <a class="link logout" href="{{ url_for('logout') }}">Log out</a>
+            </nav>
+            
+            <footer>
+                <p>
+                    &copy; 2022&ndash;2023 sIMS<br>
+                    All rights reserved.
+                </p>
+            </footer>
         </div>
 
-        <div id="content">
-            <div id="nav">
-                <a class="link" href="{{ url_for('inventory') }}">Inventory</a><br>
-                <a class="link" href="{{ url_for('transactions') }}">Transactions</a><br>
-                <a class="link" href="{{ url_for('logout') }}">Log out</a>
-            </div>
-
-            <!-- THIS SECTION CHANGES BASED ON THE REQUEST -->
+        <main>
             {% block main %}
             {% endblock %}
-            <!--   -->
-        </div>
-
-        <div id="footer">
-            <p class="footer-notes">© 2022 sIMS</p>
-            <p class="footer-notes">All rights reserved</p>
-        </div>
+        </main>
     </body>
 </html>
