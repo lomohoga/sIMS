@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
     <head>
         <title>sIMS</title>
@@ -5,7 +6,8 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='style_login.css') }}">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:slnt,wght@-10,400;-10,700;0,400;0,700;0,800&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&family=IBM+Plex+Sans:ital,wght@0,400;0,700;1,400;1,700&family=IBM+Plex+Sans+Condensed:ital,wght@1,400;1,700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
     </head>
 
     <body id="login-body">
@@ -17,14 +19,12 @@
 
             <div id="login-right">
                 <form id="login-form" method="post">
-                    <!-- DO NOT CHANGE THE name attribute! Code will break -->
-                    <input type="text" class="field" placeholder="Username" name="uname" required>
-                    <input type="password" class="field" placeholder="Password" name="pword" required>
+                    <input id="login-username" type="text" class="field" placeholder="Username" name="uname" required autofocus>
+                    <input id="login-password" type="password" class="field" placeholder="Password" name="pword" required>
                     <span>
                         <input type="submit" id="login-submit" value="Log in">
-                        <!-- shows whether login is successful or not -->
                         {% if msg|length != 0 %}
-                            <span id="login-error"> {{ msg }} </span>
+                            <span id="login-error">{{ msg }}</span>
                         {% endif %}
                     </span>
                 </form>
