@@ -26,24 +26,24 @@ def decode_keyword (k):
 def connect_db ():
     return mysql.connector.connect(host = "localhost", user = "root", password = "password", database = "sims")
 
-def create_app(test_config = None):
-    #create and configure the app
+def create_app (test_config = None):
+    # create and configure the app
     app = Flask(__name__, instance_relative_config = True)
     app.config.from_mapping(SECRET_KEY = 'dev')
 
-    #ensure the instance folder exists
+    # ensure the instance folder exists
     try:
         os.makedirs(app.instance_path)
     except OSError:
         pass
 
-    #convert password to hash using sha256
+    # convert password to hash using sha256
     def generateHash (a):
         m = hashlib.sha256()
         m.update(a.encode('utf-8'))
         return m.hexdigest()
 
-    #route for login page
+    # route for login page
     @app.route('/login', methods=('GET', 'POST'))
     def login ():
         error = ""
@@ -70,7 +70,7 @@ def create_app(test_config = None):
 
         return render_template("login.html", msg = error)
     
-    #decorator for pages that requires authentication
+    # decorator for pages that require authentication
     def login_required (view):
         @functools.wraps(view)
         def wrapped_view(**kwargs):
@@ -81,15 +81,20 @@ def create_app(test_config = None):
 
         return wrapped_view
 
-    #route for inventory
-    #inventory is our MAIN page
+    # route for inventory (main page)
     @app.route('/')
     @login_required
     def inventory ():
         return render_template("inventory.html", active = "inventory")
+    
+    # route for requests
+    @app.route('/requests')
+    @login_required
+    def requests ():
+        return render_template("requests.html", active = "requests")
 
-    #route for adding an item
-    @app.route('/add', methods=('GET', 'POST'))
+    # route for item addition
+    @app.route('/add', methods = ["GET", "POST"])
     @login_required
     def add_items ():
         if request.method == 'GET':
@@ -106,13 +111,13 @@ def create_app(test_config = None):
                     db.execute("INSERT INTO item VALUES (%s, %s, %s, %s, %s, %s, %s);", [re.sub(r'[\u2018\u2019\u201c\u201d]', lambda x: "\'" if x.group(0) in ['\u201c', '\u201d'] else "\"", z) if type(z) == str else z for z in v])
                 cxn.commit()
             except Exception as e:
-                print(e)
                 return Response(status = 500)
             finally:
                 cxn.close()
             
             return Response(status = 200)
 
+    # route for item removal
     @app.route('/remove', methods = ["GET", "POST"])
     @login_required
     def remove_items ():
@@ -136,7 +141,33 @@ def create_app(test_config = None):
 
             return Response(status = 200)
 
-    #route for request form (which item to request)
+    # route for item update
+    @app.route('/update', methods = ["GET", "POST"])
+    @login_required
+    def update_items ():
+        if request.method == "GET":
+            if (session['user'])[0] == 2: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to update items in the database."), 403
+            else: return render_template("update.html")
+
+        if request.method == "POST":
+            values = request.get_json()["values"]
+
+            try:
+                cxn = connect_db()
+                db = cxn.cursor()
+
+                for v in values:
+                    db.execute("UPDATE item SET ItemCode = %s, ItemName = %s, ItemDescription = %s, ShelfLife = %s, Price = %s, QuantityAvailable = %s, Unit = %s WHERE ItemCode = '" + v + "';", [re.sub(r'[\u2018\u2019\u201c\u201d]', lambda x: "\'" if x.group(0) in ['\u201c', '\u201d'] else "\"", z) if type(z) == str else z for z in values[v]])
+
+                cxn.commit()
+            except Exception as e:
+                return Response(status = 500)
+            finally:
+                cxn.close()
+
+            return Response(status = 200)
+
+    # route for item request
     @app.route('/request', methods = ["GET", "POST"])
     @login_required
     def request_items ():
@@ -152,7 +183,7 @@ def create_app(test_config = None):
                 db = cxn.cursor()
 
                 for x in req:
-                    db.execute("INSERT INTO request (ItemCode, RequestQuantity, RequestedBy, RequestDate) VALUES (%s, %s, %s, CURDATE());", [x[0], x[1], session['user'][1]])
+                    db.execute("INSERT INTO request (ItemCode, RequestQuantity, RequestedBy) VALUES (%s, %s, %s);", [x[0], x[1], session['user'][1]])
                 cxn.commit()
             except Exception as e:
                 return { "error": e.args[1] }, 500
@@ -161,7 +192,7 @@ def create_app(test_config = None):
 
             return Response(status = 200)
 
-    #route for searching an item
+    # route for item search
     @app.route('/search')
     @login_required
     def search_items ():
@@ -183,6 +214,7 @@ def create_app(test_config = None):
 
         return { "items": format_values(items) }
 
+    # route for request search
     @app.route('/search-requests')
     @login_required
     def search_requests ():
@@ -200,20 +232,14 @@ def create_app(test_config = None):
 
         cxn = connect_db()
         db = cxn.cursor()
-        query = "SELECT ID, ItemCode, ItemName, ItemDescription, RequestQuantity, Unit, RequestedBy, RequestDate FROM request LEFT JOIN item USING (ItemCode)" + (" WHERE " + cond if cond != "" else "") + ";"
+        query = "SELECT ID, ItemCode, ItemName, ItemDescription, RequestQuantity, Unit, RequestedBy, DATE_FORMAT(RequestDate, '%e %b %Y') FROM request LEFT JOIN item USING (ItemCode)" + (" WHERE " + cond if cond != "" else "") + ";"
         db.execute(query)
         requests = db.fetchall()
         cxn.close()
 
         return { "requests": requests }
     
-    #route for requests
-    @app.route('/requests')
-    @login_required
-    def requests ():
-        return render_template("requests.html", active = "requests")
-    
-    #route for logging out
+    # route for logging out
     @app.route('/logout')
     def logout ():
         session.clear()

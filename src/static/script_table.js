@@ -1,3 +1,13 @@
+const timeConv = {
+    "minutes": 0.017,
+    "hours": 1,
+    "days": 24,
+    "weeks": 168,
+    "months": 720,
+    "years": 8760,
+    "N/A": -1
+};
+
 function escapeKeyword (k) {
     return k.replaceAll(/[\u2018\u2019\u201c\u201d]/gu, x => (x === '\u2018' || x === '\u2019') ? '"' : "'").replaceAll(/[:/?#\[\]@!$&'()*+,;=%]/g, x => "%" + x.charCodeAt(0).toString(16).toUpperCase());
 }
