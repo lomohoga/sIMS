@@ -1,6 +1,3 @@
-Include/
-Lib/
-Scripts/
-pyvenv.cfg
+venv/
 __pycache__/
-sims.sql
+instance/

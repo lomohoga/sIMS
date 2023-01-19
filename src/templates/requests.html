@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block main %}
+
+<div id="content-top">
+    <h1 class="main-header">{{ "My" if session['user'][0] == 2 else "Item" }} Requests</h1>
+
+    <form id="search">
+        <input type="search" id="search-box" placeholder="Search item requests&hellip;" name="keyword" autofocus>
+        <input type="submit" id="search-btn" value="Search" name="search-btn">
+    </form>
+</div>
+
+<div class="table-wrapper request-table{{ ' cust' if session['user'][0] == 1 }}">
+    <div class="table-main">
+        <div class="table-header">
+            <div class="table-row">
+                <div>TID</div>
+                <div>Item Code</div>
+                <div>Item Name</div>
+                <div>Item Description</div>
+                <div>Request Quantity</div>
+                <div>Unit</div>
+                {% if session['user'][0] == 1 %}<div>Requested By</div>{% endif %}
+                <div>Request Date</div>
+            </div>
+        </div>
+        <div class="table-body">
+            <div class="table-loading table-row hide">
+                <div>Please wait&hellip;</div>
+            </div>
+            <div class="table-empty table-row hide">
+                <div>{{ "You have not made any requests." if session['user'][0] == 2 else "No requests found." }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.addEventListener("load", () => populateRequests(document.querySelector(".request-table .table-body"), "", "{{ session['user'][0] }}" === "1"))
+</script>
+
+{% endblock %}

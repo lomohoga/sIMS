@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block main %}
+<!-- items is the list of items -->
+
+<div id="content-top">
+    <h1 class="main-header">Item Request</h1>
+
+    <form id="search">
+        <input type="search" id="search-box" placeholder="Search item&hellip;" name="keyword">
+        <input type="submit" id="search-btn" value="Search" name="search-btn">
+    </form>
+</div>
+
+<div id="item-search" class="table-wrapper">
+    <div class="table-main inventory-table">
+        <div class="table-header">
+            <div class="table-row">
+                <div>Code</div>
+                <div>Name</div>
+                <div>Description</div>
+                <div><span>Shelf Life<br><span style="font-weight: initial; font-style: italic; font-size: 80%;">(in hours)</span></span></div>
+                <div>Unit Price</div>
+                <div>Available Quantity</div>
+                <div>Unit</div>
+                <div></div>
+            </div>
+        </div>
+        <div class="table-body">
+            <div class="table-row table-loading hide">
+                <div>Please wait&hellip;</div>
+            </div>
+            <div class="table-row table-empty hide">
+                <div>No items found.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="requested-items" class="table-wrapper">
+    <div class="table-main inventory-table">
+        <div class="table-header">
+            <div class="table-row">
+                <div>Code</div>
+                <div>Name</div>
+                <div>Description</div>
+                <div><span>Shelf Life<br><span style="font-weight: initial; font-style: italic; font-size: 80%;">(in hours)</span></span></div>
+                <div>Unit Price</div>
+                <div>Available Quantity</div>
+                <div>Unit</div>
+                <div>Request Amount</div>
+                <div></div>
+            </div>
+        </div>
+        <div class="table-body"> </div>
+    </div>
+</div>
+
+<form id="request">
+    <input type="submit" id="request-btn" value="Request selected items" name="request-btn" disabled>
+</form>
+
+<script>
+    function selectItem (row) {
+        let clone = row.cloneNode(true);
+        clone.lastChild.innerHTML = clone.lastChild.innerHTML.replaceAll("plus", "dash");
+        clone.querySelector(".select-row").classList.add("delete-row");
+        clone.querySelector(".select-row").classList.remove("select-row");
+        
+        clone.lastChild.querySelector("button").addEventListener("click", () => {
+            clone.parentElement.removeChild(clone);
+            let r = Array.from(document.querySelectorAll("#item-search .table-body .table-row")).filter(x => x.firstChild.innerHTML === clone.firstChild.innerHTML);
+            if (r.length > 0) r[0].lastChild.querySelector("button").disabled = false;
+            toggleDeleteDisabled();
+        });
+
+        let amt = document.createElement("input");
+        amt.type = "number";
+        amt.min = 1;
+        amt.max = clone.children[5].innerHTML;
+        let amtWrap = document.createElement("div");
+        amtWrap.classList.add("right");
+        amtWrap.appendChild(amt);
+        clone.insertBefore(amtWrap, clone.lastChild);
+
+        let b = document.querySelector("#requested-items .table-body");
+        b.insertBefore(clone, b.firstChild);
+        row.lastChild.querySelector("button").disabled = true;
+        toggleDeleteDisabled();
+    }
+
+    function disableButtons () {
+        if (document.querySelector("#requested-items .table-body").childElementCount > 0) {
+            let codes = Array.from(document.querySelectorAll("#requested-items .table-body .table-row > :first-child")).map(x => x.innerHTML);
+            Array.from(document.querySelectorAll("#item-search .table-body .table-row")).filter(x => codes.includes(x.firstChild.innerHTML)).forEach(x => x.lastChild.querySelector("button").disabled = true);
+        }
+    }
+
+    function toggleDeleteDisabled () {
+        document.querySelector("#request-btn").disabled = document.querySelector("#requested-items .table-body").childElementCount === 0 || Array.from(document.querySelectorAll("#requested-items .table-body > div :nth-child(8) input")).some(x => !x.checkValidity() || x.value === '');
+    }
+
+    document.querySelector("#search").addEventListener("submit", e => {
+        e.preventDefault();
+        populateTable(document.querySelector("#item-search .table-body"), document.querySelector("#search-box").value, "item-search");
+    });
+
+    window.addEventListener("load", () => populateTable(document.querySelector("#item-search .table-body"), document.querySelector("#search-box").value, "item-search"));
+
+    document.querySelector("#requested-items").addEventListener("input", toggleDeleteDisabled);
+
+    document.addEventListener("tablerefresh", () => {
+        Array.from(document.querySelectorAll("#item-search .table-body .table-row > :last-child button")).forEach(x => {
+            x.addEventListener("click", () => selectItem(x.parentElement.parentElement));
+        });
+        toggleDeleteDisabled();
+        disableButtons();
+    });
+
+    document.querySelector("#request").addEventListener("submit", e => {
+        e.preventDefault();
+        fetch("{{ url_for('request_items') }}", {
+            "method": "POST",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": JSON.stringify({ "items": Array.from(document.querySelectorAll("#requested-items .table-body .table-row")).map(x => [x.firstChild.innerHTML, +x.children[7].firstChild.value]) })
+        }).then(d => {
+            if (d.status === 200) window.location = "{{ url_for('inventory') }}";
+        });
+    })
+</script>
+
+{% endblock %}
