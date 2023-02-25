@@ -12,6 +12,56 @@ function escapeKeyword (k) {
     return k.replaceAll(/[\u2018\u2019\u201c\u201d]/gu, x => (x === '\u2018' || x === '\u2019') ? '"' : "'").replaceAll(/[:/?#\[\]@!$&'()*+,;=%]/g, x => "%" + x.charCodeAt(0).toString(16).toUpperCase());
 }
 
+async function getUsers (keyword = "") {
+    return fetch(encodeURI("./search-users?keyword=" + escapeKeyword(keyword))).then(d => d.json()).then(j => j["users"]);
+}
+
+async function populateUsers(tbody, keyword = "", type = "users") {
+    while (tbody.childElementCount > 2) tbody.removeChild(tbody.lastChild);
+
+    tbody.querySelector(".table-loading").classList.remove("hide");
+    tbody.querySelector(".table-empty").classList.add("hide");
+
+    let users = await getUsers(keyword);
+
+    for (let x of users) {
+        let tr = document.createElement("div");
+        tr.classList.add("table-row");
+
+        for (let i = 0; i < 4; i++) {
+            let y = x[i];
+            let td = document.createElement("div");
+            td.innerHTML = y
+            tr.appendChild(td);
+        }
+
+        if (type === 'delete') {
+            let e = document.createElement("div");
+            let c = document.createElement("input");
+            c.type = "checkbox";
+            e.appendChild(c);
+            tr.insertBefore(e, tr.firstChild);
+        } else if (type === 'user-search') {
+            let e = document.createElement("div");
+            let b = document.createElement("button");
+            b.type = "button";
+            b.role = "button";
+            b.innerHTML = "<i class='bi bi-plus-circle'></i><i class='bi bi-plus-circle-fill'></i>";
+            b.classList.add("select-row");
+            e.appendChild(b);
+            tr.appendChild(e);
+        }
+
+        tbody.appendChild(tr);
+    }
+
+    tbody.querySelector(".table-loading").classList.add("hide");
+    if (items.length > 0) tbody.querySelector(".table-empty").classList.add("hide");
+    else tbody.querySelector(".table-empty").classList.remove("hide");
+
+    document.dispatchEvent(new CustomEvent("tablerefresh"));
+}
+
 async function getItems (keyword = "") {
     return fetch(encodeURI("./search?keyword=" + escapeKeyword(keyword))).then(d => d.json()).then(j => j["items"]);
 }

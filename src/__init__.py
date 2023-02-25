@@ -214,6 +214,27 @@ def create_app (test_config = None):
 
         return { "items": format_values(items) }
 
+    # route for user search
+    @app.route('/search-users')
+    @login_required
+    def search_users ():
+        keyword = [decode_keyword(x) for x in request.args.get('keyword').lower().split()]
+
+        cond = ""
+        for a in keyword:
+            cond = cond + "((LOWER(Username) LIKE '%" + a + "%') OR "
+            cond = cond + "(LOWER(FirstName) LIKE '%" + a + "%') OR "
+            cond = cond + "(LOWER(LastName) LIKE '%" + a + "%')) AND "
+        cond = cond[:-5]
+        
+        cxn = connect_db()
+        db = cxn.cursor()
+        query = "SELECT Username, LastName, FirstName, RoleName FROM user LEFT JOIN role USING (RoleID)" + (" WHERE " + cond if cond != "" else "") + ";"
+        db.execute(query)
+        users = db.fetchall()
+        cxn.close()
+        return { "users": users }
+
     # route for request search
     @app.route('/search-requests')
     @login_required
@@ -238,6 +259,12 @@ def create_app (test_config = None):
         cxn.close()
 
         return { "requests": requests }
+
+    #route for users
+    @app.route('/users')
+    @login_required
+    def show_users():
+        return render_template("user.html")
     
     # route for logging out
     @app.route('/logout')
