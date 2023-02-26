@@ -188,6 +188,30 @@ def create_app (test_config = None):
                 cxn.close()
 
             return Response(status = 200)
+    
+    # route for item removal
+    @app.route('/remove-users', methods = ["GET", "POST"])
+    @login_required
+    def remove_users ():
+        if request.method == "GET":
+            if (session['user'])[0] == 2: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to remove items from the database."), 403
+            else: return render_template("delete_user.html")
+
+        if request.method == "POST":
+            users = request.get_json()["users"]
+            choices = [(x,) for x in users]
+
+            try:
+                cxn = connect_db()
+                db = cxn.cursor()
+                db.executemany("DELETE FROM user WHERE Username = %s;", choices)
+                cxn.commit()
+            except Exception as e:
+                return Response(status = 500)
+            finally:
+                cxn.close()
+
+            return Response(status = 200)
 
     # route for item update
     @app.route('/update', methods = ["GET", "POST"])

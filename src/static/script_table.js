@@ -56,7 +56,7 @@ async function populateUsers(tbody, keyword = "", type = "users") {
     }
 
     tbody.querySelector(".table-loading").classList.add("hide");
-    if (items.length > 0) tbody.querySelector(".table-empty").classList.add("hide");
+    if (users.length > 0) tbody.querySelector(".table-empty").classList.add("hide");
     else tbody.querySelector(".table-empty").classList.remove("hide");
 
     document.dispatchEvent(new CustomEvent("tablerefresh"));
