@@ -239,6 +239,46 @@ def create_app (test_config = None):
 
             return Response(status = 200)
 
+    # route for promoting user
+    @app.route('/promote-user', methods = ["POST"])
+    @login_required
+    def promote_user():
+        values = request.get_json()["values"]
+        
+        try:
+            cxn = connect_db()
+            db = cxn.cursor()
+
+            db.execute("UPDATE user SET RoleID = 1 WHERE Username = '" + values + "';")
+
+            cxn.commit()
+        except Exception as e:
+            return Response(status = 500)
+        finally:
+            cxn.close()
+        
+        return Response(status = 200)
+
+    # route for demoting user
+    @app.route('/demote-user', methods = ["POST"])
+    @login_required
+    def demote_user():
+        values = request.get_json()["values"]
+        
+        try:
+            cxn = connect_db()
+            db = cxn.cursor()
+
+            db.execute("UPDATE user SET RoleID = 2 WHERE Username = '" + values + "';")
+
+            cxn.commit()
+        except Exception as e:
+            return Response(status = 500)
+        finally:
+            cxn.close()
+        
+        return Response(status = 200)
+
     # route for item request
     @app.route('/request', methods = ["GET", "POST"])
     @login_required

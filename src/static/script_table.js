@@ -35,6 +35,40 @@ async function populateUsers(tbody, keyword = "", type = "users") {
             tr.appendChild(td);
         }
 
+        if(type === 'users'){
+            let a = document.createElement("button");
+            if(x[3] === "Personnel"){
+                a.innerHTML = "Promote";
+                a.addEventListener("click", () => {
+                    fetch("/promote-user", {
+                        "method": "POST",
+                        "headers": {
+                            "Content-Type": "application/json"
+                        },
+                        "body": JSON.stringify({ "values": x[0] })
+                    }).then(d => {
+                        if (d.status === 200) window.location = "/users";
+                    });
+                });
+            }
+            else{
+                a.innerHTML = "Demote";
+                a.addEventListener("click", () => {
+                    fetch("/demote-user", {
+                        "method": "POST",
+                        "headers": {
+                            "Content-Type": "application/json"
+                        },
+                        "body": JSON.stringify({ "values": x[0] })
+                    }).then(d => {
+                        if (d.status === 200) window.location = "/users";
+                    });
+                });
+            }
+
+            tr.appendChild(a);
+        }
+
         if (type === 'delete') {
             let e = document.createElement("div");
             let c = document.createElement("input");
