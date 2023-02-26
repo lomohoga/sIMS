@@ -116,6 +116,54 @@ def create_app (test_config = None):
                 cxn.close()
             
             return Response(status = 200)
+    
+    def generate_userID(first, last):
+        userID = first[0].lower() + last.lower()
+        userID_length = len(userID)
+        items = 1
+        counter = 0
+
+        cxn = connect_db()
+        db = cxn.cursor()
+        while(items):
+            query = "SELECT * FROM user WHERE Username LIKE '" + userID + "';"
+            db.execute(query)
+            items = len(db.fetchall())
+
+            if(items):
+                counter = counter + 1;
+                userID = userID[:userID_length] + str(counter);
+
+        cxn.close()
+        return userID
+    
+    # route for item addition
+    @app.route('/add-users', methods = ["GET", "POST"])
+    @login_required
+    def add_users ():
+        if request.method == 'GET':
+            if (session['user'])[0] == 2: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to add items to the database."), 403
+            else: return render_template("add_user.html")
+
+        if request.method == 'POST':
+            values = request.get_json()["values"]
+
+            #TODO: Insert to user table
+            cxn = connect_db()
+            db = cxn.cursor()
+            default = generateHash('ilovesims')
+            try:
+                for v in values:
+                    userID = generate_userID(v[0], v[1])
+                    db.execute("INSERT INTO user VALUES (%s, %s, %s, %s, %s);", [userID, default, v[0], v[1], v[2]])
+
+                cxn.commit()
+            except Exception as e:
+                return Response(status = 500)
+            finally:
+                cxn.close()
+            
+            return Response(status = 200)
 
     # route for item removal
     @app.route('/remove', methods = ["GET", "POST"])

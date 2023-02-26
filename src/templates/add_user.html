@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block main %}
+
+<div id="content-top">
+    <h1 class="main-header">User Addition</h1>
+</div>
+
+<div id="add-table" class="table-wrapper">
+    <div class="table-main inventory-table">
+        <div class="table-header">
+            <div class="table-row">
+                <div>First Name</div>
+                <div>Last Name</div>
+                <div>Role</div>
+                <div></div>
+            </div>
+        </div>
+        <div class="table-body">
+            <div class="table-row" id="add-row">
+                <div>
+                    <button role="button"><i class="bi bi-plus-circle"></i>Add user</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="add">
+    <input type="submit" id="add-btn" value="Add users" name="add-btn" disabled>
+</form>
+
+<script>
+    function disableButton () {
+        document.querySelector("#add-btn").disabled =
+            // Disable if there are no rows in table
+            document.querySelector("#add-table .table-body").childElementCount === 1
+            // Disable if at least one row has no item code
+            || Array.from(document.querySelectorAll("#add-table .table-body .table-row:not(#add-row) > :first-child input")).some(x => x.value === '')
+            // Disable if at least one input box is invalid
+            || Array.from(document.querySelectorAll("#add-table input")).some(x => !x.checkValidity());
+    }
+
+    function addRow () {
+        let row = document.createElement("div");
+        row.classList.add("table-row");
+
+        let roles = {
+            "Custodian": 1,
+            "Personnel": 2
+        }
+
+        for (let i = 0; i < 3; i++) {
+            let el = document.createElement("input");
+            let wrapper = document.createElement("div");
+
+            if(i === 0 || i === 1){
+                el.type = "text";
+                el.maxLength = 30;
+                wrapper.appendChild(el);
+                row.appendChild(wrapper);
+                continue;
+            }
+
+            let sel = document.createElement("select");
+            for(let x in roles){
+                let op = document.createElement("option");
+                op.value = roles[x];
+                op.innerHTML = x;
+                sel.appendChild(op);
+            }
+
+            wrapper.appendChild(sel);
+            row.appendChild(wrapper);
+        }
+
+        let e = document.createElement("div");
+        let b = document.createElement("button");
+        b.type = "button";
+        b.role = "button";
+        b.innerHTML = "<i class='bi bi-dash-circle'></i><i class='bi bi-dash-circle-fill'></i>"
+        b.classList.add("delete-row");
+        e.appendChild(b);
+        row.append(e);
+
+        b.addEventListener("click", () => document.querySelector("#add-table .table-body").removeChild(b.parentElement.parentElement));
+
+        document.querySelector("#add-table .table-body").insertBefore(row, document.querySelector("#add-row"));
+        disableButton();
+    }
+
+    document.querySelector("#add").addEventListener("submit", e => {
+        e.preventDefault();
+
+        let values = [];
+
+        for (let row of Array.from(document.querySelectorAll("#add-table .table-body .table-row:not(#add-row)"))) {
+            let v = [];
+            Array.from(row.children).forEach((x, i) => {
+                if(i !== 3){
+                    v.push(x.firstChild.value);
+                }
+            });
+            values.push(v);
+        }
+
+        fetch("{{ url_for('add_users') }}", {
+            "method": "POST",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": JSON.stringify({ "values": values })
+        }).then(d => {
+            if (d.status === 200) window.location = "{{ url_for('show_users') }}";
+        });
+
+        disableButton();
+    });
+
+    document.querySelector("#add-table").addEventListener("input", disableButton);
+
+    document.querySelector("#add-row").addEventListener("click", addRow);
+</script>
+
+{% endblock %}
