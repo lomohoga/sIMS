@@ -66,6 +66,7 @@ def create_app (test_config = None):
             if error == "":
                 session.clear()
                 session['user'] = user
+                print(user)
                 return redirect(url_for('inventory'))
 
         return render_template("login.html", msg = error)
@@ -142,7 +143,7 @@ def create_app (test_config = None):
     @login_required
     def add_users ():
         if request.method == 'GET':
-            if (session['user'])[0] == 2: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to add items to the database."), 403
+            if (session['user'])[0] != 0: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to add users to the database."), 403
             else: return render_template("add_user.html")
 
         if request.method == 'POST':
@@ -194,7 +195,7 @@ def create_app (test_config = None):
     @login_required
     def remove_users ():
         if request.method == "GET":
-            if (session['user'])[0] == 2: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to remove items from the database."), 403
+            if (session['user'])[0] != 0: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to remove users from the database."), 403
             else: return render_template("delete_user.html")
 
         if request.method == "POST":
@@ -330,6 +331,7 @@ def create_app (test_config = None):
     @app.route('/search-users')
     @login_required
     def search_users ():
+        if (session['user'])[0] != 0: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to search for users in the database."), 403
         keyword = [decode_keyword(x) for x in request.args.get('keyword').lower().split()]
 
         cond = ""
@@ -376,7 +378,8 @@ def create_app (test_config = None):
     @app.route('/users')
     @login_required
     def show_users():
-        return render_template("user.html")
+        if (session['user'])[0] != 0: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to see the users in the database."), 403
+        else: return render_template("user.html", active="users")
     
     # route for logging out
     @app.route('/logout')

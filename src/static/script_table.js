@@ -25,6 +25,10 @@ async function populateUsers(tbody, keyword = "", type = "users") {
     let users = await getUsers(keyword);
 
     for (let x of users) {
+        if(x[3] === "Admin"){
+            continue;
+        }
+        
         let tr = document.createElement("div");
         tr.classList.add("table-row");
 

@@ -19,7 +19,7 @@
             <div id="profile">
                 <!-- session['user'] = (role_id, username, password, firstName, lastName, role_name) of the CURRENT user -->
                 <p class="info" id="profile-name">{{ (session['user'])[3] }} {{ (session['user'])[4] }}</p>
-                <p class="info" id="profile-role">{{ (session['user'])[5] }}</p>
+                <p class="info" id="profile-role">{{ (session['user'])[6] }}</p>
             </div>
         </header>
 
@@ -27,6 +27,9 @@
             <nav>
                 <a class="link {{ 'active' if active == 'inventory' }}" href="{{ url_for('inventory') }}">Inventory</a>
                 <a class="link {{ 'active' if active == 'requests' }}" href="{{ url_for('requests') }}">{{ "My" if session['user'][0] == 2 else "Item"}} Requests</a>
+                {% if session['user'][0] == 0 %}
+                <a class="link {{ 'active' if active == 'users' }}" href="{{ url_for('show_users') }}">Users</a>
+                {% endif %}
                 <a class="link logout" href="{{ url_for('logout') }}">Log out</a>
             </nav>
             
