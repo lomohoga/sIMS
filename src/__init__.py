@@ -7,6 +7,11 @@ import re
 import mysql.connector
 from flask import Flask, render_template, request, redirect, url_for, session, Response
 
+import smtplib
+from email.message import EmailMessage
+sender_address = 'iamjhin01@gmail.com'
+sender_pass = 'qenmyutlantkdgap'
+
 locale.setlocale(locale.LC_ALL, 'en_PH')
 
 # session['user'] = (role_id, username, password, firstName, lastName, role_name) of the CURRENT user
@@ -138,6 +143,35 @@ def create_app (test_config = None):
         cxn.close()
         return userID
     
+    def start_email_session():
+        #Create SMTP session for sending the mail
+        session = smtplib.SMTP('smtp.gmail.com', 587) #use gmail with port
+        session.starttls() #enable security
+        session.login(sender_address, sender_pass) #login with mail_id and password
+        return session
+
+    def send_email(session, type, recipient, username="", password=""):
+        #Contruct message
+        msg = EmailMessage()
+        msg['From'] = "sIMS <" + sender_address + ">"
+        msg['To'] = recipient
+
+        if(type == "add"):
+            msg["Subject"] = "Account credentials"
+            msg.set_content(f'Good day! You have been added into sIMS. Please use the following credentials to log in.\nUsername: {username}\nPassword: {password}')
+        elif(type == "delete"):
+            msg["Subject"] = "Account removal"
+            msg.set_content("Your account was deleted.")
+        elif(type == "promote"):
+            msg["Subject"] = "Account promoted"
+            msg.set_content("Your account was promoted to custodian. This means that\n(a) You can now add, delete, and update items in the inventory.\n(b) You can now approve or deny item requests.")
+        elif(type == "demote"):
+            msg["Subject"] = "Account demoted"
+            msg.set_content("Your account was demoted to personnel. This means that\n(a) You can no longer add, delete, and update items in the inventory.\n(b) You can no longer approve or deny item requests.")
+        
+        text = msg.as_string()
+        session.sendmail(sender_address, recipient, text)
+    
     # route for item addition
     @app.route('/add-users', methods = ["GET", "POST"])
     @login_required
@@ -153,16 +187,27 @@ def create_app (test_config = None):
             cxn = connect_db()
             db = cxn.cursor()
             default = generateHash('ilovesims')
+
+            mail_session = start_email_session()
             try:
                 for v in values:
+                    print(v)
                     userID = generate_userID(v[0], v[1])
-                    db.execute("INSERT INTO user VALUES (%s, %s, %s, %s, %s);", [userID, default, v[0], v[1], v[2]])
+                    email = v[2]
+                    if email == '':
+                        email = "NULL"
+
+                    db.execute("INSERT INTO user VALUES (%s, %s, %s, %s, %s, %s);", [userID, default, v[0], v[1], v[3], email])
+                    
+                    if v[2] != '':
+                        send_email(mail_session, "add", v[2], userID, 'ilovesims')
 
                 cxn.commit()
             except Exception as e:
                 return Response(status = 500)
             finally:
                 cxn.close()
+                mail_session.quit()
             
             return Response(status = 200)
 
@@ -200,17 +245,28 @@ def create_app (test_config = None):
 
         if request.method == "POST":
             users = request.get_json()["users"]
+            emails = request.get_json()["emails"]
             choices = [(x,) for x in users]
+            print(emails)
 
             try:
                 cxn = connect_db()
                 db = cxn.cursor()
+
                 db.executemany("DELETE FROM user WHERE Username = %s;", choices)
                 cxn.commit()
+
+                mail_session = start_email_session()
+
+                for p in emails:
+                    if p != '-':
+                        send_email(mail_session, "delete", p)
+
             except Exception as e:
                 return Response(status = 500)
             finally:
                 cxn.close()
+                mail_session.quit()
 
             return Response(status = 200)
 
@@ -245,18 +301,23 @@ def create_app (test_config = None):
     @login_required
     def promote_user():
         values = request.get_json()["values"]
+        print(values)
         
         try:
             cxn = connect_db()
             db = cxn.cursor()
+            mail_session = start_email_session()
 
-            db.execute("UPDATE user SET RoleID = 1 WHERE Username = '" + values + "';")
+            db.execute("UPDATE user SET RoleID = 1 WHERE Username = '" + values[0] + "';")
+            if(values[1] and values[1] != "NULL"):
+                send_email(mail_session, "promote", values[1])
 
             cxn.commit()
         except Exception as e:
             return Response(status = 500)
         finally:
             cxn.close()
+            mail_session.quit()
         
         return Response(status = 200)
 
@@ -269,14 +330,18 @@ def create_app (test_config = None):
         try:
             cxn = connect_db()
             db = cxn.cursor()
+            mail_session = start_email_session()
 
-            db.execute("UPDATE user SET RoleID = 2 WHERE Username = '" + values + "';")
+            db.execute("UPDATE user SET RoleID = 2 WHERE Username = '" + values[0] + "';")
+            if(values[1] and values[1] != "NULL"):
+                send_email(mail_session, "demote", values[1])
 
             cxn.commit()
         except Exception as e:
             return Response(status = 500)
         finally:
             cxn.close()
+            mail_session.quit()
         
         return Response(status = 200)
 
@@ -343,7 +408,7 @@ def create_app (test_config = None):
         
         cxn = connect_db()
         db = cxn.cursor()
-        query = "SELECT Username, LastName, FirstName, RoleName FROM user LEFT JOIN role USING (RoleID)" + (" WHERE " + cond if cond != "" else "") + ";"
+        query = "SELECT Username, LastName, FirstName, Email, RoleName FROM user LEFT JOIN role USING (RoleID)" + (" WHERE " + cond if cond != "" else "") + ";"
         db.execute(query)
         users = db.fetchall()
         cxn.close()

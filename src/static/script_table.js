@@ -25,23 +25,32 @@ async function populateUsers(tbody, keyword = "", type = "users") {
     let users = await getUsers(keyword);
 
     for (let x of users) {
-        if(x[3] === "Admin"){
+        console.log(x)
+        if(x[4] === "Admin"){
             continue;
         }
         
         let tr = document.createElement("div");
         tr.classList.add("table-row");
 
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < 5; i++) {
             let y = x[i];
             let td = document.createElement("div");
-            td.innerHTML = y
+            if(y === "NULL"){
+                td.innerHTML = "-"
+            }
+            else if(y){
+                td.innerHTML = y
+            }
+            else{
+                td.innerHTML = "-"
+            }
             tr.appendChild(td);
         }
 
         if(type === 'users'){
             let a = document.createElement("button");
-            if(x[3] === "Personnel"){
+            if(x[4] === "Personnel"){
                 a.innerHTML = "Promote";
                 a.addEventListener("click", () => {
                     fetch("/promote-user", {
@@ -49,7 +58,7 @@ async function populateUsers(tbody, keyword = "", type = "users") {
                         "headers": {
                             "Content-Type": "application/json"
                         },
-                        "body": JSON.stringify({ "values": x[0] })
+                        "body": JSON.stringify({ "values": [x[0], x[3]] })
                     }).then(d => {
                         if (d.status === 200) window.location = "/users";
                     });
@@ -63,7 +72,7 @@ async function populateUsers(tbody, keyword = "", type = "users") {
                         "headers": {
                             "Content-Type": "application/json"
                         },
-                        "body": JSON.stringify({ "values": x[0] })
+                        "body": JSON.stringify({ "values": [x[0], x[3]] })
                     }).then(d => {
                         if (d.status === 200) window.location = "/users";
                     });

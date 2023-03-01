@@ -12,6 +12,7 @@
             <div class="table-row">
                 <div>First Name</div>
                 <div>Last Name</div>
+                <div>Email address</div>
                 <div>Role</div>
                 <div></div>
             </div>
@@ -50,7 +51,7 @@
             "Personnel": 2
         }
 
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 4; i++) {
             let el = document.createElement("input");
             let wrapper = document.createElement("div");
 
@@ -62,11 +63,23 @@
                 continue;
             }
 
+            if(i == 2){
+                el.type = "email"
+                el.maxLength = 50;
+                wrapper.appendChild(el);
+                row.appendChild(wrapper);
+                continue;
+            }
+
             let sel = document.createElement("select");
             for(let x in roles){
                 let op = document.createElement("option");
                 op.value = roles[x];
                 op.innerHTML = x;
+
+                if(x === 'Personnel'){
+                    op.selected = 1;
+                }
                 sel.appendChild(op);
             }
 
@@ -97,7 +110,7 @@
         for (let row of Array.from(document.querySelectorAll("#add-table .table-body .table-row:not(#add-row)"))) {
             let v = [];
             Array.from(row.children).forEach((x, i) => {
-                if(i !== 3){
+                if(i !== 4){
                     v.push(x.firstChild.value);
                 }
             });
