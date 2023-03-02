@@ -187,7 +187,10 @@ def create_app (test_config = None):
             msg.set_content("Your account was demoted to personnel. This means that\n(a) You can no longer add, delete, and update items in the inventory.\n(b) You can no longer approve or deny item requests.")
         elif(type == "password"):
             msg["Subject"] = "Password changed"
-            msg.set_content("Your account password was changed.")    
+            msg.set_content("Your account password was changed.")
+        elif(type == "email"):
+            msg["Subject"] = "Email updated"
+            msg.set_content("Your account email was updated.")         
         
         text = msg.as_string()
         session.sendmail(sender_address, recipient, text)
@@ -503,6 +506,55 @@ def create_app (test_config = None):
                 cxn.close()
 
             return redirect(url_for('logout'))
+    
+    @app.route('/change-email', methods = ["GET", "POST"])
+    @login_required
+    def change_email():
+        if request.method == "GET":
+            return render_template("change_email.html")
+        
+        if (request.method == "POST"):
+            req = request.form['new-email']
+
+            try:
+                cxn = connect_db()
+                db = cxn.cursor()
+
+                db.execute("UPDATE user SET Email = '" + req + "' WHERE Username = '" + session['user'][1] + "';")
+                cxn.commit()
+
+                mail_session = start_email_session()
+                send_email(mail_session, "email", req)
+                mail_session.quit()
+
+            except Exception as e:
+                return { "error": e.args[1] }, 500
+            finally:
+                cxn.close()
+
+            return redirect(url_for('inventory'))
+
+    @app.route('/remove-email', methods = ["POST"])
+    @login_required
+    def remove_email():
+        try:
+            cxn = connect_db()
+            db = cxn.cursor()
+
+            db.execute("UPDATE user SET Email = NULL WHERE Username = '" + session['user'][1] + "';")
+            cxn.commit()
+            
+            mail_session = start_email_session()
+            send_email(mail_session, "email", session['user'][5])
+            mail_session.quit()
+
+        except Exception as e:
+            return { "error": e.args[1] }, 500
+        finally:
+            cxn.close()
+
+        return Response(status = 200)
+            
     
     # route for logging out
     @app.route('/logout')
