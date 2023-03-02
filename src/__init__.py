@@ -5,7 +5,7 @@ import locale
 import re
 
 import mysql.connector
-from flask import Flask, render_template, request, redirect, url_for, session, Response
+from flask import Flask, render_template, request, redirect, url_for, session, Response, abort
 
 import smtplib
 from email.message import EmailMessage
@@ -76,6 +76,17 @@ def create_app (test_config = None):
 
         return render_template("login.html", msg = error)
     
+    def update_session():
+        cxn = connect_db()
+        db = cxn.cursor()
+        db.execute("SELECT * FROM user LEFT JOIN role USING (RoleID) WHERE Username = %s;", [session['user'][1]])
+        user = db.fetchone()
+        cxn.close()
+
+        session.clear()
+        session['user'] = user
+        return
+    
     # decorator for pages that require authentication
     def login_required (view):
         @functools.wraps(view)
@@ -91,23 +102,29 @@ def create_app (test_config = None):
     @app.route('/')
     @login_required
     def inventory ():
+        update_session()
         return render_template("inventory.html", active = "inventory")
     
     # route for requests
     @app.route('/requests')
     @login_required
     def requests ():
+        update_session()
         return render_template("requests.html", active = "requests")
 
     # route for item addition
     @app.route('/add', methods = ["GET", "POST"])
     @login_required
     def add_items ():
+        update_session()
+
         if request.method == 'GET':
-            if (session['user'])[0] == 2: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to add items to the database."), 403
+            if (session['user'])[0] != 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to add items to the database."), 403
             else: return render_template("add.html")
 
         if request.method == 'POST':
+            if (session['user'])[0] != 1:
+                pass
             values = request.get_json()
 
             cxn = connect_db()
@@ -168,6 +185,9 @@ def create_app (test_config = None):
         elif(type == "demote"):
             msg["Subject"] = "Account demoted"
             msg.set_content("Your account was demoted to personnel. This means that\n(a) You can no longer add, delete, and update items in the inventory.\n(b) You can no longer approve or deny item requests.")
+        elif(type == "password"):
+            msg["Subject"] = "Password changed"
+            msg.set_content("Your account password was changed.")    
         
         text = msg.as_string()
         session.sendmail(sender_address, recipient, text)
@@ -215,11 +235,16 @@ def create_app (test_config = None):
     @app.route('/remove', methods = ["GET", "POST"])
     @login_required
     def remove_items ():
+        update_session()
+
         if request.method == "GET":
-            if (session['user'])[0] == 2: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to remove items from the database."), 403
+            if (session['user'])[0] != 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to remove items from the database."), 403
             else: return render_template("delete.html")
 
         if request.method == "POST":
+            if (session['user'])[0] != 1: 
+                pass
+
             items = request.get_json()["items"]
             choices = [(x,) for x in items]
 
@@ -274,11 +299,15 @@ def create_app (test_config = None):
     @app.route('/update', methods = ["GET", "POST"])
     @login_required
     def update_items ():
+        update_session()
+        
         if request.method == "GET":
-            if (session['user'])[0] == 2: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to update items in the database."), 403
+            if (session['user'])[0] != 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to update items in the database."), 403
             else: return render_template("update.html")
 
         if request.method == "POST":
+            if (session['user'])[0] != 1:
+                pass
             values = request.get_json()["values"]
 
             try:
@@ -445,6 +474,35 @@ def create_app (test_config = None):
     def show_users():
         if (session['user'])[0] != 0: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to see the users in the database."), 403
         else: return render_template("user.html", active="users")
+
+    @app.route('/change-password', methods = ["GET", "POST"])
+    @login_required
+    def change_password():
+        if request.method == "GET":
+            return render_template("change_password.html")
+        
+        if (request.method == "POST"):
+            req = request.form['new-password']
+
+            try:
+                cxn = connect_db()
+                db = cxn.cursor()
+
+                new_password = generateHash(req)
+                db.execute("UPDATE user SET Password = '" + new_password + "' WHERE Username = '" + session['user'][1] + "';")
+                cxn.commit()
+
+                if (session['user'][5] is not None) and (session['user'][5] != "NULL"):
+                    mail_session = start_email_session()
+                    send_email(mail_session, "password", session['user'][5])
+                    mail_session.quit()
+
+            except Exception as e:
+                return { "error": e.args[1] }, 500
+            finally:
+                cxn.close()
+
+            return redirect(url_for('logout'))
     
     # route for logging out
     @app.route('/logout')

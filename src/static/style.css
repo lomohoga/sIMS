@@ -177,3 +177,22 @@ input[type=submit]:active, input[type=button]:active, a.btn:active, button:activ
 main {
     overflow: hidden;
 }
+
+.valid {
+    color: green;
+  }
+  
+.valid:before {
+    margin-right: 10px;
+    content: '\2714';
+}
+
+/* Add a red text color and an "x" icon when the requirements are wrong */
+.invalid {
+    color: red;
+}
+
+.invalid:before {
+    margin-right: 10px;
+    content: '\2716';
+}
