@@ -165,6 +165,10 @@ main h1 {
     grid-template-columns: 10% 15% 25% 10% 15% 15% 10%;
 }
 
+.user-table .table-row {
+    grid-template-columns: 15% 15% 15% 25% 15% 15%;
+}
+
 .inventory-table .left, .request-table .left {
     text-align: left;
 }
@@ -199,6 +203,10 @@ main h1 {
     grid-template-columns: 10% 15% 1fr 10% 15% 15% 10% 3rem;
 }
 
+#selected-items .delete-user-table, #item-search .delete-user-table {
+    grid-template-columns: 15% 15% 15% 25% 10% 5%;
+}
+
 #table-loading > div, #table-empty > div {
     grid-column: 1 / -1;
 }
@@ -224,6 +232,18 @@ main h1 {
 
 #add-table .table-row, #updated-items .table-row {
     grid-template-columns: 10% 15% 20% 20% 10% 10% 10% 5%;
+}
+
+#add-table .add-user-table{
+    grid-template-columns: 20% 20% 35% 10% 5%;
+}
+
+.add-user-table input[type="email"]{
+    border: 1px solid var(--gray);
+    border-radius: 5px;
+    background: none;
+    height: 100%;
+    padding: 0 0.75rem;
 }
 
 #add-table input {

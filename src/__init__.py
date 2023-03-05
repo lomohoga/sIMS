@@ -71,7 +71,6 @@ def create_app (test_config = None):
             if error == "":
                 session.clear()
                 session['user'] = user
-                print(user)
                 return redirect(url_for('inventory'))
 
         return render_template("login.html", msg = error)
@@ -275,7 +274,6 @@ def create_app (test_config = None):
             users = request.get_json()["users"]
             emails = request.get_json()["emails"]
             choices = [(x,) for x in users]
-            print(emails)
 
             try:
                 cxn = connect_db()
@@ -333,7 +331,6 @@ def create_app (test_config = None):
     @login_required
     def promote_user():
         values = request.get_json()["values"]
-        print(values)
         
         try:
             cxn = connect_db()

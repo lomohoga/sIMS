@@ -32,6 +32,7 @@ async function populateUsers(tbody, keyword = "", type = "users") {
         
         let tr = document.createElement("div");
         tr.classList.add("table-row");
+        tr.classList.add("delete-user-table");
 
         for (let i = 0; i < 5; i++) {
             let y = x[i];
