@@ -218,6 +218,9 @@
             "body": JSON.stringify({ "values": obj })
         }).then(d => {
             if (d.status === 200) window.location = "{{ url_for('inventory') }}";
+            if(d.status === 403) return d.text().then((html) => {
+                document.body.innerHTML = html     
+            })
         });
     })
 </script>

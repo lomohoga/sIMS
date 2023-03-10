@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block main %}
+<div id="c-password">
+    <div id="content-top" style="margin-bottom: 20px;">
+        <h1 class="main-header">Change password</h1>
+    </div>
+    
+    <div>
+        <form action="{{ url_for('change_password') }}" method="post">
+            <label for="new-password">Enter new password:</label>
+            <input type="password" id="new-password" name="new-password" style="width:300px; padding: 5px; margin-left:10px; margin-right: 10px;" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,12}" minlength="1" title="Must contain at least one number and one uppercase and lowercase letter, and must be between 8 to 12 characters">
+            <input type="submit" value="Submit" id="submit" disabled>
+        </form>
+    </div>
+    
+    <div id="message">
+        <h4>Password must contain the following:</h4>
+        <p id="letter" class="invalid">A <b>lowercase</b> letter</p>
+        <p id="capital" class="invalid">A <b>capital (uppercase)</b> letter</p>
+        <p id="number" class="invalid">A <b>number</b></p>
+        <p id="length" class="invalid"><b>8 to 12 characters</b></p>
+    </div>
+</div>
+
+<div id="c-password">
+    <div id="content-top" style="margin-bottom: 20px;">
+        <h1 class="main-header">Change email address</h1>
+    </div>
+    
+    <div id = "email-form">
+        <form action="{{ url_for('change_email') }}" method="post">
+            <label for="new-password">Enter new email address:</label>
+            <input type="email" id="new-email" name="new-email" value="{{ '' if  session['user'][5] is none else session['user'][5] }}" maxlength="50">
+            <input type="submit" value="Submit" disabled>
+        </form>
+    </div>
+</div>
+
+<script>
+    let myInput = document.getElementById("new-password");
+    let submit = document.getElementById("submit");
+
+    let letter = document.getElementById("letter");
+    let capital = document.getElementById("capital");
+    let number = document.getElementById("number");
+    let length = document.getElementById("length");
+
+    myInput.onkeyup = function() {
+        // Validate lowercase letters
+        let lowerCaseLetters = /[a-z]/g;
+        let lowerCase = 0;
+        if(myInput.value.match(lowerCaseLetters)) {
+            letter.classList.remove("invalid");
+            letter.classList.add("valid");
+            lowerCase = 1;
+        } else {
+            letter.classList.remove("valid");
+            letter.classList.add("invalid");
+        }
+
+        // Validate capital letters
+        let upperCaseLetters = /[A-Z]/g;
+        let upperCase = 0;
+        if(myInput.value.match(upperCaseLetters)) {
+            capital.classList.remove("invalid");
+            capital.classList.add("valid");
+            upperCase = 1;
+        } else {
+            capital.classList.remove("valid");
+            capital.classList.add("invalid");
+        }
+
+        // Validate numbers
+        let numbers = /[0-9]/g;
+        let num = 0;
+        if(myInput.value.match(numbers)) {
+            number.classList.remove("invalid");
+            number.classList.add("valid");
+            num = 1;
+        } else {
+            number.classList.remove("valid");
+            number.classList.add("invalid");
+        }
+
+        // Validate length
+        let len = 0;
+        if(myInput.value.length >= 8 && myInput.value.length <= 12) {
+            length.classList.remove("invalid");
+            length.classList.add("valid");
+            len = 1;
+        } else {
+            length.classList.remove("valid");
+            length.classList.add("invalid");
+        }
+
+        submit.disabled = !(lowerCase && upperCase && num && len);
+    }
+
+    let a = document.createElement("input");
+    a.type = "button";
+    a.id = "remove";
+    a.value = "Remove email";
+    a.style.marginTop = "30px";
+    
+    let b = document.querySelector("#new-email").value
+    if(b === ""){
+        a.disabled = 1;
+    }
+
+    document.querySelector("#email-form").appendChild(a);
+
+    document.querySelector("#remove").addEventListener("click", e => {
+        e.preventDefault();
+        fetch("{{ url_for('remove_email') }}", {
+            "method": "POST"
+        }).then(d => {
+            if (d.status === 200) window.location.reload();
+        });
+    })
+
+    let change_p = document.querySelector('#email-form input[type=submit]');
+    document.querySelector('#new-email').addEventListener("keyup", (e)=>{
+        let p_format = /^\w+([\.-]?\w+)*@(gmail|yahoo)\.com/g
+        if(e.target.value.match(p_format)){
+            change_p.disabled = 0;
+        }
+        else{
+            change_p.disabled = 1;
+        }
+    })
+</script>
+
+{% endblock %}

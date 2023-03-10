@@ -123,7 +123,7 @@ def create_app (test_config = None):
 
         if request.method == 'POST':
             if (session['user'])[0] != 1:
-                pass
+                return render_template("error.html", errcode = 403, errmsg = "You do not have permission to add items to the database."), 403
             values = request.get_json()
 
             cxn = connect_db()
@@ -205,7 +205,6 @@ def create_app (test_config = None):
         if request.method == 'POST':
             values = request.get_json()["values"]
 
-            #TODO: Insert to user table
             cxn = connect_db()
             db = cxn.cursor()
             default = generateHash('ilovesims')
@@ -244,8 +243,8 @@ def create_app (test_config = None):
             else: return render_template("delete.html")
 
         if request.method == "POST":
-            if (session['user'])[0] != 1: 
-                pass
+            if (session['user'])[0] != 1:
+                return render_template("error.html", errcode = 403, errmsg = "You do not have permission to remove items from the database."), 403
 
             items = request.get_json()["items"]
             choices = [(x,) for x in items]
@@ -308,7 +307,7 @@ def create_app (test_config = None):
 
         if request.method == "POST":
             if (session['user'])[0] != 1:
-                pass
+                return render_template("error.html", errcode = 403, errmsg = "You do not have permission to update items in the database."), 403
             values = request.get_json()["values"]
 
             try:
@@ -335,13 +334,15 @@ def create_app (test_config = None):
         try:
             cxn = connect_db()
             db = cxn.cursor()
-            mail_session = start_email_session()
 
             db.execute("UPDATE user SET RoleID = 1 WHERE Username = '" + values[0] + "';")
+            cxn.commit()
+
+            mail_session = start_email_session()
             if(values[1] and values[1] != "NULL"):
                 send_email(mail_session, "promote", values[1])
 
-            cxn.commit()
+            
         except Exception as e:
             return Response(status = 500)
         finally:
@@ -359,13 +360,13 @@ def create_app (test_config = None):
         try:
             cxn = connect_db()
             db = cxn.cursor()
-            mail_session = start_email_session()
 
             db.execute("UPDATE user SET RoleID = 2 WHERE Username = '" + values[0] + "';")
+            cxn.commit()
+
+            mail_session = start_email_session()
             if(values[1] and values[1] != "NULL"):
                 send_email(mail_session, "demote", values[1])
-
-            cxn.commit()
         except Exception as e:
             return Response(status = 500)
         finally:
@@ -475,61 +476,55 @@ def create_app (test_config = None):
         if (session['user'])[0] != 0: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to see the users in the database."), 403
         else: return render_template("user.html", active="users")
 
-    @app.route('/change-password', methods = ["GET", "POST"])
+    @app.route('/change-password', methods = ["POST"])
     @login_required
     def change_password():
-        if request.method == "GET":
-            return render_template("change_password.html")
-        
-        if (request.method == "POST"):
-            req = request.form['new-password']
+        req = request.form['new-password']
 
-            try:
-                cxn = connect_db()
-                db = cxn.cursor()
+        try:
+            cxn = connect_db()
+            db = cxn.cursor()
 
-                new_password = generateHash(req)
-                db.execute("UPDATE user SET Password = '" + new_password + "' WHERE Username = '" + session['user'][1] + "';")
-                cxn.commit()
+            new_password = generateHash(req)
+            db.execute("UPDATE user SET Password = '" + new_password + "' WHERE Username = '" + session['user'][1] + "';")
+            cxn.commit()
 
-                if (session['user'][5] is not None) and (session['user'][5] != "NULL"):
-                    mail_session = start_email_session()
-                    send_email(mail_session, "password", session['user'][5])
-                    mail_session.quit()
+            if (session['user'][5] is not None) and (session['user'][5] != "NULL"):
+                mail_session = start_email_session()
+                send_email(mail_session, "password", session['user'][5])
+                mail_session.quit()
 
-            except Exception as e:
-                return { "error": e.args[1] }, 500
-            finally:
-                cxn.close()
+        except Exception as e:
+            return { "error": e.args[1] }, 500
+        finally:
+            cxn.close()
 
-            return redirect(url_for('logout'))
+        return redirect(url_for('logout'))
+            
     
     @app.route('/change-email', methods = ["GET", "POST"])
     @login_required
     def change_email():
-        if request.method == "GET":
-            return render_template("change_email.html")
-        
-        if (request.method == "POST"):
-            req = request.form['new-email']
+        req = request.form['new-email']
 
-            try:
-                cxn = connect_db()
-                db = cxn.cursor()
+        try:
+            cxn = connect_db()
+            db = cxn.cursor()
 
-                db.execute("UPDATE user SET Email = '" + req + "' WHERE Username = '" + session['user'][1] + "';")
-                cxn.commit()
+            db.execute("UPDATE user SET Email = '" + req + "' WHERE Username = '" + session['user'][1] + "';")
+            cxn.commit()
 
-                mail_session = start_email_session()
-                send_email(mail_session, "email", req)
-                mail_session.quit()
+            mail_session = start_email_session()
+            send_email(mail_session, "email", req)
+            mail_session.quit()
 
-            except Exception as e:
-                return { "error": e.args[1] }, 500
-            finally:
-                cxn.close()
+        except Exception as e:
+            return { "error": e.args[1] }, 500
+        finally:
+            cxn.close()
 
-            return redirect(url_for('inventory'))
+        return redirect(url_for('inventory'))
+            
 
     @app.route('/remove-email', methods = ["POST"])
     @login_required
@@ -551,6 +546,12 @@ def create_app (test_config = None):
             cxn.close()
 
         return Response(status = 200)
+    
+    # route for logging out
+    @app.route('/account-settings')
+    def change_account_settings ():
+        update_session()
+        return render_template("account-settings.html", active = 'settings')
             
     
     # route for logging out

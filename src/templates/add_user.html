@@ -67,6 +67,7 @@
             if(i == 2){
                 el.type = "email"
                 el.maxLength = 50;
+                el.pattern = "^\\w+([\\.-]?\w+)*@(gmail|yahoo)\\.com"
                 wrapper.appendChild(el);
                 row.appendChild(wrapper);
                 continue;

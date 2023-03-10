@@ -30,7 +30,7 @@
                 {% if session['user'][0] == 0 %}
                 <a class="link {{ 'active' if active == 'users' }}" href="{{ url_for('show_users') }}">Users</a>
                 {% endif %}
-                <a class="link {{ 'active' if active == 'settings' }}" href="{{ url_for('show_users') }}">Account settings</a>
+                <a class="link {{ 'active' if active == 'settings' }}" href="{{ url_for('change_account_settings') }}">Account settings</a>
                 <a class="link logout" href="{{ url_for('logout') }}">Log out</a>
             </nav>
             
