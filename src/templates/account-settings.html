@@ -9,7 +9,7 @@
     <div>
         <form action="{{ url_for('change_password') }}" method="post">
             <label for="new-password">Enter new password:</label>
-            <input type="password" id="new-password" name="new-password" style="width:300px; padding: 5px; margin-left:10px; margin-right: 10px;" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,12}" minlength="1" title="Must contain at least one number and one uppercase and lowercase letter, and must be between 8 to 12 characters">
+            <input type="password" id="new-password" name="new-password" style="width:300px; padding: 5px; margin-left:10px; margin-right: 10px;" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,12}" minlength="1">
             <input type="submit" value="Submit" id="submit" disabled>
         </form>
     </div>
@@ -31,7 +31,7 @@
     <div id = "email-form">
         <form action="{{ url_for('change_email') }}" method="post">
             <label for="new-password">Enter new email address:</label>
-            <input type="email" id="new-email" name="new-email" value="{{ '' if  session['user'][5] is none else session['user'][5] }}" maxlength="50">
+            <input type="email" id="new-email" name="new-email" value="{{ '' if  session['user'][5] is none else session['user'][5] }}" maxlength="50" title="Email address must have a gmail.com domain">
             <input type="submit" value="Submit" disabled>
         </form>
     </div>
@@ -121,7 +121,7 @@
 
     let change_p = document.querySelector('#email-form input[type=submit]');
     document.querySelector('#new-email').addEventListener("keyup", (e)=>{
-        let p_format = /^\w+([\.-]?\w+)*@(gmail|yahoo)\.com/g
+        let p_format = /^\w+([\.-]?\w+)*@gmail\.com/g
         if(e.target.value.match(p_format)){
             change_p.disabled = 0;
         }
