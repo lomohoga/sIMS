@@ -1,6 +1,8 @@
 body {
+    height: 100%;
+    width: 100%;
     display: grid;
-    grid-template-columns: clamp(100px, 20vw, 250px) 1fr;
+    grid-template-columns: clamp(100px, 15%, 250px) 1fr;
     grid-template-rows: 4rem 1fr;
     margin: 0;
     padding: 0;
@@ -124,8 +126,22 @@ main h1 {
     top: 0;
 }
 
-#content-top * {
+#content-top > * {
     margin: 0;
+}
+
+#inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+}
+
+#inputs > div {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    width: 100%;
 }
 
 #search {
@@ -140,9 +156,28 @@ main h1 {
     width: 100%;
 }
 
-.table-loading.hide, .table-empty.hide {
-    display: none;
+#add-bottom {
+    width: 100%;
+    display: flex;
+    gap: 1rem;
 }
+
+#errmsg ~ #submit-form {
+    width: initial;
+    flex-grow: 0;
+    flex-shrink: 1;
+}
+
+#errmsg {
+    font-style: italic;
+    color: var(--red);
+    text-align: right;
+    align-self: center;
+    flex-grow: 1;
+    flex-shrink: 0;
+}
+
+/* special table rows (loading and empty messages) */
 
 .table-loading {
     font-style: italic;
@@ -153,6 +188,10 @@ main h1 {
     color: var(--red);
 }
 
+.table-loading.hide, .table-empty.hide {
+    display: none;
+}
+
 .table-loading > div, .table-empty > div {
     grid-column: 1 / -1;
 }
@@ -161,76 +200,169 @@ main h1 {
     background: initial;
 }
 
+/* table column widths */
+
 .inventory-table .table-row {
-    grid-template-columns: 10% 15% 25% 10% 15% 15% 10%;
+    grid-template-columns: 0.625fr 0.75fr 2fr 0.5fr 0.75fr 0.5fr 0.5fr;
 }
 
-.inventory-table .left, .request-table .left {
+.add-table .table-row {
+    grid-template-columns: 0.625fr 0.75fr 2fr 1fr 0.75fr 0.5fr 3rem;
+}
+
+.search-table .table-row {
+    grid-template-columns: 0.625fr 0.75fr 2fr 0.5fr 0.75fr 0.5fr 0.5fr 3rem;
+}
+
+.search-table.update .table-row {
+    grid-template-columns: 0.625fr 0.75fr 2fr 0.5fr 0.75fr 0.5fr 3rem;
+}
+
+.selection-table.remove .table-row {
+    grid-template-columns: 0.625fr 0.75fr 2fr 0.5fr 0.75fr 0.5fr 0.5fr 3rem;
+}
+
+.selection-table.update .table-row {
+    grid-template-columns: 0.625fr 0.75fr 2fr 1fr 0.75fr 0.5fr 3rem;
+}
+
+.selection-table.request .table-row {
+    grid-template-columns: 0.625fr 0.75fr 2fr 0.5fr 0.75fr 0.5fr 0.5fr 0.5fr 3rem;
+}
+
+.selection-table.delivery .table-row {
+    grid-template-columns: 0.625fr 0.75fr 2fr 0.5fr 0.75fr 0.5fr 0.75fr 0.5fr 3rem;
+}
+
+.request-table .table-row {
+    grid-template-columns: 0.375fr 0.625fr 0.75fr 2fr 0.375fr 0.5fr 0.75fr 0.5fr;
+}
+
+.request-table.cust .table-row {
+    grid-template-columns: 0.375fr 0.625fr 0.75fr 2fr 0.5fr 0.375fr 0.5fr 0.75fr 0.5fr;
+}
+
+.delivery-table .table-row {
+    grid-template-columns: 0.375fr 0.625fr 0.75fr 2fr 0.5fr 0.75fr 0.5fr 0.75fr 0.75fr 0.5fr;
+}
+
+/* table cell formatting */
+
+.table-row > .left {
     text-align: left;
+    justify-items: left;
 }
 
-.inventory-table .right, .request-table .right {
+.table-row > .right {
     text-align: right;
+    justify-items: right;
 }
 
-.inventory-table .mono, .request-table .mono {
+.table-row > .mono {
     font-family: 'IBM Plex Mono', monospace;
 }
 
-.inventory-table .tabnum, .request-table .tabnum {
+.table-row > .tabnum {
     font-variant-numeric: tabular-nums;
 }
 
-.inventory-table .currency {
-    width: 100%;
-    display: flex;
-}
-
-.inventory-table .currency :first-child {
-    text-align: left;
-}
-
-.inventory-table .currency :last-child {
-    flex-grow: 1;
-    text-align: right;
-}
-
-#selected-items .table-row, #item-search .table-row {
-    grid-template-columns: 10% 15% 1fr 10% 15% 15% 10% 3rem;
-}
-
-#table-loading > div, #table-empty > div {
-    grid-column: 1 / -1;
-}
-
-#table-loading.hide, #table-empty.hide {
-    display: none;
-}
-
-#table-loading {
-    font-style: italic;
-}
-
-#table-empty {
+.table-row > .red {
     color: var(--red);
     font-weight: bold;
 }
 
-#add, #delete, #request, #update {
+.table-row .currency {
+    width: 100%;
     display: flex;
+    justify-content: center;
+}
+
+.table-row .currency :first-child {
+    text-align: left;
+}
+
+.table-row .currency :last-child {
     flex-grow: 1;
-    justify-content: end;
+    text-align: right;
 }
 
-#add-table .table-row, #updated-items .table-row {
-    grid-template-columns: 10% 15% 20% 20% 10% 10% 10% 5%;
+.table-row .hide {
+    display: none;
 }
 
-#add-table input {
+/* form buttons */
+
+#submit-form {
+    width: 100%;
+    display: flex;
+    justify-content: right;
+}
+
+/* status badges */
+
+.status {
+    font-size: 80%;
+    text-transform: uppercase;
+    font-weight: bold;
+    border-radius: 0.375rem;
+    padding: 0.1rem 0.3rem;
+}
+
+.status.pending {
+    background-color: var(--status-pending);
+    color: black;
+}
+
+.status.approved {
+    background-color: var(--status-approved);
+    color: black;
+}
+
+.status.rejected {
+    background-color: var(--status-rejected);
+    color: white;
+}
+
+.status.expired {
+    background-color: var(--status-rejected);
+    color: white;
+}
+
+/* styling for item addition, item update & delivery addition tables */
+
+.add-table input, .add-table textarea,
+.selection-table.update input, .selection-table.update textarea,
+.selection-table.delivery input, .selection-table.delivery textarea {
     font-family: inherit;
     font-variant-numeric: inherit;
     text-align: inherit;
+    width: 100%;
 }
+
+.add-table textarea,
+.selection-table.update textarea {
+    resize: vertical;
+}
+
+.add-table .shelf-life,
+.selection-table.update .shelf-life {
+    width: 100%;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.add-table .shelf-life select,
+.selection-table.update .shelf-life select {
+    flex-grow: 1;
+    text-align: left;
+}
+
+.add-table .shelf-life .hide,
+.selection-table.update .shelf-life .hide {
+    display: none;
+}
+
+/* row addition button (item addition) */
 
 #add-row > div {
     grid-column: 1 / -1;
@@ -249,43 +381,7 @@ main h1 {
     color: var(--blue);
 }
 
-#add-table textarea {
-    resize: vertical;
-}
-
-#add-table .shelf-life, #updated-items .shelf-life {
-    grid-template-columns: 1fr 1.5fr;
-    grid-auto-flow: column;
-    gap: 0.75rem;
-}
-
-#add-table .shelf-life > *, #updated-items .shelf-life > * {
-    width: 100%;
-}
-
-#add-table .shelf-life > .hide, #updated-items .shelf-life > .hide {
-    display: none;
-}
-
-#add-table .shelf-life > .extend, #updated-items .shelf-life > .extend {
-    grid-column: 1 / -1;
-}
-
-#add-table .shelf-life input, #updated-items .shelf-life input {
-    text-align: right;
-}
-
-#add-table .shelf-life select, #updated-items .shelf-life select {
-    text-align: left;
-}
-
-#add-table .shelf-life option, #updated-items .shelf-life option {
-    background: var(--white);
-}
-
-#requested-items .table-row {
-    grid-template-columns: 10% 15% 1fr 10% 10% 10% 10% 10% 3rem;
-}
+/* row selection & deletion buttons (item removal, update, & request) */
 
 .select-row, .delete-row {
     background: none;
@@ -328,17 +424,7 @@ main h1 {
     display: unset;
 }
 
-#updated-items .table-row > .hidden {
-    display: none;
-}
-
-.request-table .table-row {
-    grid-template-columns: 5% 10% 20% 25% 12.5% 12.5% 15%;
-}
-
-.request-table.cust .table-row {
-    grid-template-columns: 5% 10% 20% 20% 10% 12.5% 10% 12.5%;
-}
+/* request table */
 
 .request-table .table-row.item-not-found {
     background: var(--light-red-3);
@@ -354,4 +440,22 @@ main h1 {
     font-weight: bold;
     font-style: italic;
     grid-column: 3 / 5;
+}
+
+.table-row .table-sortable > button {
+    cursor: pointer;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    outline-offset: 0.5rem;
+    border-radius: 0.025rem;
+}
+
+.table-sortable > button,
+.table-sortable > button:hover,
+.table-sortable > button:focus {
+    background: none;
+    box-shadow: none;
 }

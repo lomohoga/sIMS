@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block main %}
+<div id="content-top">
+    <h1 class="main-header">Deliveries</h1>
+
+    <div id="inputs">
+        <div>
+            <a class="btn" href="{{ url_for('add_deliveries') }}">Log deliveries</a>
+            
+            <form id="search">
+                <input type="search" id="search-box" placeholder="Search deliveries&hellip;" name="keyword" autofocus>
+                <input type="submit" id="search-btn" value="Search" name="search-btn">
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-main delivery-table">
+        <div class="table-header">
+            <div class="table-row">
+                <div class="table-sortable">
+                    <button role="button" class="sort-btn">
+                        DID
+                        <i class="bi bi-chevron-expand"></i>
+                    </button>
+                </div>
+                <div class="table-sortable">
+                    <button role="button" class="sort-btn">
+                        Item ID
+                        <i class="bi bi-chevron-expand"></i>
+                    </button>
+                </div>
+                <div class="table-sortable">
+                    <button role="button" class="sort-btn">
+                        Name
+                        <i class="bi bi-chevron-expand"></i>
+                    </button>
+                </div>
+                <div class="table-sortable">
+                    <button role="button" class="sort-btn">
+                        Description
+                        <i class="bi bi-chevron-expand"></i>
+                    </button>
+                </div>
+                <div>Delivery Quantity</div>
+                <div>Unit</div>
+                <div class="table-sortable">
+                    <button role="button" class="sort-btn">
+                        <span>
+                            Shelf Life
+                            <br>
+                            <span style="font-weight: initial; font-style: italic; font-size: 80%;">(days)</span>
+                        </span>
+                        <i class="bi bi-chevron-expand"></i>
+                    </button>
+                </div>
+                <div>Delivery Date</div>
+                <div class="table-sortable">
+                    <button role="button" class="sort-btn">
+                        Received By
+                        <i class="bi bi-chevron-expand"></i>
+                    </button>
+                </div>
+                <div>Status</div>
+            </div>
+        </div>
+        <div class="table-body">
+            <div class="table-loading table-row hide">
+                <div>Please wait&hellip;</div>
+            </div>
+            <div class="table-empty table-row hide">
+                <div>No deliveries found.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentSort = [0, true];
+
+    document.querySelectorAll(".delivery-table .sort-btn").forEach(x => {
+        const p = x.parentElement;
+        x.addEventListener("click", () => {
+            currentSort = sortTable(document.querySelector(".delivery-table"), Array.prototype.indexOf.call(p.parentElement.children, p), currentSort, { shelfLife: x.innerText.includes("Shelf Life"), numerical: x.innerText === 'DID' });
+        });
+    });
+
+    document.querySelector("#search").addEventListener("submit", e => {
+        e.preventDefault();
+        populateDeliveries(document.querySelector(".delivery-table .table-body"), document.querySelector("#search-box").value);
+
+        let oldSym = document.querySelector(`.delivery-table .table-header .table-row > :nth-child(${currentSort[0] + 1}) .bi`);
+        oldSym.classList.remove(`bi-chevron-${currentSort[1] ? "up" : "down"}`);
+        oldSym.classList.add("bi-chevron-expand");
+
+        currentSort = [0, true];
+
+        let newSym = document.querySelector(".delivery-table .table-header .table-row > :nth-child(1) .bi");
+        newSym.classList.remove("bi-chevron-expand");
+        newSym.classList.add("bi-chevron-up");
+    });
+
+    window.addEventListener("load", () => populateDeliveries(document.querySelector(".delivery-table .table-body")));
+
+    document.addEventListener("tablerefresh", () => {
+        currentSort = [0, true];
+        if (document.querySelector(".delivery-table .bi-chevron-up, .delivery-table .bi-chevron-down")) document.querySelector(".delivery-table .bi-chevron-up, .delivery-table .bi-chevron-down").classList.add("bi-chevron-expand");
+        if (document.querySelector(".delivery-table .bi-chevron-up")) document.querySelector(".delivery-table .bi-chevron-up").classList.remove("bi-chevron-up");
+        if (document.querySelector(".delivery-table .bi-chevron-down")) document.querySelector(".delivery-table .bi-chevron-down").classList.remove("bi-chevron-down");
+        document.querySelector(".delivery-table .bi-chevron-expand").classList.add("bi-chevron-up");
+        document.querySelector(".delivery-table .bi-chevron-expand").classList.remove("bi-chevron-expand");
+    });
+</script>
+
+{% endblock %}

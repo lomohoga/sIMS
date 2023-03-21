@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block main %}
+
+<div id="content-top">
+    <h1 class="main-header">{{ "My" if session['user']['RoleID'] != 1 else "Item" }} Requests</h1>
+
+    <form id="search">
+        <input type="search" id="search-box" placeholder="Search item requests&hellip;" name="keyword" autofocus>
+        <input type="submit" id="search-btn" value="Search" name="search-btn">
+    </form>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-main request-table {{ 'cust' if session['user']['RoleID'] == 1 }}">
+        <div class="table-header">
+            <div class="table-row">
+                <div class="table-sortable">
+                    <button role="button" class="sort-btn">
+                        RID
+                        <i class="bi bi-chevron-up"></i>
+                    </button>
+                </div>
+                <div class="table-sortable">
+                    <button role="button" class="sort-btn">
+                        Item ID
+                        <i class="bi bi-chevron-expand"></i>
+                    </button>
+                </div>
+                <div class="table-sortable">
+                    <button role="button" class="sort-btn">
+                        Item Name
+                        <i class="bi bi-chevron-expand"></i>
+                    </button>
+                </div>
+                <div class="table-sortable">
+                    <button role="button" class="sort-btn">
+                        Description
+                        <i class="bi bi-chevron-expand"></i>
+                    </button>
+                </div>
+                <div class="table-sortable">
+                    <button role="button" class="sort-btn">
+                        Requested By
+                        <i class="bi bi-chevron-expand"></i>
+                    </button>
+                </div>
+                <div>Request Quantity</div>
+                <div>Unit</div>
+                <div>Request Date</div>
+                <div>Status</div>
+            </div>
+        </div>
+        <div class="table-body">
+            <div class="table-loading table-row hide">
+                <div>Please wait&hellip;</div>
+            </div>
+            <div class="table-empty table-row hide">
+                <div>{{ "You have not made any requests." if session['user'][0] == 2 else "No requests found." }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentSort = [0, true];
+
+    document.querySelectorAll(".request-table .sort-btn").forEach(x => {
+        const p = x.parentElement;
+        x.addEventListener("click", () => {
+            currentSort = sortTable(document.querySelector(".request-table"), Array.prototype.indexOf.call(p.parentElement.children, p), currentSort, { numerical: x.innerText === 'RID' });
+        });
+    });
+
+    document.querySelector("#search").addEventListener("submit", e => {
+        e.preventDefault();
+        populateRequests(document.querySelector(".request-table .table-body"), document.querySelector("#search-box").value, "{{ session['user']['RoleID'] }}" === "1");
+    });
+
+    window.addEventListener("load", () => populateRequests(document.querySelector(".request-table .table-body"), "", "{{ session['user']['RoleID'] }}" === "1"));
+</script>
+
+{% endblock %}
