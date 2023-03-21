@@ -32,12 +32,15 @@
 .table-row > div {
     height: 100%;
     width: 100%;
+    min-height: 0;
+    min-width: 0;
     padding: 0 0.75rem;
     display: grid;
     grid-auto-rows: 100%;
     grid-auto-columns: 100%;
     align-items: center;
-    justify-content: center;
+    align-content: center;
+    justify-items: center;
     text-align: center;
 }
 
