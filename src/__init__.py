@@ -309,11 +309,14 @@ def create_app (test_config = None):
     @app.route('/deliveries')
     @login_required
     def deliveries ():
+        if session['user']['RoleID'] != 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to view deliveries."), 403
         return render_template("deliveries/deliveries.html", active = "deliveries")
     
     @app.route('/deliveries/search')
     @login_required
     def search_deliveries ():
+        if session['user']['RoleID'] != 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to search for deliveries."), 403
+
         keywords = [] if "keywords" not in request.args else [decode_keyword(x).lower() for x in request.args.get("keywords").split(" ")]
 
         conditions = []
@@ -378,10 +381,5 @@ def create_app (test_config = None):
     @app.errorhandler(404)
     def error_404 (e):
         return render_template("error.html", errcode = 404, errmsg = "Page not found. Please check if the URL you have typed is correct."), 404
-
-    # 500 - server error
-    @app.errorhandler(500)
-    def error_500 (e):
-        return render_template("error.html", errcode = 500, errmsg = "Internal server error. Please try again later."), 500
 
     return app
