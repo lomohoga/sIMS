@@ -47,6 +47,6 @@ To stop the application, press `Ctrl + C` in the terminal or close the terminal.
 
 | Username | Password      | Role      |
 | -------- | ------------- | --------- |
-| bajo     | Wmtan66       | Custodian |
+| bajo     | wmtan66       | Custodian |
 | asaito   | fortunecookie | Personnel |
 | hpham    | Attention1    | Admin     |
