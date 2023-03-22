@@ -27,7 +27,7 @@
     </div>
 </div>
 
-<form id="add">
+<form id="submit-form">
     <input type="submit" id="add-btn" value="Add users" name="add-btn" disabled>
 </form>
 
@@ -37,7 +37,7 @@
             // Disable if there are no rows in table
             document.querySelector("#add-table .table-body").childElementCount === 1
             // Disable if at least one row has no item code
-            || Array.from(document.querySelectorAll("#add-table .table-body .table-row:not(#add-row) > :first-child input")).some(x => x.value === '')
+            || Array.from(document.querySelectorAll("#add-table .table-body .table-row:not(#add-row) > :not(:nth-child(4)) input")).some(x => x.value === '')
             // Disable if at least one input box is invalid
             || Array.from(document.querySelectorAll("#add-table input")).some(x => !x.checkValidity());
     }
@@ -66,7 +66,8 @@
 
             if(i == 2){
                 el.type = "email"
-                el.maxLength = 50;
+                el.minLength = 1;
+                el.maxLength = 100;
                 el.pattern = "^\\w+([\\.-]?\w+)*@gmail\\.com"
                 el.title = "Email address must have a gmail.com domain"
                 wrapper.appendChild(el);
@@ -99,13 +100,16 @@
         e.appendChild(b);
         row.append(e);
 
-        b.addEventListener("click", () => document.querySelector("#add-table .table-body").removeChild(b.parentElement.parentElement));
+        b.addEventListener("click", () => {
+            document.querySelector("#add-table .table-body").removeChild(b.parentElement.parentElement);
+            disableButton();
+        });
 
         document.querySelector("#add-table .table-body").insertBefore(row, document.querySelector("#add-row"));
         disableButton();
     }
 
-    document.querySelector("#add").addEventListener("submit", e => {
+    document.querySelector("#submit-form").addEventListener("submit", e => {
         e.preventDefault();
 
         let values = [];

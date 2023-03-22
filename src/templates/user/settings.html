@@ -31,7 +31,7 @@
     <div id = "email-form">
         <form action="{{ url_for('change_email') }}" method="post">
             <label for="new-password">Enter new email address:</label>
-            <input type="email" id="new-email" name="new-email" value="{{ '' if  session['user'][5] is none else session['user'][5] }}" maxlength="50" title="Email address must have a gmail.com domain">
+            <input type="email" id="new-email" name="new-email" placeholder="{{ '' if  session['user']['Email'] is none else session['user']['Email'] }}" maxlength="50" title="Email address must have a gmail.com domain">
             <input type="submit" value="Submit" disabled>
         </form>
     </div>
@@ -96,28 +96,6 @@
 
         submit.disabled = !(lowerCase && upperCase && num && len);
     }
-
-    let a = document.createElement("input");
-    a.type = "button";
-    a.id = "remove";
-    a.value = "Remove email";
-    a.style.marginTop = "30px";
-    
-    let b = document.querySelector("#new-email").value
-    if(b === ""){
-        a.disabled = 1;
-    }
-
-    document.querySelector("#email-form").appendChild(a);
-
-    document.querySelector("#remove").addEventListener("click", e => {
-        e.preventDefault();
-        fetch("{{ url_for('remove_email') }}", {
-            "method": "POST"
-        }).then(d => {
-            if (d.status === 200) window.location.reload();
-        });
-    })
 
     let change_p = document.querySelector('#email-form input[type=submit]');
     document.querySelector('#new-email').addEventListener("keyup", (e)=>{

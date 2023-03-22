@@ -15,7 +15,7 @@ function escapeKeyword (k) {
 }
 
 async function getUsers (keyword = "") {
-    return fetch(encodeURI("./search-users?keyword=" + escapeKeyword(keyword))).then(d => d.json()).then(j => j["users"]);
+    return fetch(encodeURI(`/users/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`)).then(d => d.json()).then(j => j["users"]);
 }
 
 async function populateUsers(tbody, keyword = "", type = "users") {

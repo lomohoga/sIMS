@@ -50,7 +50,7 @@
     </div>
 </div>
 
-<form id="delete">
+<form id="submit-form">
     <input type="submit" id="delete-btn" class="btn-red" value="Delete selected users" name="delete-btn" disabled>
 </form>
 
@@ -100,7 +100,7 @@
         disableButtons();
     });
 
-    document.querySelector("#delete").addEventListener("submit", e => {
+    document.querySelector("#submit-form").addEventListener("submit", e => {
         e.preventDefault();
         fetch("{{ url_for('remove_users') }}", {
             "method": "POST",
