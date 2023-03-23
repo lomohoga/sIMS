@@ -13,7 +13,7 @@ from src.formgen import formgen
 locale.setlocale(locale.LC_ALL, 'en_PH')
 
 # session['user'] = (role_id, username, password, firstName, lastName, role_name) of the CURRENT user
-# role_id: 1(Custodian), 2(Personnel)
+# role_id: 1(Custodian), 2(Personnel) 3(Admin)
 
 def format_items (items):
     return [
@@ -258,25 +258,40 @@ def create_app (test_config = None):
     @login_required
     def search_requests ():
         keywords = [] if "keywords" not in request.args else [decode_keyword(x).lower() for x in request.args.get("keywords").split(" ")]
+        requestStatus = request.args.get("requestStatus")
         custodian = session['user']['RoleID'] == 1
-
-        conditions = []
-        for x in keywords:
-            a = f" OR RequestedBy LIKE '%{x}%'"
-            conditions.append(f"ItemID LIKE '%{x}%' OR ItemName LIKE '%{x}%' OR ItemDescription LIKE '%{x}%'{a if custodian else ''}")
 
         cxn = connect_db()
         db = cxn.cursor()
 
-        u = f"({' AND '.join(conditions)})" if len(conditions) > 0 else ""
-        v = f"RequestedBy LIKE '%{session['user']['Username']}%'" if not custodian else ""
-        w = ' AND '.join(filter(None, [u, v]))
+        db.execute("SELECT RequestID, RequestedBy, DATE_FORMAT(RequestDate, '%d %b %Y') AS RequestDate, StatusName AS RequestStatus FROM request LEFT JOIN request_status USING (StatusID)")
+        reqs = db.fetchall()
 
-        db.execute(f"SELECT RequestID, ItemID, ItemName, ItemDescription, RequestedBy, RequestQuantity, Unit, DATE_FORMAT(RequestDate, '%d %b %Y') AS RequestDate, StatusName as Status FROM request INNER JOIN item USING (ItemID) INNER JOIN request_status ON (Status = StatusID){'WHERE ' + w if w != '' else ''} ORDER BY RequestID")
-        requests = db.fetchall()
-        cxn.close()
+        requests = []
+        for req in reqs:
+            db.execute(f"SELECT ItemName, ItemDescription, Quantity FROM request_items INNER JOIN item USING (ItemID) WHERE RequestID = {req[0]}")
+            reqItems = db.fetchall()
+            req = list(req)
+            req.append(reqItems)
+            requests.append(req)
 
-        return { "requests": format_requests(requests, custodian) }
+        # conditions = []
+        # for x in keywords:
+        #     a = f" OR RequestedBy LIKE '%{x}%'"
+        #     conditions.append(f"ItemID LIKE '%{x}%' OR ItemName LIKE '%{x}%' OR ItemDescription LIKE '%{x}%'{a if custodian else ''}")
+
+        # cxn = connect_db()
+        # db = cxn.cursor()
+
+        # u = f"({' AND '.join(conditions)})" if len(conditions) > 0 else ""
+        # v = f"RequestedBy LIKE '%{session['user']['Username']}%'" if not custodian else ""
+        # w = ' AND '.join(filter(None, [u, v]))
+
+        # db.execute(f"SELECT RequestID, ItemID, ItemName, ItemDescription, RequestedBy, RequestQuantity, Unit, DATE_FORMAT(RequestDate, '%d %b %Y') AS RequestDate, StatusName as Status FROM request INNER JOIN item USING (ItemID) INNER JOIN request_status ON (Status = StatusID){'WHERE ' + w if w != '' else ''} ORDER BY RequestID")
+        # requests = db.fetchall()
+        # cxn.close()
+
+        return { "requests": requests }
 
     # route for item request
     @app.route('/requests/request', methods = ["GET", "POST"])
