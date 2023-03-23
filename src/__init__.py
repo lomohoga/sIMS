@@ -288,14 +288,17 @@ def create_app (test_config = None):
 
         if (request.method == "POST"):
             req = request.get_json()["items"]
-            print(req)
 
             try:
                 cxn = connect_db()
                 db = cxn.cursor()
 
+                db.execute(f"INSERT INTO request (RequestedBy) VALUES ('{session['user']['Username']}')")
+                db.execute("SELECT LAST_INSERT_ID()")
+                requestID = int(db.fetchone()[0])
+
                 for x in req:
-                    db.execute(f"INSERT INTO request (ItemID, RequestQuantity, RequestedBy) VALUES ({x['ItemID']}, {x['RequestQuantity']}, '{session['user']['Username']}')")
+                    db.execute(f"INSERT INTO request_items (RequestID, ItemID, Quantity) VALUES ({requestID}, {x['ItemID']}, {x['RequestQuantity']})")
                 cxn.commit()
             except Exception as e:
                 return { "error": e.args[1] }, 500
