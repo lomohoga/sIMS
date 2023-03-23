@@ -14,6 +14,41 @@ function escapeKeyword (k) {
     return k.replaceAll(/[\u2018\u2019\u201c\u201d]/gu, x => (x === '\u2018' || x === '\u2019') ? '"' : "'").replaceAll(/[:/?#\[\]@!$&'()*+,;=%]/g, x => "%" + x.charCodeAt(0).toString(16).toUpperCase());
 }
 
+function getRequestItemsTable(contents = []){
+    let table = document.createElement("div"), tm = document.createElement("div"), th = document.createElement("div"), tb = document.createElement("div"), tr = document.createElement("div");
+    table.classList.add("table-wrapper");
+
+    tm.classList.add("table-main");
+    tm.classList.add("request-items-table");
+
+    th.classList.add("table-header")
+    th.innerHTML = `
+    <div class="table-row">
+        <div>Item Name</div>
+        <div>Item Description</div>
+        <div>Quantity</div>
+    </div>
+    `;
+    tm.appendChild(th);
+
+    tb.classList.add("table-body");
+
+    for (let i = 0; i < contents.length; i++){
+        let tr = document.createElement("div");
+        tr.classList.add("table-row");
+        for (let j = 0; j < contents[i].length; j++){
+            let td = document.createElement("div");
+            td.innerHTML = contents[i][j];
+            tr.appendChild(td);
+        }
+        tb.appendChild(tr);
+    }
+    tm.appendChild(tb);
+    table.appendChild(tm);
+
+    return table
+}
+
 async function getItems (keyword = "") {
     return fetch(encodeURI(`/inventory/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`)).then(d => d.json()).then(j => j["items"]);
 }
@@ -81,47 +116,36 @@ async function populateItems (tbody, keyword = "", { stock = true, buttons = fal
     return rows;
 }
 
-async function getRequests (keyword = "") {
-    return fetch(encodeURI(`/requests/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`)).then(d => d.json()).then(j => j["requests"]);
+async function getRequests (keyword = "", requestStatus = "") {
+    return fetch(encodeURI(`/requests/search?requestStatus=` + requestStatus + `${keyword === "" ? "" : "&keywords=" + escapeKeyword(keyword)}`)).then(d => d.json()).then(j => j["requests"]);
 }
 
-async function populateRequests (tbody, keyword = "", custodian = true) {
+// Request Status inputs: all, user, Pending, Approved, Issued, Completed
+async function populateRequests (tbody, keyword = "", requestStatus="") {
     while (tbody.childElementCount > 2) tbody.removeChild(tbody.lastChild);
 
     tbody.querySelector(".table-loading").classList.remove("hide");
     tbody.querySelector(".table-empty").classList.add("hide");
 
-    let items = await getRequests(keyword);
+    let requests = await getRequests(keyword, requestStatus);
 
-    for (let x of items) {
+    for (let req of requests){
         let tr = document.createElement("div");
-        tr.classList.add("table-row");
+        tr.classList.add("table-row")
+        tr.classList.add("request-details")
 
-        for (let i of requestColumns) {
-            if (!custodian && i === "RequestedBy") continue;
-
-            let y = x[i];
+        for (let i = 0; i < 4; i++){
             let td = document.createElement("div");
-
-            if (i === 'Status') {
-                let span = document.createElement("span");
-                span.classList.add("status");
-                span.classList.add(y.toLowerCase())
-                span.innerText = y;
-                td.appendChild(span);
-            } else td.innerText = y;
-
-            if (i === "ItemID") td.classList.add("mono");
-            if (i === "ItemDescription") td.classList.add("left");
+            td.innerText = req[i];
 
             tr.appendChild(td);
         }
-
+        tr.appendChild(getRequestItemsTable(req[4]));
         tbody.appendChild(tr);
     }
 
     tbody.querySelector(".table-loading").classList.add("hide");
-    if (items.length > 0) tbody.querySelector(".table-empty").classList.add("hide");
+    if (requests.length > 0) tbody.querySelector(".table-empty").classList.add("hide");
     else tbody.querySelector(".table-empty").classList.remove("hide");
 
     document.dispatchEvent(new CustomEvent("tablerefresh"));
