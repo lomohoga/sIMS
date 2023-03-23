@@ -226,20 +226,8 @@ main h1 {
     grid-template-columns: 0.625fr 0.75fr 2fr 1fr 0.75fr 0.5fr 3rem;
 }
 
-.selection-table.request .table-row {
-    grid-template-columns: 0.625fr 0.75fr 2fr 0.5fr 0.75fr 0.5fr 0.5fr 0.5fr 3rem;
-}
-
 .selection-table.delivery .table-row {
     grid-template-columns: 0.625fr 0.75fr 2fr 0.5fr 0.75fr 0.5fr 0.75fr 0.5fr 3rem;
-}
-
-.request-table .table-row {
-    grid-template-columns: 0.375fr 0.625fr 0.75fr 2fr 0.375fr 0.5fr 0.75fr 0.5fr;
-}
-
-.request-table.cust .table-row {
-    grid-template-columns: 0.375fr 0.625fr 0.75fr 2fr 0.5fr 0.375fr 0.5fr 0.75fr 0.5fr;
 }
 
 .delivery-table .table-row {
@@ -422,24 +410,6 @@ main h1 {
 .select-row:not(:disabled):hover :last-child, .select-row:not(:disabled):focus :last-child,
 .delete-row:not(:disabled):hover :last-child, .delete-row:not(:disabled):focus :last-child {
     display: unset;
-}
-
-/* request table */
-
-.request-table .table-row.item-not-found {
-    background: var(--light-red-3);
-    color: var(--red);
-}
-
-.request-table .table-row.item-not-found:hover {
-    background: var(--light-red);
-    color: var(--red);
-}
-
-.request-table .table-row.item-not-found .extend {
-    font-weight: bold;
-    font-style: italic;
-    grid-column: 3 / 5;
 }
 
 .table-row .table-sortable > button {

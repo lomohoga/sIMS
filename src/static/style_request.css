@@ -1,0 +1,37 @@
+.table-main .request-items-table{
+    padding:10px 0px;
+}
+
+.table-row.request-details{
+    display:grid;
+    grid-auto-flow:column;
+    padding-top:10px;
+    padding-bottom:10px;
+    grid-template-columns: 10% 10% 10% 10%;
+}
+
+.request-details > div {
+    display:flex;
+    justify-content:center;
+}
+
+.request-table-row{
+    display:grid;
+    grid-auto-flow:row;
+}
+
+.request-table .table-row.item-not-found {
+    background: var(--light-red-3);
+    color: var(--red);
+}
+
+.request-table .table-row.item-not-found:hover {
+    background: var(--light-red);
+    color: var(--red);
+}
+
+.request-table .table-row.item-not-found .extend {
+    font-weight: bold;
+    font-style: italic;
+    grid-column: 3 / 5;
+}
