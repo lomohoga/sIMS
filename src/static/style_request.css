@@ -15,11 +15,6 @@
     justify-content:center;
 }
 
-.request-table-row{
-    display:grid;
-    grid-auto-flow:row;
-}
-
 .request-table .table-row.item-not-found {
     background: var(--light-red-3);
     color: var(--red);
