@@ -280,14 +280,14 @@
             }
         }
         
-        fetch("{{ url_for('update_items') }}", {
+        fetch("{{ url_for('bp_inventory.update_items') }}", {
             "method": "POST",
             "headers": {
                 "Content-Type": "application/json"
             },
             "body": JSON.stringify({ "values": values })
         }).then(d => {
-            if (d.status === 200) window.location = "{{ url_for('inventory') }}";
+            if (d.status === 200) window.location = "{{ url_for('bp_inventory.inventory') }}";
         });
     })
 </script>

@@ -176,14 +176,14 @@
             })
         }
         
-        fetch("{{ url_for('add_deliveries') }}", {
+        fetch("{{ url_for('bp_delivery.add_deliveries') }}", {
             "method": "POST",
             "headers": {
                 "Content-Type": "application/json"
             },
             "body": JSON.stringify({ "values": values })
         }).then(d => {
-            if (d.status === 200) window.location = "{{ url_for('deliveries') }}";
+            if (d.status === 200) window.location = "{{ url_for('bp_delivery.deliveries') }}";
         });
     })
 </script>

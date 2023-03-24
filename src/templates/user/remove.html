@@ -102,14 +102,14 @@
 
     document.querySelector("#submit-form").addEventListener("submit", e => {
         e.preventDefault();
-        fetch("{{ url_for('remove_users') }}", {
+        fetch("{{ url_for('bp_user.remove_users') }}", {
             "method": "POST",
             "headers": {
                 "Content-Type": "application/json"
             },
             "body": JSON.stringify({ "users": Array.from(document.querySelectorAll("#selected-items .table-body .table-row > :first-child")).map(x => x.innerHTML), "emails":  Array.from(document.querySelectorAll("#selected-items .table-body .table-row > :nth-child(4)")).map(x => x.innerHTML)})
         }).then(d => {
-            if (d.status === 200) window.location = "{{ url_for('show_users') }}";
+            if (d.status === 200) window.location = "{{ url_for('bp_user.show_users') }}";
         });
     })
 </script>

@@ -124,14 +124,14 @@
             values.push(v);
         }
 
-        fetch("{{ url_for('add_users') }}", {
+        fetch("{{ url_for('bp_user.add_users') }}", {
             "method": "POST",
             "headers": {
                 "Content-Type": "application/json"
             },
             "body": JSON.stringify({ "values": values })
         }).then(d => {
-            if (d.status === 200) window.location = "{{ url_for('show_users') }}";
+            if (d.status === 200) window.location = "{{ url_for('bp_user.show_users') }}";
         });
 
         disableButton();
