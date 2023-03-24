@@ -114,13 +114,16 @@ def create_app (test_config = None):
             cxn = connect_db()
             db = cxn.cursor()
             db.execute(f"SELECT Username, Password, FirstName, LastName, RoleID, RoleName, Email FROM user LEFT JOIN role USING (RoleID) WHERE Username = '{username}'")
-            user = {a: b for a, b in zip(["Username", "Password", "FirstName", "LastName", "RoleID", "RoleName", "Email"], db.fetchone())}
+            record = db.fetchone()
             cxn.close()
 
-            if user is None:
-                error = 'User not found.'
-            elif (username != "" and password != "" and generateHash(password) != user["Password"]):
-                error = 'Incorrect password.'
+            if record is None:
+                error = 'Invalid login, please try again.'
+            else:
+                user = {a: b for a, b in zip(["Username", "Password", "FirstName", "LastName", "RoleID", "RoleName", "Email"], record)}
+
+                if generateHash(password) != user['Password']:
+                    error = 'Invalid login, please try again.'
 
             if error == "":
                 session.clear()
