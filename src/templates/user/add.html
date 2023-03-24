@@ -131,7 +131,7 @@
             },
             "body": JSON.stringify({ "values": values })
         }).then(d => {
-            if (d.status === 200) window.location = "{{ url_for('show_users') }}";
+            if (d.status === 200) window.location = "{{ url_for('bp_user.show_users') }}";
         });
 
         disableButton();
