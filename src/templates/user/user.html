@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block main %}
+<!-- session['user'] = (role_id, username, password, firstName, lastName, role_name) of the CURRENT user -->
+<div id="content-top">
+    <h1 class="main-header">Users</h1>
+
+    <a class="btn" href="{{ url_for('add_users') }}">Add users</a>
+    <a class="btn" href="{{ url_for('remove_users') }}">Remove users</a>
+
+    <form id="search">
+        <input type="search" id="search-box" placeholder="Search user&hellip;" name="keyword" autofocus>
+        <input type="submit" id="search-btn" value="Search" name="search-btn">
+    </form>
+</div>
+
+<div class="table-wrapper inventory-table user-table">
+    <div class="table-main">
+        <div class="table-header">
+            <div class="table-row">
+                <div>Username</div>
+                <div>First Name</div>
+                <div>Last name</div>
+                <div>Email address</div>
+                <div>Role</div>
+            </div>
+        </div>
+        <div class="table-body">
+            <div class="table-loading table-row hide">
+                <div>Please wait&hellip;</div>
+            </div>
+            <div class="table-empty table-row hide">
+                <div>No users found.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+    document.querySelector("#search").addEventListener("submit", e => {
+        e.preventDefault();
+        populateUsers(document.querySelector(".inventory-table .table-body"), document.querySelector("#search-box").value);
+    });
+
+    window.addEventListener("load", () => populateUsers(document.querySelector(".inventory-table .table-body")));
+</script>
+
+{% endblock %}

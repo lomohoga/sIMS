@@ -156,6 +156,10 @@ main h1 {
     width: 100%;
 }
 
+.table-loading.hide, .table-empty.hide {
+    display: none;
+}
+
 #add-bottom {
     width: 100%;
     display: flex;
@@ -232,6 +236,10 @@ main h1 {
 
 .delivery-table .table-row {
     grid-template-columns: 0.375fr 0.625fr 0.75fr 2fr 0.5fr 0.75fr 0.5fr 0.75fr 0.75fr 0.5fr;
+}
+
+.user-table .table-row {
+    grid-template-columns: 15% 15% 15% 25% 15% 15%;
 }
 
 /* table cell formatting */
@@ -314,6 +322,24 @@ main h1 {
 .status.expired {
     background-color: var(--status-rejected);
     color: white;
+}
+
+#add-table .add-user-table{
+    grid-template-columns: 20% 20% 35% 10% 5%;
+}
+
+.add-user-table input[type="email"]{
+    border: none;
+    border-bottom: 1px solid var(--gray);
+    background: none;
+    height: 100%;
+    padding: 0 0.2rem;
+    margin-bottom: 5px;
+}
+
+.add-user-table input[type="email"]:focus{
+    outline: none;
+    border-bottom: 1px solid var(--blue);
 }
 
 /* styling for item addition, item update & delivery addition tables */

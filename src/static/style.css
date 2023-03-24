@@ -182,3 +182,47 @@ input[type=submit]:active, input[type=button]:active, input[type=date]:active, a
 main {
     overflow: hidden;
 }
+
+.valid {
+    color: green;
+  }
+  
+.valid:before {
+    margin-right: 10px;
+    content: '\2714';
+}
+
+/* Add a red text color and an "x" icon when the requirements are wrong */
+.invalid {
+    color: red;
+}
+
+.invalid:before {
+    margin-right: 10px;
+    content: '\2716';
+}
+
+#c-password{
+    margin-bottom: 15px;
+    padding: 1rem 1.4rem;
+    background: var(--white);
+    box-shadow: 0rem 0.2rem 0.4rem var(--btn-shadow);
+    border-radius: 0.5rem;
+    transition: background 0.1s, box-shadow 0.1s;
+}
+
+#new-email{
+    width: 265px;
+    padding: 5px;
+    margin-left: 10px;
+    margin-right: 10px;
+
+    border: none;
+    background: none;
+    border-bottom: 1px solid var(--gray);
+}
+
+#new-email:focus{
+    outline: none;
+    border-bottom: 1px solid var(--blue);
+}

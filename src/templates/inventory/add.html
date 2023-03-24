@@ -114,7 +114,10 @@
         e.appendChild(b);
         row.append(e);
         
-        b.addEventListener("click", () => document.querySelector(".add-table .table-body").removeChild(b.parentElement.parentElement));
+        b.addEventListener("click", () => {
+            document.querySelector(".add-table .table-body").removeChild(b.parentElement.parentElement);
+            disableButton();
+        });
 
         document.querySelector(".add-table .table-body").insertBefore(row, document.querySelector("#add-row"));
         disableButton();

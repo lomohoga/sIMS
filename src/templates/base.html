@@ -13,7 +13,7 @@
 
     <body>
         <header>
-            <h1 id="title"><span>s</span>IMS</h1>
+            <a href = "{{ url_for('index') }}" style="text-decoration: none;"><h1 id="title"><span>s</span>IMS</h1></a>
             <div id="profile">
                 <p class="info" id="profile-name">{{ session['user']['FirstName'] }} {{ session['user']['LastName'] }}</p>
                 <p class="info" id="profile-role">{{ session['user']['RoleName'] }}</p>
@@ -23,10 +23,14 @@
         <div id="sidebar">
             <nav>
                 <a class="link {{ 'active' if active == 'inventory' }}" href="{{ url_for('inventory') }}">Inventory</a>
-                <a class="link {{ 'active' if active == 'requests' }}" href="{{ url_for('requests') }}">{{ "My" if session['user']['RoleID'] == 2 else "Item"}} Requests</a>
                 {% if session['user']['RoleID'] == 1 %}
                     <a class="link {{ 'active' if active == 'deliveries' }}" href="{{ url_for('deliveries') }}">Deliveries</a>
                 {% endif %}
+                <a class="link {{ 'active' if active == 'requests' }}" href="{{ url_for('requests') }}">{{ "My" if session['user']['RoleID'] == 2 else "Item"}} Requests</a>
+                {% if session['user']['RoleID'] == 0 %}
+                    <a class="link {{ 'active' if active == 'users' }}" href="{{ url_for('show_users') }}">Users</a>
+                {% endif %}
+                <a class="link {{ 'active' if active == 'settings' }}" href="{{ url_for('change_account_settings') }}">Account settings</a>
                 <a class="link logout" href="{{ url_for('logout') }}">Log out</a>
             </nav>
             
