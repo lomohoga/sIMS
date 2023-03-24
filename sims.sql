@@ -43,7 +43,7 @@ CREATE TABLE `delivery` (
   KEY `ReceivedBy` (`ReceivedBy`),
   CONSTRAINT `delivery_ibfk_1` FOREIGN KEY (`ItemID`) REFERENCES `item` (`ItemID`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `delivery_ibfk_2` FOREIGN KEY (`ReceivedBy`) REFERENCES `user` (`Username`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -123,7 +123,7 @@ CREATE TABLE `request` (
   CONSTRAINT `request_ibfk_4` FOREIGN KEY (`ApprovedBy`) REFERENCES `user` (`Username`),
   CONSTRAINT `request_ibfk_5` FOREIGN KEY (`IssuedBy`) REFERENCES `user` (`Username`),
   CONSTRAINT `request_ibfk_6` FOREIGN KEY (`ReceivedBy`) REFERENCES `user` (`Username`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -242,6 +242,7 @@ CREATE TABLE `user` (
   `Email` varchar(64) NOT NULL,
   `RoleID` int NOT NULL,
   PRIMARY KEY (`Username`),
+  UNIQUE KEY `Email` (`Email`),
   KEY `RoleID` (`RoleID`),
   CONSTRAINT `user_ibfk_1` FOREIGN KEY (`RoleID`) REFERENCES `role` (`RoleID`),
   CONSTRAINT `user_chk_1` CHECK (regexp_like(`Email`,_utf8mb4'^([0-9a-z]|([0-9a-z][\\.\\-_]{1}[0-9a-z]))+@([0-9a-z\\-]+\\.)+[a-z]{2,}$'))
@@ -254,9 +255,15 @@ CREATE TABLE `user` (
 
 LOCK TABLES `user` WRITE;
 /*!40000 ALTER TABLE `user` DISABLE KEYS */;
-INSERT INTO `user` VALUES ('asaito','0d8dee449758d4fc3bad65c9262d30a5a85d9abeb51cccf581f683833d80ce38','Asuka','Saito','asaito@deped.gov.ph',2),('bajo','6d5a003977c7270a4183ed84926d71b1b1507ec6700f6349e4e70411312fc2a9','Braullo','Jo','braullojo.bj@gmail.com',1),('hpham','65f28cb7430292b6e09d28470d1cb1fc19c7d602b206d4ba9de3e6791fbb42a8','Hanni','Pham','braullojo.bj@gmail.com',0),('ksante','9c6880c361a20206300f0e5121caa8f68886d47e67f74a20f87d31973171972b','Rose','Santos','ksante@deped.gov.ph',2);
+INSERT INTO `user` VALUES ('asaito','0d8dee449758d4fc3bad65c9262d30a5a85d9abeb51cccf581f683833d80ce38','Asuka','Saito','asaito@deped.gov.ph',2),('bajo','6d5a003977c7270a4183ed84926d71b1b1507ec6700f6349e4e70411312fc2a9','Braullo','Jo','braullojo@gmail.com',1),('hpham','65f28cb7430292b6e09d28470d1cb1fc19c7d602b206d4ba9de3e6791fbb42a8','Hanni','Pham','braullojo.bj@gmail.com',0),('ksante','9c6880c361a20206300f0e5121caa8f68886d47e67f74a20f87d31973171972b','Rose','Santos','ksante@deped.gov.ph',2);
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Current Database: `sims`
+--
+
+USE `sims`;
 
 --
 -- Final view structure for view `expiration`
@@ -303,4 +310,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-03-22 11:18:36
+-- Dump completed on 2023-03-24 21:30:30

@@ -7,11 +7,11 @@
     <div id="inputs">
         <div>
             {% if session['user']['RoleID'] == 1 %}
-                <a class="btn" href="{{ url_for('add_items') }}">Add items</a>
-                <a class="btn" href="{{ url_for('remove_items') }}">Remove items</a>
-                <a class="btn" href="{{ url_for('update_items') }}">Update items</a>
+                <a class="btn" href="{{ url_for('bp_inventory.add_items') }}">Add items</a>
+                <a class="btn" href="{{ url_for('bp_inventory.remove_items') }}">Remove items</a>
+                <a class="btn" href="{{ url_for('bp_inventory.update_items') }}">Update items</a>
             {% else %}
-                <a class="btn" href="{{ url_for('make_requests') }}">Request items</a>
+                <a class="btn" href="{{ url_for('bp_request.make_requests') }}">Request items</a>
             {% endif %}
 
             <form id="search">

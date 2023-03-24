@@ -192,7 +192,7 @@
     document.querySelector("#submit-form").addEventListener("submit", e => {
         e.preventDefault();
         
-        fetch("{{ url_for('make_requests') }}", {
+        fetch("{{ url_for('bp_request.make_requests') }}", {
             "method": "POST",
             "headers": {
                 "Content-Type": "application/json"
@@ -206,7 +206,7 @@
                 })
             })
         }).then(d => {
-            if (d.status === 200) window.location = "{{ url_for('inventory') }}";
+            if (d.status === 200) window.location = "{{ url_for('bp_inventory.inventory') }}";
         });
     })
 </script>
