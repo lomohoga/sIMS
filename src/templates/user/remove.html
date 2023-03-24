@@ -102,7 +102,7 @@
 
     document.querySelector("#submit-form").addEventListener("submit", e => {
         e.preventDefault();
-        fetch("{{ url_for('remove_users') }}", {
+        fetch("{{ url_for('bp_user.remove_users') }}", {
             "method": "POST",
             "headers": {
                 "Content-Type": "application/json"
