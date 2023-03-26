@@ -221,7 +221,6 @@ async function populateRequests (tbody, keyword = "") {
                 
                 tr.appendChild(td)
             }
-
         }
 
         tbody.appendChild(tr);
@@ -291,20 +290,19 @@ function sortTable (table, column, currentSort, { shelfLife = false, numerical =
     currentSort = [column, column === currentSort[0] ? !currentSort[1] : true];
     rows.sort((a, b) => {
         let [x, y] = [a.children[column].innerText, b.children[column].innerText];
+        let desc = currentSort[1] ? 1 : -1;
         let s;
 
         if (shelfLife) {
-            s = +x - +y;
+            s = desc * (+x - +y);
             if (Number.isNaN(s)) s = +(x === '\u2014') + -(y === '\u2014');
-        } else if (numerical) s = +x - +y;
+        } else if (numerical) s = desc * (+x - +y);
         else if (date) {
             let [v, w] = [new Date(x), new Date(y)]
             let vs = `${v.getFullYear()}-${(v.getMonth() + 1).toString().padStart(2, "0")}-${(v.getDate()).toString().padStart(2, "0")}`;
             let ws = `${w.getFullYear()}-${(w.getMonth() + 1).toString().padStart(2, "0")}-${(w.getDate()).toString().padStart(2, "0")}`;
-            s = vs.localeCompare(ws);
-        } else s = x.localeCompare(y);
-
-        if (!currentSort[1]) s *= -1
+            s = desc * (vs.localeCompare(ws));
+        } else s = desc * (x.localeCompare(y));
 
         return s === 0 ? a.children[0].innerText.localeCompare(b.children[0].innerText) : s;
     });
