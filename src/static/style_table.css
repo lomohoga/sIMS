@@ -19,7 +19,6 @@
     width: 100%;
     padding: 0.75rem 0;
     display: grid;
-    grid-auto-flow: column;
     grid-auto-columns: 1fr;
     grid-auto-rows: 1fr;
     transition: background 0.1s;
