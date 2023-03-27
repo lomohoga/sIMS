@@ -130,6 +130,11 @@ main h1 {
     margin: 0;
 }
 
+#content-top > h1 {
+    flex-grow: 1;
+    flex-shrink: 0;
+}
+
 #inputs {
     display: flex;
     flex-direction: column;
@@ -226,6 +231,10 @@ main h1 {
     grid-template-columns: 0.625fr 0.75fr 2fr 0.5fr 0.75fr 0.5fr 0.5fr 3rem;
 }
 
+.selection-table.request .table-row {
+    grid-template-columns: 0.625fr 0.75fr 2fr 0.5fr 0.75fr 0.5fr 0.5fr 0.5fr 3rem;
+}
+
 .selection-table.update .table-row {
     grid-template-columns: 0.625fr 0.75fr 2fr 1fr 0.75fr 0.5fr 3rem;
 }
@@ -236,6 +245,14 @@ main h1 {
 
 .delivery-table .table-row {
     grid-template-columns: 0.375fr 0.625fr 0.75fr 2fr 0.5fr 0.75fr 0.5fr 0.75fr 0.75fr 0.5fr;
+}
+
+.request-table .table-row {
+    grid-template-columns: 0.375fr 0.5fr 0.5fr 0.625fr 0.75fr 2fr 0.5fr 0.5fr 0.5fr;
+}
+
+.request-table.cust .table-row {
+    grid-template-columns: 0.375fr 0.5fr 0.5fr 0.5fr 0.625fr 0.75fr 2fr 0.5fr 0.5fr 0.5fr;
 }
 
 .user-table .table-row {
@@ -284,6 +301,10 @@ main h1 {
 
 .table-row .hide {
     display: none;
+}
+
+.request-table .table-body .table-row {
+    gap: 1rem 0;
 }
 
 /* form buttons */
@@ -345,8 +366,7 @@ main h1 {
 /* styling for item addition, item update & delivery addition tables */
 
 .add-table input, .add-table textarea,
-.selection-table.update input, .selection-table.update textarea,
-.selection-table.delivery input, .selection-table.delivery textarea {
+.selection-table input, .selection-table textarea {
     font-family: inherit;
     font-variant-numeric: inherit;
     text-align: inherit;
@@ -354,25 +374,25 @@ main h1 {
 }
 
 .add-table textarea,
-.selection-table.update textarea {
+.selection-table textarea {
     resize: vertical;
 }
 
 .add-table .shelf-life,
-.selection-table.update .shelf-life {
+.selection-table .shelf-life {
     width: 100%;
     display: flex;
     gap: 0.5rem;
 }
 
 .add-table .shelf-life select,
-.selection-table.update .shelf-life select {
+.selection-table .shelf-life select {
     flex-grow: 1;
     text-align: left;
 }
 
 .add-table .shelf-life .hide,
-.selection-table.update .shelf-life .hide {
+.selection-table .shelf-life .hide {
     display: none;
 }
 

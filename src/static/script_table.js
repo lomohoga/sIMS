@@ -7,7 +7,7 @@ const timeConv = {
 };
 
 const itemColumns = ["ItemID", "ItemName", "ItemDescription", "ShelfLife", "Price", "AvailableStock", "Unit"];
-const requestColumns = ["RequestID", "ItemID", "ItemName", "ItemDescription", "RequestedBy", "RequestQuantity", "Unit", "RequestDate", "Status"];
+const requestColumns = ["RequestID", "RequestedBy", "RequestDate", "Status", "ItemID", "ItemName", "ItemDescription", "RequestQuantity", "AvailableStock", "Unit"];
 const deliveryColumns = ["DeliveryID", "ItemID", "ItemName", "ItemDescription", "DeliveryQuantity", "Unit", "ShelfLife", "DeliveryDate", "ReceivedBy", "IsExpired"];
 
 function escapeKeyword (k) {
@@ -111,41 +111,6 @@ async function populateUsers(tbody, keyword = "", type = "users") {
     document.dispatchEvent(new CustomEvent("tablerefresh"));
 }
 
-function getRequestItemsTable(contents = []){
-    let table = document.createElement("div"), tm = document.createElement("div"), th = document.createElement("div"), tb = document.createElement("div"), tr = document.createElement("div");
-    table.classList.add("table-wrapper");
-
-    tm.classList.add("table-main");
-    tm.classList.add("request-items-table");
-
-    th.classList.add("table-header")
-    th.innerHTML = `
-    <div class="table-row">
-        <div>Item Name</div>
-        <div>Item Description</div>
-        <div>Quantity</div>
-    </div>
-    `;
-    tm.appendChild(th);
-
-    tb.classList.add("table-body");
-
-    for (let i = 0; i < contents.length; i++){
-        let tr = document.createElement("div");
-        tr.classList.add("table-row");
-        for (let j = 0; j < contents[i].length; j++){
-            let td = document.createElement("div");
-            td.innerHTML = contents[i][j];
-            tr.appendChild(td);
-        }
-        tb.appendChild(tr);
-    }
-    tm.appendChild(tb);
-    table.appendChild(tm);
-
-    return table
-}
-
 async function getItems (keyword = "") {
     return fetch(encodeURI(`/inventory/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`)).then(d => d.json()).then(j => j["items"]);
 }
@@ -213,31 +178,51 @@ async function populateItems (tbody, keyword = "", { stock = true, buttons = fal
     return rows;
 }
 
-async function getRequests (keyword = "", requestStatus = "") {
-    return fetch(encodeURI(`/requests/search?requestStatus=` + requestStatus + `${keyword === "" ? "" : "&keywords=" + escapeKeyword(keyword)}`)).then(d => d.json()).then(j => j["requests"]);
+async function getRequests (keyword = "") {
+    return fetch(encodeURI(`/requests/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`)).then(d => d.json()).then(j => j["requests"]);
 }
 
-// Request Status inputs: all, user, Pending, Approved, Issued, Completed
-async function populateRequests (tbody, keyword = "", requestStatus="") {
+async function populateRequests (tbody, keyword = "") {
     while (tbody.childElementCount > 2) tbody.removeChild(tbody.lastChild);
 
     tbody.querySelector(".table-loading").classList.remove("hide");
     tbody.querySelector(".table-empty").classList.add("hide");
 
-    let requests = await getRequests(keyword, requestStatus);
+    let requests = await getRequests(keyword);
 
-    for (let req of requests){
+    for (let req of requests) {
         let tr = document.createElement("div");
         tr.classList.add("table-row")
-        tr.classList.add("request-details")
 
-        for (let i = 0; i < 4; i++){
+        for (let i of requestColumns.slice(0, 4)){
+            if (!(i in req)) continue;
+
             let td = document.createElement("div");
-            td.innerText = req[i];
+            td.style.gridRow = `1 / ${req["Items"].length + 1}`;
 
+            if (i === 'Status') {
+                span = document.createElement("span")
+                span.classList.add("status");
+                span.classList.add(req[i].toLowerCase())
+                span.innerText = req[i];
+                td.appendChild(span);
+            } else td.innerText = req[i];
+            
             tr.appendChild(td);
         }
-        tr.appendChild(getRequestItemsTable(req[4]));
+
+        for (let j of req["Items"]) {
+            for (let k of requestColumns.slice(4)) {
+                let td = document.createElement("div");
+                if (k === 'ItemID') td.classList.add("mono");
+                if (k === 'ItemDescription') td.classList.add("left");
+                if (k === 'AvailableStock' && +j['RequestQuantity'] > +j[k]) td.classList.add("red");
+                td.innerText = j[k];
+                
+                tr.appendChild(td)
+            }
+        }
+
         tbody.appendChild(tr);
     }
 
@@ -294,7 +279,7 @@ async function populateDeliveries (tbody, keyword = "") {
     document.dispatchEvent(new CustomEvent("tablerefresh"));
 }
 
-function sortTable (table, column, currentSort, { shelfLife = false, numerical = false } = {}) {
+function sortTable (table, column, currentSort, { shelfLife = false, numerical = false, date = false } = {}) {
     let oldSym = table.querySelector(`.table-header .table-row > :nth-child(${currentSort[0] + 1}) .bi`);
     oldSym.classList.remove(`bi-chevron-${currentSort[1] ? "up" : "down"}`);
     oldSym.classList.add("bi-chevron-expand");
@@ -305,16 +290,23 @@ function sortTable (table, column, currentSort, { shelfLife = false, numerical =
     currentSort = [column, column === currentSort[0] ? !currentSort[1] : true];
     rows.sort((a, b) => {
         let [x, y] = [a.children[column].innerText, b.children[column].innerText];
+        let desc = currentSort[1] ? 1 : -1;
         let s;
 
         if (shelfLife) {
-            s = (2 * +currentSort[1] - 1) * (+x - +y);
+            s = desc * (+x - +y);
             if (Number.isNaN(s)) s = +(x === '\u2014') + -(y === '\u2014');
-        } else if (numerical) s = (currentSort[1] ? 1 : -1) * (+x - +y);
-        else s = (currentSort[1] ? 1 : -1) * x.localeCompare(y);
+        } else if (numerical) s = desc * (+x - +y);
+        else if (date) {
+            let [v, w] = [new Date(x), new Date(y)]
+            let vs = `${v.getFullYear()}-${(v.getMonth() + 1).toString().padStart(2, "0")}-${(v.getDate()).toString().padStart(2, "0")}`;
+            let ws = `${w.getFullYear()}-${(w.getMonth() + 1).toString().padStart(2, "0")}-${(w.getDate()).toString().padStart(2, "0")}`;
+            s = desc * (vs.localeCompare(ws));
+        } else s = desc * (x.localeCompare(y));
 
         return s === 0 ? a.children[0].innerText.localeCompare(b.children[0].innerText) : s;
     });
+
     while (tbody.childElementCount > 2) tbody.removeChild(tbody.lastChild);
     for (let row of rows) tbody.appendChild(row);
     
