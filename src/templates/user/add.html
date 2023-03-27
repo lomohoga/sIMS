@@ -68,7 +68,7 @@
                 el.type = "email"
                 el.minLength = 1;
                 el.maxLength = 100;
-                el.pattern = "^([0-9a-z]|([0-9a-z][\\.\\-_]{1}[0-9a-z]))+@gmail.com$"
+                el.pattern = "^\\w+([\\.-]?\\w+)*@gmail\\.com"
                 el.title = "Email address must have a gmail.com domain"
                 wrapper.appendChild(el);
                 row.appendChild(wrapper);
