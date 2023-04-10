@@ -17,7 +17,45 @@
             <div id="profile">
                 <p class="info" id="profile-name">{{ session['user']['FirstName'] }} {{ session['user']['LastName'] }}</p>
                 <p class="info" id="profile-role">{{ session['user']['RoleName'] }}</p>
+
+                <div id="profile-options">
+                    <p>Reset password</p>
+                    <p>Change email address</p>
+                </div>
             </div>
+            <dialog id="passwordchange">
+                <div id="step1">
+                    <label for="old-password">Enter old password:</label>
+                    <input type="password" id="old-password" name="old-password" style="width:300px; padding: 5px; margin-left:10px; margin-right: 10px;" required autofocus>
+                    <form id="changepw">
+                        <input type="submit" value="Submit" >
+                    </form>
+                </div>
+
+                <div id="step2" style="display:none">
+                    <form id="changepw" action="{{ url_for('bp_user.change_password') }}" method="post">
+                        <label for="new-password">Enter new password:</label>
+                        <input type="password" id="new-password" name="new-password" pattern="(?=.*[a-zA-Z0-9]).{8,12}" style="width:300px; padding: 5px; margin-left:10px; margin-right: 10px;" required>
+                        <br>
+                        <label for="new-password2">Enter new password again:</label>
+                        <input type="password" id="new-password2" name="new-password2" style="width:300px; padding: 5px; margin-left:10px; margin-right: 10px;" required>
+                        <br>
+                        <input type="submit" value="Submit" id="submit" disabled>
+                    </form>
+                </div>
+            </dialog>
+
+            <dialog id="email-form">
+                <label for="old-password2">Enter your password:</label>
+                <input type="password" id="old-password2" name="old-password" style="width:300px; padding: 5px; margin-left:10px; margin-right: 10px;" required autofocus>
+                <br>
+                <label for="new-password">Enter new email address:</label>
+                <input type="email" id="new-email" name="new-email" placeholder="{{ '' if  session['user']['Email'] is none else session['user']['Email'] }}" maxlength="50" title="Email address must have a gmail.com domain">
+                <form id='changemail'>
+                    <input type="submit" value="Submit" id="submit" disabled>
+                </form>
+                <p style="display:none"></p>
+            </dialog>
         </header>
 
         <div id="sidebar">
@@ -48,3 +86,129 @@
         </main>
     </body>
 </html>
+
+<script>
+    document.querySelector("#profile").addEventListener('click', () => {
+        let content = document.querySelector('#profile-options');
+        if (content.style.maxHeight){
+            content.style.maxHeight = null;
+        } 
+        else {
+            content.style.maxHeight = content.scrollHeight + "px";
+        } 
+    });
+
+    document.querySelector('#profile-options p').addEventListener('click', () => {
+        document.querySelector('#passwordchange').showModal();
+    });
+
+    document.querySelector("#changepw").addEventListener("submit", e => {
+        e.preventDefault();
+
+        fetch("{{ url_for('bp_user.check_password') }}", {
+            "method": "POST",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": JSON.stringify({ "values": document.querySelector('#old-password').value })
+        }).then(d => {
+            if (d.status === 200){
+                if(document.querySelector('#passwordchange').childElementCount == 3){
+                    let a = document.querySelector('#passwordchange').lastChild
+                    document.querySelector('#passwordchange').removeChild(a)
+                }
+                document.querySelector('#step1').style.display = 'none';
+                document.querySelector('#step2').style.display = 'block';
+
+                document.querySelector('#new-password').focus();
+            }
+
+            if (d.status === 304){
+                document.querySelector('#old-password').value = '';
+
+                if(document.querySelector('#passwordchange').childElementCount == 2){
+                    let a = document.createElement('p');
+                    a.innerHTML = "Invalid password"
+                    document.querySelector('#passwordchange').append(a)
+                }
+            }
+        });
+    });
+
+    document.querySelectorAll('#changepw input[type=password]').forEach(x => {x.addEventListener('keyup', e => {
+        let submit = document.querySelector('#step2 #submit')
+        submit.disabled = !(isValidPassword() && equalPassword());
+    })})
+
+    function isValidPassword(){
+        let a = document.querySelector('#new-password');
+        let format = /^(?=.*[a-zA-Z0-9]).{8,12}$/g
+        return a.value.match(format)
+    }
+
+    function equalPassword(){
+        let a = document.querySelector('#new-password');
+        let b = document.querySelector('#new-password2');
+        console.log(a.value)
+        console.log(b.value)
+        return a.value == b.value;
+    }
+
+    document.querySelector('#profile-options p ~ p').addEventListener('click', () => {
+        document.querySelector('#email-form').showModal();
+    });
+
+    let change_p = document.querySelector('#email-form input[type=submit]');
+    document.querySelector('#new-email').addEventListener("keyup", (e)=>{
+        let p_format = /^\w+([\.-]?\w+)*@gmail\.com/g
+        if(e.target.value.match(p_format)){
+            change_p.disabled = 0;
+        }
+        else{
+            change_p.disabled = 1;
+        }
+    })
+
+    //TODO: Edit submit button
+    document.querySelector('#changemail').addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        fetch("{{ url_for('bp_user.change_email') }}", {
+            "method": "POST",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": JSON.stringify({ "password": document.querySelector('#old-password2').value, "email": document.querySelector('#new-email').value })
+        }).then(d => {
+            if (d.status === 200){
+                document.querySelector('#email-form').close();
+            }
+
+            if (d.status === 304){
+                //Wrong password
+                document.querySelector('#old-password2').value = '';
+                document.querySelector('#old-password2').focus();
+                document.querySelector('#new-email').value = '';
+
+                let a = document.querySelector('#email-form p');
+                a.style.display = "block";
+                a.innerHTML = "Invalid password"
+
+                document.querySelector('#changemail input[type=submit]').disabled = 1;
+            }
+
+            if (d.status === 500){
+                //Duplicate email
+                document.querySelector('#old-password2').value = '';
+                document.querySelector('#old-password2').focus();
+                document.querySelector('#new-email').value = '';
+
+                let a = document.querySelector('#email-form p');
+                a.style.display = "block";
+                a.innerHTML = "Email already used"
+
+                document.querySelector('#changemail input[type=submit]').disabled = 1;
+            }
+        });
+    });
+</script>

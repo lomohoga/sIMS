@@ -34,6 +34,10 @@ header {
     text-align: right;
 }
 
+#profile:hover{
+    cursor: pointer;
+}
+
 #profile p {
     margin: 0;
 }

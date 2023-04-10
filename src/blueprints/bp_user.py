@@ -232,6 +232,15 @@ def search_users ():
 def change_account_settings ():
     return render_template("user/settings.html", active = 'settings')
 
+# route for checking password
+@bp_user.route('/checkpassword', methods = ["POST"])
+def check_password():
+    password = request.get_json()["values"]
+    if(session['user']['Password'] == generateHash(password)):
+        return Response(status = 200)
+    else:
+        return Response(status = 304)
+
 # route for updating password
 @bp_user.route('/settings/changepassword', methods = ["POST"])
 @login_required
@@ -263,23 +272,28 @@ def change_password ():
 @bp_user.route('/settings/emailchange', methods = ["POST"])
 @login_required
 def change_email ():
-    req = request.form['new-email']
+    password = request.get_json()["password"]
+    
+    if(session['user']['Password'] != generateHash(password)):
+        return Response(status = 304)
+    else:
+        email = request.get_json()["email"]
 
-    try:
-        cxn = connect_db()
-        db = cxn.cursor()
+        try:
+            cxn = connect_db()
+            db = cxn.cursor()
 
-        db.execute(f"UPDATE user SET Email = '{req}' WHERE Username = '{session['user']['Username']}';")
-        cxn.commit()
+            db.execute(f"UPDATE user SET Email = '{email}' WHERE Username = '{session['user']['Username']}';")
+            cxn.commit()
 
-        mail_session = start_email_session()
-        send_email(mail_session, "email", req)
-        mail_session.quit()
+            mail_session = start_email_session()
+            send_email(mail_session, "email", email)
+            mail_session.quit()
 
-    except Exception as e:
-        # TODO: Fix this
-        return { "error": e.args[1] }, 500
-    finally:
-        cxn.close()
+        except Exception as e:
+            # TODO: Fix this
+            return Response(status = 500)
+        finally:
+            cxn.close()
 
-    return redirect(url_for('bp_inventory.inventory'))
+        return Response(status = 200)
