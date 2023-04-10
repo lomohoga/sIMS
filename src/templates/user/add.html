@@ -132,6 +132,13 @@
             "body": JSON.stringify({ "values": values })
         }).then(d => {
             if (d.status === 200) window.location = "{{ url_for('bp_user.show_users') }}";
+            if(d.status === 500){
+                d.text().then(a => {
+                    let g = document.querySelector(`.table-body :nth-child(${parseInt(a)}) :nth-child(3) :first-child`)
+                    g.style.borderBottomColor = 'red'
+                    g.style.color = 'red'
+                });
+            }
         });
 
         disableButton();

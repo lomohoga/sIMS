@@ -104,15 +104,18 @@ def add_users ():
             mail_session = start_email_session()
 
             default = generateHash('ilovesims')
+            index = 0
             for v in values:
                 userID = generate_userID(v[0], v[1])
+                index = index + 1
                 
                 db.execute(f"INSERT INTO user VALUES ('{userID}', '{default}', '{v[0]}', '{v[1]}', '{v[2]}', {v[3]});")
                 send_email(mail_session, "add", v[2], userID, 'ilovesims')
 
             cxn.commit()
         except Exception as e:
-            return Response(status = 500)
+            print(index)
+            return Response(status = 500, response = [str(index)])
         finally:
             cxn.close()
             mail_session.quit()
