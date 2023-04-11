@@ -165,7 +165,7 @@ main h1 {
     width: 100%;
 }
 
-.table-loading.hide, .table-empty.hide {
+.table-loading.hide, .table-empty.hide, .table-error.hide {
     display: none;
 }
 
@@ -196,20 +196,20 @@ main h1 {
     font-style: italic;
 }
 
-.table-empty {
+.table-empty, .table-error {
     font-weight: bold;
     color: var(--red);
 }
 
-.table-loading.hide, .table-empty.hide {
+.table-loading.hide, .table-empty.hide, .table-error.hide{
     display: none;
 }
 
-.table-loading > div, .table-empty > div {
+.table-loading > div, .table-empty > div, .table-error > div {
     grid-column: 1 / -1;
 }
 
-.table-row.table-loading:hover, .table-row.table-empty:hover {
+.table-row.table-loading:hover, .table-row.table-empty:hover, .table-row.table-error:hover {
     background: initial;
 }
 

@@ -15,16 +15,23 @@ function escapeKeyword (k) {
 }
 
 async function getUsers (keyword = "") {
-    return fetch(encodeURI(`/users/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`)).then(d => d.json()).then(j => j["users"]);
+    let a = fetch(encodeURI(`/users/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`));
+    let b = a.then(d => d.json());
+    let c = a.then(d => d.status);
+
+    return Promise.all([b, c]).then((e) => {
+        return [e[1], e[0]['users']]
+    });
 }
 
 async function populateUsers(tbody, keyword = "", type = "users") {
-    while (tbody.childElementCount > 2) tbody.removeChild(tbody.lastChild);
+    while (tbody.childElementCount > 3) tbody.removeChild(tbody.lastChild);
 
     tbody.querySelector(".table-loading").classList.remove("hide");
     tbody.querySelector(".table-empty").classList.add("hide");
+    tbody.querySelector(".table-error").classList.add("hide");
 
-    let users = await getUsers(keyword);
+    let [code, users] = await getUsers(keyword);
 
     for (let x of users) {
         if(x[4] === "Admin"){
@@ -106,7 +113,14 @@ async function populateUsers(tbody, keyword = "", type = "users") {
 
     tbody.querySelector(".table-loading").classList.add("hide");
     if (users.length > 0) tbody.querySelector(".table-empty").classList.add("hide");
-    else tbody.querySelector(".table-empty").classList.remove("hide");
+    else{
+        if(code === 500){
+            tbody.querySelector(".table-error").classList.remove("hide");
+        }
+        else{
+            tbody.querySelector(".table-empty").classList.remove("hide");
+        }
+    }
 
     document.dispatchEvent(new CustomEvent("tablerefresh"));
 }

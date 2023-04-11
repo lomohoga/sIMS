@@ -221,14 +221,19 @@ def search_users ():
         conditions.append(f"(Username LIKE '%{x}%' OR FirstName LIKE '%{x}%' OR LastName LIKE '%{x}%')")
 
     query = f"SELECT Username, LastName, FirstName, Email, RoleName FROM user LEFT JOIN role USING (RoleID) {'' if len(conditions) == 0 else 'WHERE (' + ' AND '.join(conditions) + ')'} ORDER BY Username;"
+    cxn = 0
+    try:
+        cxn = connect_db()
+        db = cxn.cursor()
+        db.execute(query)
+        users = db.fetchall()
+    except Exception as e:
+        return { "users": [] }, 500
+    finally:
+        if(cxn != 0):
+            cxn.close()
 
-    cxn = connect_db()
-    db = cxn.cursor()
-    db.execute(query)
-    users = db.fetchall()
-    cxn.close()
-
-    return { "users": users }
+    return { "users": users }, 200
 
 # route for updating user settings
 @bp_user.route('/settings')
