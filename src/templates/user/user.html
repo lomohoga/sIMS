@@ -18,9 +18,24 @@
     <div class="table-main">
         <div class="table-header">
             <div class="table-row">
-                <div>Username</div>
-                <div>First Name</div>
-                <div>Last name</div>
+                <div class="table-sortable">
+                    <button role="button" class="sort-btn">
+                        Username
+                        <i class="bi bi-chevron-expand"></i>
+                    </button>
+                </div>
+                <div class="table-sortable">
+                    <button role="button" class="sort-btn">
+                        First Name
+                        <i class="bi bi-chevron-expand"></i>
+                    </button>
+                </div>
+                <div class="table-sortable">
+                    <button role="button" class="sort-btn">
+                        Last Name
+                        <i class="bi bi-chevron-expand"></i>
+                    </button>
+                </div>
                 <div>Email address</div>
                 <div>Role</div>
             </div>
@@ -39,12 +54,40 @@
 
 
 <script>
+    let currentSort = [0, true];
+
+    document.querySelectorAll(".inventory-table .sort-btn").forEach(x => {
+        const p = x.parentElement;
+        x.addEventListener("click", () => {
+            currentSort = sortTable(document.querySelector(".inventory-table"), Array.prototype.indexOf.call(p.parentElement.children, p), currentSort, { shelfLife: x.innerText.includes("Shelf Life") });
+        });
+    });
+
     document.querySelector("#search").addEventListener("submit", e => {
         e.preventDefault();
         populateUsers(document.querySelector(".inventory-table .table-body"), document.querySelector("#search-box").value);
+
+        let oldSym = document.querySelector(`.inventory-table .table-header .table-row > :nth-child(${currentSort[0] + 1}) .bi`);
+        oldSym.classList.remove(`bi-chevron-${currentSort[1] ? "up" : "down"}`);
+        oldSym.classList.add("bi-chevron-expand");
+
+        currentSort = [0, true];
+
+        let newSym = document.querySelector(".inventory-table .table-header .table-row > :nth-child(1) .bi");
+        newSym.classList.remove("bi-chevron-expand");
+        newSym.classList.add("bi-chevron-up");
     });
 
     window.addEventListener("load", () => populateUsers(document.querySelector(".inventory-table .table-body")));
+
+    document.addEventListener("tablerefresh", () => {
+        currentSort = [0, true];
+        if (document.querySelector(".inventory-table .bi-chevron-up, .inventory-table .bi-chevron-down")) document.querySelector(".inventory-table .bi-chevron-up, .inventory-table .bi-chevron-down").classList.add("bi-chevron-expand");
+        if (document.querySelector(".inventory-table .bi-chevron-up")) document.querySelector(".inventory-table .bi-chevron-up").classList.remove("bi-chevron-up");
+        if (document.querySelector(".inventory-table .bi-chevron-down")) document.querySelector(".inventory-table .bi-chevron-down").classList.remove("bi-chevron-down");
+        document.querySelector(".inventory-table .bi-chevron-expand").classList.add("bi-chevron-up");
+        document.querySelector(".inventory-table .bi-chevron-expand").classList.remove("bi-chevron-expand");
+    });
 </script>
 
 {% endblock %}
