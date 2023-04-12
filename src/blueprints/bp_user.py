@@ -1,4 +1,6 @@
 import smtplib
+import random
+import time
 from email.message import EmailMessage
 
 from flask import Blueprint, Response, redirect, render_template, url_for, request, session
@@ -241,13 +243,93 @@ def change_account_settings ():
     return render_template("user/settings.html", active = 'settings')
 
 # route for checking password
-@bp_user.route('/checkpassword', methods = ["POST"])
+@bp_user.route('/check_password', methods = ["POST"])
 def check_password():
     password = request.get_json()["values"]
     if(session['user']['Password'] == generateHash(password)):
         return Response(status = 200)
     else:
         return Response(status = 304)
+
+code_key = 0
+time_start = 0
+
+# route for checking email
+@bp_user.route('/check_email', methods = ["POST"])
+def check_email():
+    email = request.get_json()["email"]
+
+    try:
+        cxn = connect_db()
+        db = cxn.cursor()
+
+        db.execute(f"SELECT COUNT(*) FROM user WHERE Email = '{email}';")
+        count = db.fetchone()
+
+        if(count[0] == 0):
+            return Response(status = 304)
+        
+        generate_code()
+        
+        #mail_session = start_email_session()
+        #send_email(mail_session, "password", email)
+        #mail_session.quit()
+
+    except Exception as e:
+        # TODO: Fix this
+        return { "error": e.args[1] }, 500
+    finally:
+        cxn.close()
+
+    return Response(status = 200)
+
+# route for checking code
+@bp_user.route('/generate_code', methods = ["POST"])
+def generate_code():
+    global code_key
+    global time_start
+    
+    code_key = random.randint(1000, 9999)
+    print(code_key)
+    time_start = time.time()
+    return Response(status = 200)
+
+# route for checking code
+@bp_user.route('/verify_code', methods = ["POST"])
+def check_code():
+    code = request.get_json()["code"]
+    print(code_key)
+
+    if(int(code) == code_key and time.time() - time_start <= 180):
+        return Response(status = 200)
+    else:
+        return Response(status = 304)
+
+# route for updating password
+@bp_user.route('/settings/reset_password', methods = ["POST"])
+def change_password2():
+    password = request.get_json()['password']
+    email = request.get_json()['email']
+
+    try:
+        cxn = connect_db()
+        db = cxn.cursor()
+
+        new_password = generateHash(password)
+        db.execute(f"UPDATE user SET Password = '{new_password}' WHERE Email = '{email}';")
+        cxn.commit()
+
+        #mail_session = start_email_session()
+        #send_email(mail_session, "password", email)
+        #mail_session.quit()
+
+    except Exception as e:
+        # TODO: Fix this
+        return { "error": e.args[1] }, 500
+    finally:
+        cxn.close()
+
+    return Response(status = 200)
 
 # route for updating password
 @bp_user.route('/settings/changepassword', methods = ["POST"])
