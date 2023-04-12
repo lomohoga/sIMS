@@ -19,71 +19,97 @@
                 <form id="login-form" method="post">
                     <input id="login-username" type="text" class="field" placeholder="Username or email" name="uname" required autofocus>
                     <input id="login-password" type="password" class="field" placeholder="Password" name="pword" required>
-                    <span>
-                        <input type="submit" id="login-submit" value="Log in">
-                        {% if msg|length != 0 %}
-                            <span id="login-error">{{ msg }}</span>
-                        {% endif %}
-                    </span>
+                    <input type="submit" id="login-submit" value="Log in">
+                    {% if msg|length != 0 %}
+                        <span id="login-error">{{ msg }}</span>
+                    {% endif %}
                 </form>
-                <button id="forgotpw">Forgot password</button>
+                <button id="forgot-password">Forgot password</button>
             </div>
         </main>
 
-        <dialog id="new-pw" style="height:400px; width:800px">
+        <dialog id="forgot-password-dialog">
             <div id="step1">
-                <label for="email">Enter your email:</label>
-                <input type="email" id="email" name="email" style="width:300px; padding: 5px; margin-left:10px; margin-right: 10px;" required autofocus>
-                <br>
+                <h1>Find your account</h1>
+
+                <div>
+                    <label for="email">Enter the email associated with your account to change your password.</label>
+                    <br>
+                    <input type="email" id="email" name="email" minlength="1" placeholder="Email" required autofocus>
+                    <p class='message' id="step1-message"></p>
+                </div>
+                
                 <form id="email-form">
                     <input type="submit" value="Submit" id="submit">
                 </form>
-                <p id="step1-message" style="display:none"></p>
             </div>
+
             <div id="step2">
-                <label for="code">Enter code sent to <span id="email-add"></span>:</label>
-                <input type="text" id="code" name="code" style="width:300px; padding: 5px; margin-left:10px; margin-right: 10px;" required autofocus>
-                <br>
+                <h1>Verify email</h1>
+
+                <div>
+                    <label for="code">Kindly provide the code sent to <b><em><span id="email-add"></span></em></b>. The code will expire in 3 minutes.</label>
+                    <br>
+                    <input type="text" inputmode="numeric" pattern="\d*" id="code" name="code" placeholder="Code" required autofocus>
+                    <p class='message' id="step2-message"></p>
+                </div>
+                
+                <input type="button" value="Resend code" id="resend">
                 <form id="code-form">
                     <input type="submit" value="Submit" id="submit">
                 </form>
-                <input type="button" value="Resend code" id="resend">
-                <p id="step2-message" style="display:none"></p>
             </div>
+
             <div id="step3">
-                <label for="new-password">Enter new password:</label>
-                <input type="password" id="new-password" name="new-password" pattern="(?=.*[a-zA-Z0-9]).{8,12}" style="width:300px; padding: 5px; margin-left:10px; margin-right: 10px;" required>
-                <br>
-                <label for="new-password2">Enter new password again:</label>
-                <input type="password" id="new-password2" name="new-password2" style="width:300px; padding: 5px; margin-left:10px; margin-right: 10px;" required>
-                <form id="changepw">
+                <h1>Reset password</h1>
+
+                <div>
+                    <p>Password must have <em><b>8 to 12 alphanumeric characters</b></em>.</p>
+                    <label for="new-password">Enter new password:</label>
+                    <div style="height: 20%">
+                        <input type="password" id="new-password" name="new-password" pattern="(?=.*[a-zA-Z0-9]).{8,12}" required>
+                    </div>
+                    <br>
+
+                    <label for="new-password2" style="margin-top: 20px">Enter new password again:</label>
+                    <div>
+                        <input type="password" id="new-password2" name="new-password2" required>
+                    </div>
+                    <p class='message' id="step3-message"></p>
+                </div>
+
+                <form id="password-form">
                     <input type="submit" value="Submit" id="submit" disabled>
                 </form>
-                <p id="step3-message" style="display:none"></p>
             </div>
+
             <div id="step4">
-                <p>Password reset successfully</p>
+                <div>
+                    <h1 style="text-align: center;">Password reset successfully &#127881;</h1>
+                    <form method="dialog">
+                        <input type="submit" value="Close">
+                    </form>
+                </div>
             </div>
         </dialog>
     </body>
 </html>
 
 <script>
-    document.querySelector('#forgotpw').addEventListener('click', () => {
-        // Hide other sections
-        document.querySelector('#step1').style.display = "block"
-        document.querySelector('#step2').style.display = "none"
-        document.querySelector('#step3').style.display = "none"
-        document.querySelector('#step4').style.display = "none"
 
-        // Clear forms
-        document.querySelectorAll('#new-pw input[type=password], input[type=text], input[type=email]').forEach(x => {
-            x.value = '';
-        });
-        document.querySelector('#step3 #submit').disabled = 1;
+    document.querySelector('#forgot-password').addEventListener('click', () => {
+        document.querySelector('#step1').style.display = "block"
+
+        document.querySelectorAll('#forgot-password-dialog input[type=text], #forgot-password-dialog input[type=password], #forgot-password-dialog input[type=email]').forEach(
+            x => {x.value = ''}
+        )
 
         // Display dialog
-        document.querySelector('#new-pw').showModal();
+        document.querySelector('#forgot-password-dialog').showModal();
+    });
+
+    document.querySelector('#forgot-password-dialog').addEventListener('close', () => {
+        location.reload();
     });
 
     // STEP 1
@@ -109,7 +135,7 @@
                 document.querySelector('#email').value = '';
 
                 let m = document.querySelector('#step1-message');
-                m.innerHTML = "Invalid email";
+                m.innerHTML = "Email not found";
                 m.style.display = "block";
 
                 let n = document.querySelector('#email');
@@ -146,15 +172,17 @@
 
                 let m = document.querySelector('#step2-message');
                 m.innerHTML = "Invalid code";
+                m.style.color = "red"
                 m.style.display = "block";
 
                 let n = document.querySelector('#code');
-                n.style.borderBottomColor = 'red'
+                n.style.borderColor = 'red'
             }
 
             if (d.status === 500){
                 let m = document.querySelector('#step2-message');
                 m.innerHTML = "An error occured. Please try again.";
+                m.style.color = "red"
                 m.style.display = "block";
             }
         });
@@ -168,6 +196,7 @@
 
             let m = document.querySelector('#step2-message');
             m.innerHTML = "Code sent";
+            m.style.color = "black"
             m.style.display = "block";
         });
     })
@@ -176,7 +205,36 @@
     // TODO: Wait for response
     document.querySelectorAll('#step3 input[type=password]').forEach(x => {x.addEventListener('keyup', e => {
         let submit = document.querySelector('#step3 #submit')
-        submit.disabled = !(isValidPassword() && equalPassword());
+        let isValid = isValidPassword();
+        let isEqual = equalPassword();
+
+        let p = document.querySelector('#new-password');
+        let q = document.querySelector('#new-password2');
+
+        let r = document.querySelector('#step3 > div > div');
+        let s = document.querySelector('#step3 > div > div ~ div')
+        if(isValid){
+            r.classList.add('pvalid');
+            p.style.borderColor = 'green';
+
+            if(isEqual){
+                s.classList.add('pvalid');
+                q.style.borderColor = 'green';
+            }
+            else{
+                s.classList.remove('pvalid');
+                q.style.borderColor = 'var(--gray)';
+            }
+        }
+        else{
+            r.classList.remove('pvalid');
+            s.classList.remove('pvalid');
+
+            p.style.borderColor = 'var(--gray)';
+            q.style.borderColor = 'var(--gray)';
+        }
+
+        submit.disabled = !(isEqual && isValid);
     })})
 
     function isValidPassword(){
@@ -191,7 +249,7 @@
         return a.value === b.value;
     }
 
-    document.querySelector("#changepw").addEventListener("submit", e => {
+    document.querySelector("#password-form").addEventListener("submit", e => {
         e.preventDefault();
 
         fetch("{{ url_for('bp_user.change_password2') }}", {
@@ -209,6 +267,7 @@
             if (d.status === 500){
                 let m = document.querySelector('#step3-message');
                 m.innerHTML = "An error occured. Please try again.";
+                m.style.color = "red"
                 m.style.display = "block";
             }
         });

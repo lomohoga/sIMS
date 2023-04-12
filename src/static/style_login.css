@@ -65,3 +65,83 @@
 #login-username, #login-password {
     width: clamp(25%, 15rem, 50%);
 }
+
+/* Dialog */
+#forgot-password-dialog{
+    width: 400px;
+    height: 600px;
+}
+
+#forgot-password-dialog > div {
+    display: none;
+    width: fit-content;
+    height: 100%;
+    padding: 20px;
+}
+
+#forgot-password-dialog > div > div{
+    display: flex;
+    flex-direction: column;
+}
+
+#step1 > div, #step3 > div{
+    height: 75%;
+}
+
+#step2 > div{
+    height: 60%;
+}
+
+#step4 > div{
+    height: 100%;
+    justify-content: center;
+}
+
+#forgot-password-dialog input[type=email], 
+#forgot-password-dialog input[type=text], 
+#forgot-password-dialog input[type=password]{
+    width: 100%;
+    height: 50px;
+
+    border: 1px solid var(--gray);
+    border-radius: 10px;
+    padding: 15px;
+
+    margin-top: 15px;
+}
+
+#forgot-password-dialog input[type=submit], 
+#forgot-password-dialog input[type=button]{
+    width: 100%;
+    height: 50px;
+
+    text-align: center;
+    border-radius: 15px;
+
+    margin: 0px;
+    margin-top: 10px;
+}
+
+.message{
+    display: none;
+    font-weight: lighter;
+    font-style: italic;
+    font-size: small;
+    color: red;
+
+    margin: 0;
+    margin-top: 5px;
+}
+
+#step3 > div > label{
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+.pvalid::after{
+    content: '\2705';
+    opacity: 1;
+    top: -35px;
+    position: relative;
+    right: -300px;
+}

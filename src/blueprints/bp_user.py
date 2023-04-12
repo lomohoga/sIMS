@@ -308,6 +308,7 @@ def check_code():
 # route for updating password
 @bp_user.route('/settings/reset_password', methods = ["POST"])
 def change_password2():
+    return Response(status = 200)
     password = request.get_json()['password']
     email = request.get_json()['email']
 
