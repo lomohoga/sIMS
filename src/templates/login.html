@@ -35,12 +35,12 @@
                 <div>
                     <label for="email">Enter the email associated with your account to change your password.</label>
                     <br>
-                    <input type="email" id="email" name="email" minlength="1" placeholder="Email" required autofocus>
+                    <input type="email" id="email" name="email" minlength="1" placeholder="Email" title="Email must have a gmail.com domain." required autofocus>
                     <p class='message' id="step1-message"></p>
                 </div>
                 
                 <form id="email-form">
-                    <input type="submit" value="Submit" id="submit">
+                    <input type="submit" value="Submit" id="submit" disabled>
                 </form>
             </div>
 
@@ -50,13 +50,13 @@
                 <div>
                     <label for="code">Kindly provide the code sent to <b><em><span id="email-add"></span></em></b>. The code will expire in 3 minutes.</label>
                     <br>
-                    <input type="text" inputmode="numeric" pattern="\d*" id="code" name="code" placeholder="Code" required autofocus>
+                    <input type="text" inputmode="numeric" id="code" name="code" placeholder="Code" required autofocus>
                     <p class='message' id="step2-message"></p>
                 </div>
                 
                 <input type="button" value="Resend code" id="resend">
                 <form id="code-form">
-                    <input type="submit" value="Submit" id="submit">
+                    <input type="submit" value="Submit" id="submit" disabled>
                 </form>
             </div>
 
@@ -113,6 +113,12 @@
     });
 
     // STEP 1
+    let submit_email = document.querySelector('#email-form #submit');
+    document.querySelector('#email').addEventListener('keyup', (e) => {
+        let format = /^\w+([\.\-\+]?\w+)*@gmail\.com/g
+        submit_email.disabled = !(e.target.value.match(format))
+    })
+
     document.querySelector("#email-form").addEventListener("submit", e => {
         e.preventDefault();
 
@@ -147,10 +153,18 @@
                 m.innerHTML = "An error occured. Please try again.";
                 m.style.display = "block";
             }
+
+            document.querySelector('#email-form #submit').disabled = 1;
         });
     });
 
     // STEP 2
+    let submit_code = document.querySelector('#code-form #submit');
+    document.querySelector('#code').addEventListener('keyup', (e) => {
+        let format = /^\d+/g
+        submit_code.disabled = !(e.target.value.match(format))
+    })
+
     document.querySelector("#code-form").addEventListener("submit", e => {
         e.preventDefault();
 
@@ -185,6 +199,8 @@
                 m.style.color = "red"
                 m.style.display = "block";
             }
+
+            document.querySelector('#code-form #submit').disabled = 1;
         });
     });
 
@@ -202,7 +218,18 @@
     })
 
     // STEP 3
-    // TODO: Wait for response
+    function isValidPassword(){
+        let a = document.querySelector('#new-password');
+        let format = /^(?=.*[a-zA-Z0-9]).{8,12}$/g
+        return a.value.match(format)
+    }
+
+    function equalPassword(){
+        let a = document.querySelector('#new-password');
+        let b = document.querySelector('#new-password2');
+        return a.value === b.value;
+    }
+
     document.querySelectorAll('#step3 input[type=password]').forEach(x => {x.addEventListener('keyup', e => {
         let submit = document.querySelector('#step3 #submit')
         let isValid = isValidPassword();
@@ -237,18 +264,6 @@
         submit.disabled = !(isEqual && isValid);
     })})
 
-    function isValidPassword(){
-        let a = document.querySelector('#new-password');
-        let format = /^(?=.*[a-zA-Z0-9]).{8,12}$/g
-        return a.value.match(format)
-    }
-
-    function equalPassword(){
-        let a = document.querySelector('#new-password');
-        let b = document.querySelector('#new-password2');
-        return a.value === b.value;
-    }
-
     document.querySelector("#password-form").addEventListener("submit", e => {
         e.preventDefault();
 
@@ -270,8 +285,8 @@
                 m.style.color = "red"
                 m.style.display = "block";
             }
+
+            document.querySelector('#password-form #submit').disabled = 1;
         });
     });
-
-    // STEP 4
 </script>

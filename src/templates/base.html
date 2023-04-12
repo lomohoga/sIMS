@@ -160,7 +160,7 @@
 
     let change_p = document.querySelector('#email-form input[type=submit]');
     document.querySelector('#new-email').addEventListener("keyup", (e)=>{
-        let p_format = /^\w+([\.-]?\w+)*@gmail\.com/g
+        let p_format = /^\w+([\.\-\+]?\w+)*@gmail\.com/g
         if(e.target.value.match(p_format)){
             change_p.disabled = 0;
         }
