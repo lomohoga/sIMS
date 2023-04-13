@@ -144,7 +144,10 @@
 <script>
     document.querySelector("#profile").addEventListener('click', () => {
         let content = document.querySelector('#profile-options');
+        content.style.display = 'flex';
+
         if (content.style.maxHeight){
+            content.style.display = 'none'
             content.style.maxHeight = null;
         } 
         else {
