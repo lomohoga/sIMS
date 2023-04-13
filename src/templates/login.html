@@ -6,6 +6,7 @@
         <link rel="stylesheet" href="{{ url_for('static', filename = 'fonts/fonts.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename = 'style.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename = 'style_login.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename = 'style_dialog.css') }}">
     </head>
 
     <body id="login-body">
@@ -84,7 +85,7 @@
             </div>
 
             <div id="step4">
-                <div>
+                <div class="password-reset-success">
                     <h1 style="text-align: center;">Password reset successfully &#127881;</h1>
                     <form method="dialog">
                         <input type="submit" value="Close">

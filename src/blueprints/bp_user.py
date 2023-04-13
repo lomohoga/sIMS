@@ -7,7 +7,7 @@ from flask import Blueprint, Response, redirect, render_template, url_for, reque
 
 from src.blueprints.decode_keyword import decode_keyword
 from src.blueprints.database import connect_db
-from src.blueprints.auth import login_required
+from src.blueprints.auth import login_required, update_session
 from src.blueprints.bp_auth import generateHash
 
 # create SMTP session for sending the mail
@@ -43,7 +43,10 @@ def send_email (session, type, recipient, username = "", password = ""):
         msg.set_content("Your account password was changed.")
     elif(type == "email"):
         msg["Subject"] = "Email updated"
-        msg.set_content("Your account email was updated.")         
+        msg.set_content("Your account email was updated.") 
+    elif(type == "code"):
+        msg["Subject"] = "Reset password"
+        msg.set_content(f'Your 4-digit code is {username}.')         
     
     text = msg.as_string()
     session.sendmail(sender_address, recipient, text)
@@ -76,6 +79,7 @@ bp_user = Blueprint("bp_user", __name__, url_prefix = "/users")
 @bp_user.route('/')
 @login_required
 def show_users ():
+    update_session();
     if session['user']['RoleID'] != 0: 
         return render_template("error.html", errcode = 403, errmsg = "You do not have permission to see the users in the database."), 403
     else: 
@@ -271,9 +275,9 @@ def check_email():
         
         generate_code()
         
-        #mail_session = start_email_session()
-        #send_email(mail_session, "password", email)
-        #mail_session.quit()
+        mail_session = start_email_session()
+        send_email(mail_session, "code", email, code_key)
+        mail_session.quit()
 
     except Exception as e:
         # TODO: Fix this
@@ -308,7 +312,6 @@ def check_code():
 # route for updating password
 @bp_user.route('/settings/reset_password', methods = ["POST"])
 def change_password2():
-    return Response(status = 200)
     password = request.get_json()['password']
     email = request.get_json()['email']
 
@@ -336,7 +339,7 @@ def change_password2():
 @bp_user.route('/settings/changepassword', methods = ["POST"])
 @login_required
 def change_password ():
-    req = request.form['new-password']
+    req = request.get_json()["password"]
 
     try:
         cxn = connect_db()
@@ -376,6 +379,8 @@ def change_email ():
 
             db.execute(f"UPDATE user SET Email = '{email}' WHERE Username = '{session['user']['Username']}';")
             cxn.commit()
+
+            session['user']['Email'] = email
 
             mail_session = start_email_session()
             send_email(mail_session, "email", email)
