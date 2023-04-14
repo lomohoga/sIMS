@@ -82,7 +82,7 @@ dialog input[type=button]{
     font-weight: lighter;
     font-style: italic;
     font-size: small;
-    color: red;
+    color: var(--dark-red);
 
     margin: 0;
     margin-top: 5px;

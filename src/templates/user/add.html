@@ -27,9 +27,12 @@
     </div>
 </div>
 
-<form id="submit-form">
-    <input type="submit" id="add-btn" value="Add users" name="add-btn" disabled>
-</form>
+<div id="add-user-form">
+    <p class="message" style="display:none"></p>
+    <form id="submit-form">
+        <input type="submit" id="add-btn" value="Add users" name="add-btn" disabled>
+    </form>
+</div>
 
 <script>
     function disableButton () {
@@ -134,6 +137,10 @@
             if (d.status === 200) window.location = "{{ url_for('bp_user.show_users') }}";
             if(d.status === 500){
                 d.text().then(a => {
+                    let p = document.querySelector('#add-user-form p')
+                    p.innerHTML = 'An error occured. Please try again later.'
+                    p.style.display = 'block'
+
                     let g = document.querySelector(`.table-body :nth-child(${parseInt(a)}) :nth-child(3) :first-child`)
                     g.style.borderBottomColor = 'red'
                     g.style.color = 'red'
