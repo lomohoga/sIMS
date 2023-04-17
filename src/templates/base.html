@@ -309,8 +309,9 @@
     }
 
     let submit_email = document.querySelector('#change-email-dialog input[type=submit]');
+    let new_email = document.querySelector('#new-email')
     document.querySelector('#change-email-dialog #step1').addEventListener("keyup", (e)=>{
-        submit_email.disabled = !(isValidEmail() && notEmpty())
+        submit_email.disabled = !(isValidEmail() && notEmpty() && (new_email.value !== new_email.placeholder))
     })
 
     document.querySelector('#new-email-form').addEventListener('submit', (e) => {
