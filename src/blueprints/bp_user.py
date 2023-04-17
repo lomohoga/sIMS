@@ -241,11 +241,6 @@ def search_users ():
 
     return { "users": users }, 200
 
-# route for updating user settings
-@bp_user.route('/settings')
-def change_account_settings ():
-    return render_template("user/settings.html", active = 'settings')
-
 # route for checking password
 @bp_user.route('/check_password', methods = ["POST"])
 def check_password():
