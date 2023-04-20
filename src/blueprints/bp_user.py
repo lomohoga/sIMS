@@ -250,9 +250,6 @@ def check_password():
     else:
         return Response(status = 304)
 
-code_key = 0
-time_start = 0
-
 # route for checking email
 @bp_user.route('/check_email', methods = ["POST"])
 def check_email():
@@ -268,8 +265,35 @@ def check_email():
         if(count[0] == 0):
             return Response(status = 304)
         
-        generate_code()
-        
+        generate_code(email)
+    except Exception as e:
+        # TODO: Fix this
+        return { "error": e.args[1] }, 500
+    finally:
+        cxn.close()
+
+    return Response(status = 200)
+
+# route for generating code
+@bp_user.route('/generate_code', methods = ["POST"])
+def generate_code(email = ''):
+    # Set up email
+    if(email == ''):
+        email = request.get_json()["email"]
+    
+    # Generate code
+    code_key = random.randint(1000, 9999)
+    print(code_key)
+
+    #Update code in database
+    try:
+        cxn = connect_db()
+        db = cxn.cursor()
+
+        db.execute(f"UPDATE user SET Code = {code_key}, CodeIssueDate = {time.time()} WHERE Email = '{email}';")
+        cxn.commit()
+
+        # Email code
         mail_session = start_email_session()
         send_email(mail_session, "code", email, code_key)
         mail_session.quit()
@@ -283,23 +307,26 @@ def check_email():
     return Response(status = 200)
 
 # route for checking code
-@bp_user.route('/generate_code', methods = ["POST"])
-def generate_code():
-    global code_key
-    global time_start
-    
-    code_key = random.randint(1000, 9999)
-    print(code_key)
-    time_start = time.time()
-    return Response(status = 200)
-
-# route for checking code
 @bp_user.route('/verify_code', methods = ["POST"])
 def check_code():
     code = request.get_json()["code"]
-    print(code_key)
+    email = request.get_json()["email"]
 
-    if(int(code) == code_key and time.time() - time_start <= 180):
+    #Get code in database
+    try:
+        cxn = connect_db()
+        db = cxn.cursor()
+
+        db.execute(f"SELECT Code, CodeIssueDate FROM user WHERE Email = '{email}';")
+        count = db.fetchone()
+    except Exception as e:
+        # TODO: Fix this
+        return { "error": e.args[1] }, 500
+    finally:
+        cxn.close()
+
+    print(count)
+    if(int(count[0]) == int(code) and time.time() - count[1] <= 180):
         return Response(status = 200)
     else:
         return Response(status = 304)
@@ -318,9 +345,9 @@ def change_password2():
         db.execute(f"UPDATE user SET Password = '{new_password}' WHERE Email = '{email}';")
         cxn.commit()
 
-        #mail_session = start_email_session()
-        #send_email(mail_session, "password", email)
-        #mail_session.quit()
+        mail_session = start_email_session()
+        send_email(mail_session, "password", email)
+        mail_session.quit()
 
     except Exception as e:
         # TODO: Fix this

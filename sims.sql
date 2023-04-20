@@ -241,6 +241,8 @@ CREATE TABLE `user` (
   `LastName` varchar(30) NOT NULL,
   `Email` varchar(64) NOT NULL,
   `RoleID` int NOT NULL,
+  `Code` int DEFAULT 0,
+  `CodeIssueDate` int DEFAULT 0,
   PRIMARY KEY (`Username`),
   UNIQUE KEY `Email` (`Email`),
   KEY `RoleID` (`RoleID`),
@@ -255,7 +257,7 @@ CREATE TABLE `user` (
 
 LOCK TABLES `user` WRITE;
 /*!40000 ALTER TABLE `user` DISABLE KEYS */;
-INSERT INTO `user` VALUES ('asaito','0d8dee449758d4fc3bad65c9262d30a5a85d9abeb51cccf581f683833d80ce38','Asuka','Saito','asaito@deped.gov.ph',2),('bajo','6d5a003977c7270a4183ed84926d71b1b1507ec6700f6349e4e70411312fc2a9','Braullo','Jo','braullojo@gmail.com',1),('hpham','65f28cb7430292b6e09d28470d1cb1fc19c7d602b206d4ba9de3e6791fbb42a8','Hanni','Pham','braullojo.bj@gmail.com',0),('ksante','9c6880c361a20206300f0e5121caa8f68886d47e67f74a20f87d31973171972b','Rose','Santos','ksante@deped.gov.ph',2);
+INSERT INTO `user` VALUES ('asaito','0d8dee449758d4fc3bad65c9262d30a5a85d9abeb51cccf581f683833d80ce38','Asuka','Saito','asaito@deped.gov.ph',2, 0, 0),('bajo','6d5a003977c7270a4183ed84926d71b1b1507ec6700f6349e4e70411312fc2a9','Braullo','Jo','braullojo@gmail.com',1, 0, 0),('hpham','65f28cb7430292b6e09d28470d1cb1fc19c7d602b206d4ba9de3e6791fbb42a8','Hanni','Pham','braullojo.bj@gmail.com',0, 0, 0),('ksante','9c6880c361a20206300f0e5121caa8f68886d47e67f74a20f87d31973171972b','Rose','Santos','ksante@deped.gov.ph',2, 0, 0);
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 UNLOCK TABLES;
 

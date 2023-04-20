@@ -174,7 +174,7 @@
             "headers": {
                 "Content-Type": "application/json"
             },
-            "body": JSON.stringify({ "code": document.querySelector('#code').value })
+            "body": JSON.stringify({ "code": document.querySelector('#code').value, "email": document.querySelector('#email').value })
         }).then(d => {
             if (d.status === 200){
                 document.querySelector('#step2').style.display = 'none';
@@ -207,7 +207,11 @@
 
     document.querySelector('#resend').addEventListener('click', () => {
         fetch("{{ url_for('bp_user.generate_code') }}", {
-            "method": "POST"
+            "method": "POST",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": JSON.stringify({ "email": document.querySelector('#email').value })
         }).then(() => {
             document.querySelector('#code').value = '';
 
