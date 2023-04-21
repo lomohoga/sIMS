@@ -92,7 +92,7 @@
                     <div style="margin-top: 20px; height: 45%;">
                         <label for="new-email">Enter new email address:</label>
                         <br>
-                        <input type="email" id="new-email" name="new-email" placeholder="{{ '' if  session['user']['Email'] is none else session['user']['Email'] }}" maxlength="50" title="Email address must have a gmail.com domain">
+                        <input type="email" id="new-email" name="new-email" placeholder="{{ session['user']['Email'] }}" maxlength="50" title="Email address must have a gmail.com domain">
                         <p class='message' id="step3-message"></p>
                     </div>
                     

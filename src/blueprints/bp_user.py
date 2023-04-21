@@ -371,11 +371,10 @@ def change_password ():
         db.execute(f"UPDATE user SET Password = '{new_password}' WHERE Username = '{session['user']['Username']}';")
         cxn.commit()
 
-        if (session['user']['Email'] is not None) and (session['user']['Email'] != "NULL"):
-            mail_session = start_email_session()
-            send_email(mail_session, "password", session['user']['Email'])
-            mail_session.quit()
-
+        mail_session = start_email_session()
+        send_email(mail_session, "password", session['user']['Email'])
+        mail_session.quit()
+            
     except Exception as e:
         # TODO: Fix this
         return { "error": e.args[1] }, 500
@@ -414,4 +413,4 @@ def change_email ():
         finally:
             cxn.close()
 
-        return Response(status = 200)
+        return redirect(url_for('bp_auth.logout'))
