@@ -115,6 +115,9 @@
     document.querySelector("#submit-form").addEventListener("submit", e => {
         e.preventDefault();
 
+        document.querySelector('#submit-form input[type=submit]').disabled = 1;
+        document.querySelector('#submit-form input[type=submit]').value = 'Adding users...'
+
         let values = [];
 
         for (let row of Array.from(document.querySelectorAll("#add-table .table-body .table-row:not(#add-row)"))) {
@@ -145,10 +148,10 @@
                     g.style.borderBottomColor = 'red'
                     g.style.color = 'red'
                 });
+
+                document.querySelector('#submit-form input[type=submit]').value = 'Submit' 
             }
         });
-
-        disableButton();
     });
 
     document.querySelector("#add-table").addEventListener("input", disableButton);

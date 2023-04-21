@@ -178,6 +178,9 @@
     document.querySelector("#old-password-form").addEventListener("submit", e => {
         e.preventDefault();
 
+        submit_password.disabled = 1;
+        submit_password.value = 'Checking password...'
+
         fetch("{{ url_for('bp_user.check_password') }}", {
             "method": "POST",
             "headers": {
@@ -204,6 +207,7 @@
                 n.style.borderColor = 'red'
             }
 
+            submit_password.value = 'Submit'
             document.querySelector('#old-password-form input[type=submit]').disabled = 1;
         });
     });
@@ -258,6 +262,9 @@
     document.querySelector("#password-form").addEventListener("submit", e => {
         e.preventDefault();
 
+        document.querySelector('#step2 #submit').disabled = 1;
+        document.querySelector('#step2 #submit').value = 'Resetting password...'
+
         fetch("{{ url_for('bp_user.change_password') }}", {
             "method": "POST",
             "headers": {
@@ -277,6 +284,7 @@
                 m.style.display = "block";
             }
 
+            document.querySelector('#step2 #submit').value = 'Submit'
             document.querySelector('#password-form input[type=submit]').disabled = 1;
         });
     });
@@ -317,6 +325,9 @@
     document.querySelector('#new-email-form').addEventListener('submit', (e) => {
         e.preventDefault();
 
+        submit_email.disabled = 1;
+        submit_email.value = 'Changing email...'
+
         fetch("{{ url_for('bp_user.change_email') }}", {
             "method": "POST",
             "headers": {
@@ -356,6 +367,7 @@
                 m.style.display = "block";
             }
 
+            submit_email.value = 'Submit'
             document.querySelector('#new-email-form input[type=submit]').disabled = 1;
         });
     });

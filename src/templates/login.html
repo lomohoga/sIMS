@@ -98,6 +98,7 @@
 
 <script>
 
+    // Display dialog
     document.querySelector('#forgot-password').addEventListener('click', () => {
         document.querySelector('#step1').style.display = "block"
 
@@ -105,10 +106,10 @@
             x => {x.value = ''}
         )
 
-        // Display dialog
         document.querySelector('#forgot-password-dialog').showModal();
     });
 
+    // Close dialog
     document.querySelector('#forgot-password-dialog').addEventListener('close', () => {
         location.reload();
     });
@@ -122,6 +123,9 @@
 
     document.querySelector("#email-form").addEventListener("submit", e => {
         e.preventDefault();
+
+        submit_email.disabled = 1;
+        submit_email.value = "Checking email..."
 
         fetch("{{ url_for('bp_user.check_email') }}", {
             "method": "POST",
@@ -155,6 +159,7 @@
                 m.style.display = "block";
             }
 
+            submit_email.value = "Submit"
             document.querySelector('#email-form #submit').disabled = 1;
         });
     });
@@ -168,6 +173,9 @@
 
     document.querySelector("#code-form").addEventListener("submit", e => {
         e.preventDefault();
+
+        submit_code.disabled = 1;
+        submit_code.value = "Verifying code..."
 
         fetch("{{ url_for('bp_user.check_code') }}", {
             "method": "POST",
@@ -201,11 +209,15 @@
                 m.style.display = "block";
             }
 
+            submit_code.value = "Submit"
             document.querySelector('#code-form #submit').disabled = 1;
         });
     });
 
-    document.querySelector('#resend').addEventListener('click', () => {
+    document.querySelector('#resend').addEventListener('click', (e) => {
+        e.target.value = "Resending code..."
+        e.target.disabled = 1;
+
         fetch("{{ url_for('bp_user.generate_code') }}", {
             "method": "POST",
             "headers": {
@@ -220,7 +232,7 @@
             m.style.color = "black"
             m.style.display = "block";
 
-            document.querySelector('#resend').disabled = 1;
+            e.target.value = "Resend"
         });
     })
 
@@ -274,6 +286,9 @@
     document.querySelector("#password-form").addEventListener("submit", e => {
         e.preventDefault();
 
+        document.querySelector('#step3 #submit').value = "Resetting password..."
+        document.querySelector('#step3 #submit').disabled = 1;
+
         fetch("{{ url_for('bp_user.change_password2') }}", {
             "method": "POST",
             "headers": {
@@ -293,6 +308,7 @@
                 m.style.display = "block";
             }
 
+            document.querySelector('#password-form #submit').value = 'Submit';
             document.querySelector('#password-form #submit').disabled = 1;
         });
     });

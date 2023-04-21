@@ -61,7 +61,10 @@ async function populateUsers(tbody, keyword = "", type = "users") {
             let a = document.createElement("button");
             if(x[4] === "Personnel"){
                 a.innerHTML = "Promote";
-                a.addEventListener("click", () => {
+                a.addEventListener("click", (e) => {
+                    e.target.innerHTML = 'Promoting...'
+                    e.target.disabled = 1;
+
                     fetch("/users/promote", {
                         "method": "POST",
                         "headers": {
@@ -75,7 +78,10 @@ async function populateUsers(tbody, keyword = "", type = "users") {
             }
             else{
                 a.innerHTML = "Demote";
-                a.addEventListener("click", () => {
+                a.addEventListener("click", (e) => {
+                    e.target.innerHTML = 'Demoting...'
+                    e.target.disabled = 1;
+
                     fetch("/users/demote", {
                         "method": "POST",
                         "headers": {

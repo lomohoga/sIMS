@@ -115,7 +115,7 @@ def add_users ():
                 userID = generate_userID(v[0], v[1])
                 index = index + 1
                 
-                db.execute(f"INSERT INTO user VALUES ('{userID}', '{default}', '{v[0]}', '{v[1]}', '{v[2]}', {v[3]});")
+                db.execute(f"INSERT INTO user VALUES ('{userID}', '{default}', '{v[0]}', '{v[1]}', '{v[2]}', {v[3]}, 0, 0);")
                 send_email(mail_session, "add", v[2], userID, 'ilovesims')
 
             cxn.commit()
