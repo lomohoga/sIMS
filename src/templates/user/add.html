@@ -139,18 +139,20 @@
         }).then(d => {
             if (d.status === 200) window.location = "{{ url_for('bp_user.show_users') }}";
             if(d.status === 500){
-                d.text().then(a => {
+                d.json().then(a => {
                     let p = document.querySelector('#add-user-form p')
-                    p.innerHTML = 'An error occured. Please try again later.'
+                    p.innerHTML = a['error']
                     p.style.display = 'block'
-
-                    let g = document.querySelector(`.table-body :nth-child(${parseInt(a)}) :nth-child(3) :first-child`)
-                    g.style.borderBottomColor = 'red'
-                    g.style.color = 'red'
                 });
 
                 document.querySelector('#submit-form input[type=submit]').value = 'Submit' 
             }
+        }).catch(() => {
+            let p = document.querySelector('#add-user-form p')
+            p.innerHTML = 'Server unavailable. Please try again later'
+            p.style.display = 'block'
+
+            document.querySelector('#submit-form input[type=submit]').value = 'Submit' 
         });
     });
 
