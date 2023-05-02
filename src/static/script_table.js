@@ -179,7 +179,7 @@ async function populateItems (tbody, keyword = "", { stock = true, buttons = fal
 }
 
 async function getRequests (keyword = "", type = "") {
-    return fetch(encodeURI(`/requests/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}${type === "" ? "" : "?type=" + type}`)).then(d => d.json()).then(j => j["requests"]);
+    return fetch(encodeURI(`/requests/search?type=${type}${keyword === "" ? "" : "&keywords=" + escapeKeyword(keyword) + ""}`)).then(d => d.json()).then(j => j["requests"]);
 }
 
 async function populateRequests (tbody, keyword = "", type = "") {

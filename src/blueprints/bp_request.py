@@ -27,6 +27,7 @@ def pendingRequests ():
 def search_requests ():
     keywords = [] if "keywords" not in request.args else [decode_keyword(x).lower() for x in request.args.get("keywords").split(" ")]
     requestType = request.args.get("type")
+    print(request.args)
 
     conditions = []
     for x in keywords:
@@ -37,9 +38,11 @@ def search_requests ():
     db = cxn.cursor()
 
     u = f"({' AND '.join(conditions)})" if len(conditions) > 0 else ""
-    v = f"RequestedBy LIKE '%{session['user']['Username']}%'" if requestType == 'user' else ""
+    v = f"RequestedBy = '{session['user']['Username']}'" if requestType == 'user' else ""
     x = f"StatusName LIKE '%{requestType}%'" if requestType not in ['all', 'user'] else ""
     w = ' AND '.join(filter(None, [u, v, x]))
+
+    print(w)
 
     db.execute(f"SELECT RequestID, RequestedBy, DATE_FORMAT(RequestDate, '%d %b %Y') AS RequestDate, StatusName as Status, ItemID, ItemName, ItemDescription, RequestQuantity, AvailableStock, Unit FROM request INNER JOIN request_status USING (StatusID) INNER JOIN request_item USING (RequestID) INNER JOIN stock USING (ItemID){' WHERE RequestID IN (SELECT DISTINCT RequestID FROM request INNER JOIN request_item USING (RequestID) INNER JOIN item USING (ItemID) WHERE ' + w + ')' if w != '' else ''} ORDER BY RequestID, ItemID")
     requests = db.fetchall()

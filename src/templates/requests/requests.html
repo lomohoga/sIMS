@@ -65,7 +65,7 @@
 
     document.querySelector("#search").addEventListener("submit", e => {
         e.preventDefault();
-        populateRequests(document.querySelector(".request-table .table-body"), document.querySelector("#search-box").value);
+        populateRequests(document.querySelector(".request-table .table-body"), document.querySelector("#search-box").value, "user");
 
         let oldSym = document.querySelector(`.request-table .table-header .table-row > :nth-child(${currentSort[0] + 1}) .bi`);
         oldSym.classList.remove(`bi-chevron-${currentSort[1] ? "up" : "down"}`);
