@@ -4,7 +4,7 @@
 
 <div id="content-top">
     <h1 class="main-header">
-        {{ 'Item' if session['user']['RoleID'] == 1 else 'My' }} Requests
+        My Requests
     </h1>
 
     <div id="inputs">
@@ -27,14 +27,6 @@
                         <i class="bi bi-chevron-expand"></i>
                     </button>
                 </div>
-                {% if session['user']['RoleID'] == 1 %}
-                    <div class="table-sortable">
-                        <button role="button" class="sort-btn">
-                            Requested By
-                            <i class="bi bi-chevron-expand"></i>
-                        </button>
-                    </div>
-                {% endif %}
                 <div class="table-sortable">
                     <button role="button" class="sort-btn">
                         Request Date
@@ -96,7 +88,7 @@
         document.querySelector(".request-table .bi-chevron-expand").classList.remove("bi-chevron-expand");
     });
 
-    window.addEventListener("load", () => populateRequests(document.querySelector(".request-table .table-body"), "", "all"))
+    window.addEventListener("load", () => populateRequests(document.querySelector(".request-table .table-body"), "", "user"))
 </script>
 
 {% endblock %}
