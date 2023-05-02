@@ -178,17 +178,17 @@ async function populateItems (tbody, keyword = "", { stock = true, buttons = fal
     return rows;
 }
 
-async function getRequests (keyword = "", status = "") {
-    return fetch(encodeURI(`/requests/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}${status === "" ? "" : "?status=" + status}`)).then(d => d.json()).then(j => j["requests"]);
+async function getRequests (keyword = "", type = "") {
+    return fetch(encodeURI(`/requests/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}${type === "" ? "" : "?type=" + type}`)).then(d => d.json()).then(j => j["requests"]);
 }
 
-async function populateRequests (tbody, keyword = "", status = "") {
+async function populateRequests (tbody, keyword = "", type = "") {
     while (tbody.childElementCount > 2) tbody.removeChild(tbody.lastChild);
 
     tbody.querySelector(".table-loading").classList.remove("hide");
     tbody.querySelector(".table-empty").classList.add("hide");
 
-    let requests = await getRequests(keyword, status);
+    let requests = await getRequests(keyword, type);
 
     for (let req of requests) {
         let tr = document.createElement("div");

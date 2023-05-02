@@ -20,7 +20,7 @@ def requests ():
 @login_required
 def search_requests ():
     keywords = [] if "keywords" not in request.args else [decode_keyword(x).lower() for x in request.args.get("keywords").split(" ")]
-    status = request.args.get("status")
+    requestType = request.args.get("type")
     custodian = session['user']['RoleID'] == 1
 
     conditions = []
@@ -33,7 +33,7 @@ def search_requests ():
 
     u = f"({' AND '.join(conditions)})" if len(conditions) > 0 else ""
     v = f"RequestedBy LIKE '%{session['user']['Username']}%'" if not custodian else ""
-    x = f"StatusName LIKE '%{status}%'" if status != "all" else ""
+    x = f"StatusName LIKE '%{requestType}%'" if requestType != "all" or requestType != "user" else ""
     w = ' AND '.join(filter(None, [u, v, x]))
 
     db.execute(f"SELECT RequestID, RequestedBy, DATE_FORMAT(RequestDate, '%d %b %Y') AS RequestDate, StatusName as Status, ItemID, ItemName, ItemDescription, RequestQuantity, AvailableStock, Unit FROM request INNER JOIN request_status USING (StatusID) INNER JOIN request_item USING (RequestID) INNER JOIN stock USING (ItemID){' WHERE RequestID IN (SELECT DISTINCT RequestID FROM request INNER JOIN request_item USING (RequestID) INNER JOIN item USING (ItemID) WHERE ' + w + ')' if w != '' else ''} ORDER BY RequestID, ItemID")
