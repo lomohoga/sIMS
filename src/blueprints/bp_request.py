@@ -21,8 +21,6 @@ def requests ():
 def search_requests ():
     keywords = [] if "keywords" not in request.args else [decode_keyword(x).lower() for x in request.args.get("keywords").split(" ")]
     requestType = request.args.get("type")
-    custodian = session['user']['RoleID'] == 1
-    personnel = session['user']['RoleID'] == 2
 
     conditions = []
     for x in keywords:
@@ -51,7 +49,7 @@ def search_requests ():
                 "RequestDate": req[2],
                 "Status": req[3],
                 "Items": []
-            } if custodian else {
+            } if requestType != 'user' else {
                 "RequestID": req[0],
                 "RequestDate": req[2],
                 "Status": req[3],
