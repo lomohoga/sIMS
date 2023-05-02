@@ -41,8 +41,6 @@ def search_requests ():
     x = f"StatusName LIKE '%{requestType}%'" if requestType not in ['all', 'user'] else ""
     w = ' AND '.join(filter(None, [u, v, x]))
 
-    print(w, request.args)
-
     db.execute(f"SELECT RequestID, RequestedBy, DATE_FORMAT(RequestDate, '%d %b %Y') AS RequestDate, StatusName as Status, ItemID, ItemName, ItemDescription, RequestQuantity, AvailableStock, Unit FROM request INNER JOIN request_status USING (StatusID) INNER JOIN request_item USING (RequestID) INNER JOIN stock USING (ItemID){' WHERE RequestID IN (SELECT DISTINCT RequestID FROM request INNER JOIN request_item USING (RequestID) INNER JOIN item USING (ItemID) WHERE ' + w + ')' if w != '' else ''} ORDER BY RequestID, ItemID")
     requests = db.fetchall()
     cxn.close()
