@@ -15,6 +15,12 @@ bp_request = Blueprint("bp_request", __name__, url_prefix = "/requests")
 def requests ():
     return render_template("requests/requests.html", active = "requests")
 
+# route for pending requests
+@bp_request.route('/pendingRequests')
+@login_required
+def pendingRequests ():
+    return render_template("requests/pendingRequests.html", active = "pendingRequests")
+
 # route for request search
 @bp_request.route('/search')
 @login_required
