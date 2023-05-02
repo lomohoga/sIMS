@@ -251,6 +251,10 @@ main h1 {
     grid-template-columns: 0.375fr 0.5fr 0.5fr 0.625fr 0.75fr 2fr 0.5fr 0.5fr 0.5fr;
 }
 
+.request-table.pending .table-row {
+    grid-template-columns: 0.375fr 0.5fr 0.5fr 0.5fr 0.625fr 0.75fr 2fr 0.5fr 0.5fr 0.5fr 1fr;
+}
+
 .request-table .table-row {
     grid-template-columns: 0.375fr 0.5fr 0.5fr 0.5fr 0.625fr 0.75fr 2fr 0.5fr 0.5fr 0.5fr;
 }

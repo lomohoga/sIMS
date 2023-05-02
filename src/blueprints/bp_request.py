@@ -41,6 +41,8 @@ def search_requests ():
     x = f"StatusName LIKE '%{requestType}%'" if requestType not in ['all', 'user'] else ""
     w = ' AND '.join(filter(None, [u, v, x]))
 
+    print(w, request.args)
+
     db.execute(f"SELECT RequestID, RequestedBy, DATE_FORMAT(RequestDate, '%d %b %Y') AS RequestDate, StatusName as Status, ItemID, ItemName, ItemDescription, RequestQuantity, AvailableStock, Unit FROM request INNER JOIN request_status USING (StatusID) INNER JOIN request_item USING (RequestID) INNER JOIN stock USING (ItemID){' WHERE RequestID IN (SELECT DISTINCT RequestID FROM request INNER JOIN request_item USING (RequestID) INNER JOIN item USING (ItemID) WHERE ' + w + ')' if w != '' else ''} ORDER BY RequestID, ItemID")
     requests = db.fetchall()
     cxn.close()
@@ -106,4 +108,25 @@ def make_requests ():
         finally:
             cxn.close()
 
+        return Response(status = 200)
+
+@bp_request.route('/pendingRequests/decide', methods = ["POST"])
+@login_required
+def decide_pendingRequest():
+    if (request.method == "POST"):
+        if (session['user']['RoleID'] != 0):
+            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to view this page."), 403
+        else:
+            body = request.get_json()
+
+            try:
+                cxn = connect_db()
+                db = cxn.cursor()
+                db.execute(f"UPDATE request SET StatusID = {'2' if body['decision'] else '5'} WHERE RequestID = {body['requestID']}")
+                cxn.commit()
+            except Exception as e:
+                return { "error": e.args[1] }, 500
+            finally:
+                cxn.close()
+        
         return Response(status = 200)
