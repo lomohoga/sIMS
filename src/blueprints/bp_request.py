@@ -15,24 +15,34 @@ bp_request = Blueprint("bp_request", __name__, url_prefix = "/requests")
 def requests ():
     return render_template("requests/requests.html", active = "requests")
 
+# route for pending requests
+@bp_request.route('/pendingRequests')
+@login_required
+def pendingRequests ():
+    return render_template("requests/pendingRequests.html", active = "pendingRequests")
+
 # route for request search
 @bp_request.route('/search')
 @login_required
 def search_requests ():
     keywords = [] if "keywords" not in request.args else [decode_keyword(x).lower() for x in request.args.get("keywords").split(" ")]
-    custodian = session['user']['RoleID'] == 1
+    requestType = request.args.get("type")
+    print(request.args)
 
     conditions = []
     for x in keywords:
         a = f" OR RequestedBy LIKE '%{x}%'"
-        conditions.append(f"ItemID LIKE '%{x}%' OR ItemName LIKE '%{x}%' OR ItemDescription LIKE '%{x}%'{a if custodian else ''}")
+        conditions.append(f"ItemID LIKE '%{x}%' OR ItemName LIKE '%{x}%' OR ItemDescription LIKE '%{x}%'{a if requestType == 'user' else ''}")
 
     cxn = connect_db()
     db = cxn.cursor()
 
     u = f"({' AND '.join(conditions)})" if len(conditions) > 0 else ""
-    v = f"RequestedBy LIKE '%{session['user']['Username']}%'" if not custodian else ""
-    w = ' AND '.join(filter(None, [u, v]))
+    v = f"RequestedBy = '{session['user']['Username']}'" if requestType == 'user' else ""
+    x = f"StatusName LIKE '%{requestType}%'" if requestType not in ['all', 'user'] else ""
+    w = ' AND '.join(filter(None, [u, v, x]))
+
+    print(w)
 
     db.execute(f"SELECT RequestID, RequestedBy, DATE_FORMAT(RequestDate, '%d %b %Y') AS RequestDate, StatusName as Status, ItemID, ItemName, ItemDescription, RequestQuantity, AvailableStock, Unit FROM request INNER JOIN request_status USING (StatusID) INNER JOIN request_item USING (RequestID) INNER JOIN stock USING (ItemID){' WHERE RequestID IN (SELECT DISTINCT RequestID FROM request INNER JOIN request_item USING (RequestID) INNER JOIN item USING (ItemID) WHERE ' + w + ')' if w != '' else ''} ORDER BY RequestID, ItemID")
     requests = db.fetchall()
@@ -48,7 +58,7 @@ def search_requests ():
                 "RequestDate": req[2],
                 "Status": req[3],
                 "Items": []
-            } if custodian else {
+            } if requestType != 'user' else {
                 "RequestID": req[0],
                 "RequestDate": req[2],
                 "Status": req[3],
@@ -99,4 +109,25 @@ def make_requests ():
         finally:
             cxn.close()
 
+        return Response(status = 200)
+
+@bp_request.route('/pendingRequests/decide', methods = ["POST"])
+@login_required
+def decide_pendingRequest():
+    if (request.method == "POST"):
+        if (session['user']['RoleID'] != 0):
+            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to view this page."), 403
+        else:
+            body = request.get_json()
+
+            try:
+                cxn = connect_db()
+                db = cxn.cursor()
+                db.execute(f"UPDATE request SET StatusID = {'2' if body['decision'] else '5'} WHERE RequestID = {body['requestID']}")
+                cxn.commit()
+            except Exception as e:
+                return { "error": e.args[1] }, 500
+            finally:
+                cxn.close()
+        
         return Response(status = 200)

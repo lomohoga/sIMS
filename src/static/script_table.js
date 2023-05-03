@@ -178,17 +178,17 @@ async function populateItems (tbody, keyword = "", { stock = true, buttons = fal
     return rows;
 }
 
-async function getRequests (keyword = "") {
-    return fetch(encodeURI(`/requests/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`)).then(d => d.json()).then(j => j["requests"]);
+async function getRequests (keyword = "", type = "") {
+    return fetch(encodeURI(`/requests/search?type=${type}${keyword === "" ? "" : "&keywords=" + escapeKeyword(keyword) + ""}`)).then(d => d.json()).then(j => j["requests"]);
 }
 
-async function populateRequests (tbody, keyword = "") {
+async function populateRequests (tbody, keyword = "", type = "") {
     while (tbody.childElementCount > 2) tbody.removeChild(tbody.lastChild);
 
     tbody.querySelector(".table-loading").classList.remove("hide");
     tbody.querySelector(".table-empty").classList.add("hide");
 
-    let requests = await getRequests(keyword);
+    let requests = await getRequests(keyword, type);
 
     for (let req of requests) {
         let tr = document.createElement("div");
@@ -221,6 +221,26 @@ async function populateRequests (tbody, keyword = "") {
                 
                 tr.appendChild(td)
             }
+            if (type != 'user') tr.appendChild(document.createElement("div"));
+        }
+
+        if (type == 'pending'){
+            let td = tr.lastChild
+
+            let approveBtn = document.createElement("button");
+            approveBtn.innerText = "Approve";
+            approveBtn.classList.add("approve-btn");
+            approveBtn.type = "button";
+
+            let denyBtn = document.createElement("button");
+            denyBtn.innerText = "Deny";
+            denyBtn.classList.add("deny-btn");
+            denyBtn.type = "button";
+
+            td.appendChild(approveBtn);
+            td.appendChild(denyBtn);
+
+            tr.appendChild(td);
         }
 
         tbody.appendChild(tr);
@@ -315,4 +335,19 @@ function sortTable (table, column, currentSort, { shelfLife = false, numerical =
     newSym.classList.add(`bi-chevron-${currentSort[1] ? "up" : "down"}`);
 
     return currentSort;
+}
+
+async function decidePendingRequest(decision, requestID){
+    fetch(encodeURI(`/requests/pendingRequests/decide`), {
+        "method": "POST",
+        "headers": {
+            "Content-Type": "application/json"
+        }, 
+        "body":JSON.stringify({
+            "decision": decision,
+            "requestID": requestID
+        })
+    }).then(d => {
+        if (d.status === 200) window.location = encodeURI(`/requests/pendingRequests`);
+    });
 }
