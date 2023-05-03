@@ -40,6 +40,7 @@
                 <div>Request Quantity</div>
                 <div>Available Quantity</div>
                 <div>Unit</div>
+                <div>Cancel?</div>
             </div>
         </div>
         <div class="table-body">
@@ -86,6 +87,10 @@
         if (document.querySelector(".request-table .bi-chevron-down")) document.querySelector(".request-table .bi-chevron-down").classList.remove("bi-chevron-down");
         document.querySelector(".request-table .bi-chevron-expand").classList.add("bi-chevron-up");
         document.querySelector(".request-table .bi-chevron-expand").classList.remove("bi-chevron-expand");
+
+        document.querySelectorAll(".cancel-btn").forEach(x => x.addEventListener("click", () => {
+            if (confirm("Are you sure you want to cancel this request?")) cancelRequest(x.parentNode.parentNode.firstChild.innerText);
+        }));
     });
 
     window.addEventListener("load", () => populateRequests(document.querySelector(".request-table .table-body"), "", "user"))
