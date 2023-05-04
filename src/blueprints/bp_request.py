@@ -128,3 +128,21 @@ def decide_pendingRequest():
                 cxn.close()
         
         return Response(status = 200)
+
+@bp_request.route('/cancel', methods = ["POST"])
+@login_required
+def cancel_request():
+    if (request.method == "POST"):
+        body = request.get_json()
+
+        try:
+            cxn = connect_db()
+            db = cxn.cursor()
+            db.execute(f"UPDATE request SET StatusID = 6 WHERE RequestID = {body['requestID']}")
+            cxn.commit()
+        except Exception as e:
+            return { "error": e.args[1] }, 500
+        finally:
+            cxn.close()
+    
+    return Response(status = 200)

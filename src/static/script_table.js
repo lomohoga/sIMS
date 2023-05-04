@@ -221,11 +221,11 @@ async function populateRequests (tbody, keyword = "", type = "") {
                 
                 tr.appendChild(td)
             }
-            if (type != 'user') tr.appendChild(document.createElement("div"));
+            tr.appendChild(document.createElement("div")); // Temporary fix to easily add buttons at the rightmost
         }
 
         if (type == 'pending'){
-            let td = tr.lastChild
+            let td = tr.lastChild // Temporary fix to easily add buttons at the rightmost
 
             let approveBtn = document.createElement("button");
             approveBtn.innerText = "Approve";
@@ -240,6 +240,17 @@ async function populateRequests (tbody, keyword = "", type = "") {
             td.appendChild(approveBtn);
             td.appendChild(denyBtn);
 
+            tr.appendChild(td);
+        }
+
+        if (type == "user" && req["Status"] != "Cancelled" && req["Status"] != "Rejected"){
+            console.log("BOOM");
+            let td = tr.lastChild; // Temporary fix to easily add buttons at the rightmost
+            let btn = document.createElement("button");
+            btn.type = "button";
+            btn.classList.add("cancel-btn");
+            btn.innerText = "Cancel";
+            td.append(btn);
             tr.appendChild(td);
         }
 
@@ -349,5 +360,19 @@ async function decidePendingRequest(decision, requestID){
         })
     }).then(d => {
         if (d.status === 200) window.location = encodeURI(`/requests/pendingRequests`);
+    });
+}
+
+async function cancelRequest(requestID){
+    fetch(encodeURI(`/requests/cancel`), {
+        "method": "POST",
+        "headers": {
+            "Content-Type": "application/json"
+        }, 
+        "body":JSON.stringify({
+            "requestID": requestID
+        })
+    }).then(d => {
+        if (d.status === 200) window.location = encodeURI(`/requests`);
     });
 }
