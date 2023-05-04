@@ -151,6 +151,25 @@ def cancel_request():
     
     return Response(status = 200)
 
+# route for receiving requests
+@bp_request.route('/receive', methods = ["POST"])
+@login_required
+def receive_request():
+    if (request.method == "POST"):
+        body = request.get_json()
+
+        try:
+            cxn = connect_db()
+            db = cxn.cursor()
+            db.execute(f"UPDATE request SET StatusID = 4 WHERE RequestID = {body['requestID']}")
+            cxn.commit()
+        except Exception as e:
+            return { "error": e.args[1] }, 500
+        finally:
+            cxn.close()
+    
+    return Response(status = 200)
+
 # route for approved requests
 @bp_request.route('/approvedRequests')
 @login_required

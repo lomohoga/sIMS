@@ -282,11 +282,13 @@ async function populateRequests (tbody, keyword = "", type = "") {
             approveBtn.innerText = "Approve";
             approveBtn.classList.add("approve-btn");
             approveBtn.type = "button";
+            approveBtn.value = req["RequestID"];
 
             let denyBtn = document.createElement("button");
             denyBtn.innerText = "Deny";
             denyBtn.classList.add("deny-btn");
             denyBtn.type = "button";
+            denyBtn.value = req["RequestID"];
 
             td.appendChild(approveBtn);
             td.appendChild(denyBtn);
@@ -294,13 +296,19 @@ async function populateRequests (tbody, keyword = "", type = "") {
             tr.appendChild(td);
         }
 
-        if (type == "user" && req["Status"] != "Cancelled" && req["Status"] != "Rejected"){
-            console.log("BOOM");
+        if (type == "user" && req["Status"] != "Cancelled" && req["Status"] != "Rejected" && req["Status"] != "Completed"){
             let td = tr.lastChild; // Temporary fix to easily add buttons at the rightmost
             let btn = document.createElement("button");
             btn.type = "button";
-            btn.classList.add("cancel-btn");
-            btn.innerText = "Cancel";
+            if (req["Status"] == "Issued"){
+                btn.classList.add("receive-btn");
+                btn.innerText = "Receive";
+                
+            } else {
+                btn.classList.add("cancel-btn");
+                btn.innerText = "Cancel";
+            }
+
             td.append(btn);
             tr.appendChild(td);
         }
@@ -416,6 +424,20 @@ async function decidePendingRequest(decision, requestID){
 
 async function cancelRequest(requestID){
     fetch(encodeURI(`/requests/cancel`), {
+        "method": "POST",
+        "headers": {
+            "Content-Type": "application/json"
+        }, 
+        "body":JSON.stringify({
+            "requestID": requestID
+        })
+    }).then(d => {
+        if (d.status === 200) return;
+    });
+}
+
+async function receiveRequest(requestID){
+    fetch(encodeURI(`/requests/receive`), {
         "method": "POST",
         "headers": {
             "Content-Type": "application/json"
