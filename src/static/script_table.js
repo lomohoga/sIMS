@@ -235,13 +235,13 @@ async function populateRequests (tbody, keyword = "", type = "") {
                     btn.type = "button";
                     btn.innerText = "Available";
                     btn.classList.add("available-btn");
-                    btn.value = j["ItemID"];
+                    btn.value = req["RequestID"] + ' ' + j["ItemID"];
 
                     let btn2 = document.createElement("button");
                     btn2.type = "button";
                     btn2.innerText = "Not Available";
                     btn2.classList.add("not-available-btn");
-                    btn2.value = j["RequestID"] + ' ' + j["ItemID"];
+                    btn2.value = req["RequestID"] + ' ' + j["ItemID"];
 
                     tr.lastChild.appendChild(btn);
                     tr.lastChild.appendChild(btn2);

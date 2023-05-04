@@ -97,19 +97,19 @@
 
         document.querySelectorAll(".available-btn").forEach(x => x.addEventListener("click", () => {
             amount = Number(prompt("Enter amount of the item to be released:"));
-            requestQuantity = Number(x.parentElement.previousElementSibling.previousElementSibling.previousElementSibling.innerText);
+            requestQuantity = Number(x.parentElement.previousElementSibling.previousElementSibling.previousElementSibling.innerText); // Change if layout is changed
             if (amount > requestQuantity) alert("Please enter amount equal or less than the requested amount.")
             else if (amount != 0) {
-                let reqDetails = x.value.split();
-                issueRequestItem(1, amount, reqDetails[0], reqDetails[1]); // Change third input value if page layout is changed
+                let reqDetails = x.value.split(' ');
+                issueRequestItem(1, amount, reqDetails[0], reqDetails[1]);
                 window.location = encodeURI(`/requests/approvedRequests`);
             }
         }));
 
         document.querySelectorAll(".not-available-btn").forEach(x => x.addEventListener("click", () => {
             if (confirm("Are you sure the item is unavailable?")) {
-                let reqDetails = x.value.split();
-                issueRequestItem(0, 0, reqDetails[0], reqDetails[1]); // Change third input value if page layout is changed
+                let reqDetails = x.value.split(' ');
+                issueRequestItem(0, 0, reqDetails[0], reqDetails[1]);
                 window.location = encodeURI(`/requests/approvedRequests`);
             }
         }));

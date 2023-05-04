@@ -123,7 +123,7 @@ def decide_pendingRequest():
             try:
                 cxn = connect_db()
                 db = cxn.cursor()
-                db.execute(f"UPDATE request SET StatusID = {'2' if body['decision'] else '5'} WHERE RequestID = {body['requestID']}")
+                db.execute(f"UPDATE request SET StatusID = {'2' if body['decision'] else '5'}, ApprovedBy = \"{session['user']['Username']}\" WHERE RequestID = {body['requestID']}")
                 cxn.commit()
             except Exception as e:
                 return { "error": e.args[1] }, 500
@@ -161,7 +161,7 @@ def receive_request():
         try:
             cxn = connect_db()
             db = cxn.cursor()
-            db.execute(f"UPDATE request SET StatusID = 4 WHERE RequestID = {body['requestID']}")
+            db.execute(f"UPDATE request SET StatusID = 4, ReceivedBy = \"{session['user']['Username']}\"  WHERE RequestID = {body['requestID']}")
             cxn.commit()
         except Exception as e:
             return { "error": e.args[1] }, 500
@@ -215,7 +215,7 @@ def issue_request():
             try:
                 cxn = connect_db()
                 db = cxn.cursor()
-                db.execute(f"UPDATE request SET StatusID = 3 WHERE RequestID = {body['requestID']}")
+                db.execute(f"UPDATE request SET StatusID = 3, IssuedBy = \"{session['user']['Username']}\" WHERE RequestID = {body['requestID']}")
                 cxn.commit()
             except Exception as e:
                 return { "error": e.args[1] }, 500
