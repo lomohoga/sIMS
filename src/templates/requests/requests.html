@@ -90,14 +90,14 @@
 
         document.querySelectorAll(".cancel-btn").forEach(x => x.addEventListener("click", () => {
             if (confirm("Are you sure you want to cancel this request?")) {
-                cancelRequest(x.parentNode.parentNode.firstChild.innerText); // Change input to get requestID if page layout is changed
+                cancelRequest(x.value);
                 window.location = encodeURI(`/requests`);
             }
         }));
 
         document.querySelectorAll(".receive-btn").forEach(x => x.addEventListener("click", () => {
             if (confirm("Are you sure you have received the item?")) {
-                receiveRequest(x.parentNode.parentNode.firstChild.innerText); // Change input to get requestID if page layout is changed
+                receiveRequest(x.value);
                 window.location = encodeURI(`/requests`);
             }
         }));

@@ -241,7 +241,7 @@ async function populateRequests (tbody, keyword = "", type = "") {
                     btn2.type = "button";
                     btn2.innerText = "Not Available";
                     btn2.classList.add("not-available-btn");
-                    btn2.value = j["ItemID"];
+                    btn2.value = j["RequestID"] + ' ' + j["ItemID"];
 
                     tr.lastChild.appendChild(btn);
                     tr.lastChild.appendChild(btn2);
@@ -300,6 +300,7 @@ async function populateRequests (tbody, keyword = "", type = "") {
             let td = tr.lastChild; // Temporary fix to easily add buttons at the rightmost
             let btn = document.createElement("button");
             btn.type = "button";
+            btn.value = req["RequestID"];
             if (req["Status"] == "Issued"){
                 btn.classList.add("receive-btn");
                 btn.innerText = "Receive";
