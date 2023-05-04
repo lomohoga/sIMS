@@ -410,7 +410,7 @@ async function decidePendingRequest(decision, requestID){
             "requestID": requestID
         })
     }).then(d => {
-        if (d.status === 200) window.location = encodeURI(`/requests/pendingRequests`);
+        if (d.status === 200) return;
     });
 }
 
@@ -424,7 +424,7 @@ async function cancelRequest(requestID){
             "requestID": requestID
         })
     }).then(d => {
-        if (d.status === 200) window.location = encodeURI(`/requests`);
+        if (d.status === 200) return;
     });
 }
 
@@ -441,7 +441,7 @@ async function issueRequestItem(decision = 1, amount = 0, requestID = "", itemID
             "ItemID": itemID
         })
     }).then(d => {
-        if (d.status === 200) window.location = encodeURI(`/requests/approvedRequests`);
+        if (d.status === 200) return;
     });
 }
 
@@ -455,6 +455,6 @@ async function issueRequest(requestID){
             "requestID": requestID
         })
     }).then(d => {
-        if (d.status === 200) window.location = encodeURI(`/requests/approvedRequests`);
+        if (d.status === 200) return;
     });
 }

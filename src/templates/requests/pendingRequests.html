@@ -95,10 +95,16 @@
         document.querySelector(".request-table .bi-chevron-expand").classList.remove("bi-chevron-expand");
 
         document.querySelectorAll(".approve-btn").forEach(x => x.addEventListener("click", () => {
-            if (confirm("Are you sure you want to approve this request?")) decidePendingRequest(1, x.parentNode.parentNode.firstChild.innerText);
+            if (confirm("Are you sure you want to approve this request?")) {
+                decidePendingRequest(1, x.parentNode.parentNode.firstChild.innerText); // Change second parameter to get requestID if page layout is changed
+                window.location = encodeURI(`/requests/approvedRequests`);
+            }
         }));
         document.querySelectorAll(".deny-btn").forEach(x => x.addEventListener("click", () => {
-            if (confirm("Are you sure you want to deny this request?")) decidePendingRequest(0, x.parentNode.parentNode.firstChild.innerText)
+            if (confirm("Are you sure you want to deny this request?")) {
+                decidePendingRequest(0, x.parentNode.parentNode.firstChild.innerText) // Change second parameter to get requestID if page layout is changed
+                window.location = encodeURI(`/requests/approvedRequests`);
+            }
         }));
     });
 

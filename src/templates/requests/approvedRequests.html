@@ -99,19 +99,31 @@
             amount = Number(prompt("Enter amount of the item to be released:"));
             requestQuantity = Number(x.parentElement.previousElementSibling.previousElementSibling.previousElementSibling.innerText);
             if (amount > requestQuantity) alert("Please enter amount equal or less than the requested amount.")
-            else if (amount != 0) issueRequestItem(1, amount, x.parentNode.parentNode.firstChild.innerText, x.value); // Change third input value if layout is different
+            else if (amount != 0) {
+                issueRequestItem(1, amount, x.parentNode.parentNode.firstChild.innerText, x.value); // Change third input value if page layout is changed
+                window.location = encodeURI(`/requests/approvedRequests`);
+            }
         }));
 
         document.querySelectorAll(".not-available-btn").forEach(x => x.addEventListener("click", () => {
-            if (confirm("Are you sure the item is unavailable?")) issueRequestItem(0, 0, x.parentNode.parentNode.firstChild.innerText, x.value); // Change third input value if layout is different
+            if (confirm("Are you sure the item is unavailable?")) {
+                issueRequestItem(0, 0, x.parentNode.parentNode.firstChild.innerText, x.value); // Change third input value if page layout is changed
+                window.location = encodeURI(`/requests/approvedRequests`);
+            }
         }));
 
         document.querySelectorAll(".issue-btn").forEach(x => x.addEventListener("click", () => {
-            if (confirm("Are you sure want to issue this request?")) issueRequest(x.value); // Change third input value if layout is different
+            if (confirm("Are you sure want to issue this request?")) {
+                issueRequest(x.value);
+                window.location = encodeURI(`/requests/approvedRequests`);
+            }
         }));
 
         document.querySelectorAll(".cancel-issue-btn").forEach(x => x.addEventListener("click", () => {
-            if (confirm("Are you sure want to cancel this request?")) cancelRequest(x.value); // Change third input value if layout is different
+            if (confirm("Are you sure want to cancel this request?")) {
+                cancelRequest(x.value);
+                window.location = encodeURI(`/requests/approvedRequests`);
+            }
         }));
 
     });

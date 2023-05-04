@@ -89,7 +89,10 @@
         document.querySelector(".request-table .bi-chevron-expand").classList.remove("bi-chevron-expand");
 
         document.querySelectorAll(".cancel-btn").forEach(x => x.addEventListener("click", () => {
-            if (confirm("Are you sure you want to cancel this request?")) cancelRequest(x.parentNode.parentNode.firstChild.innerText);
+            if (confirm("Are you sure you want to cancel this request?")) {
+                cancelRequest(x.parentNode.parentNode.firstChild.innerText); // Change input to get requestID if page layout is changed
+                window.location = encodeURI(`/requests`);
+            }
         }));
     });
 
