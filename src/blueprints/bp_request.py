@@ -19,7 +19,10 @@ def requests ():
 @bp_request.route('/pendingRequests')
 @login_required
 def pendingRequests ():
-    return render_template("requests/pendingRequests.html", active = "pendingRequests")
+    if session['user']['RoleID'] != 0: 
+        return render_template("error.html", errcode = 403, errmsg = "You do not have permission to see the users in the database."), 403
+    else: 
+        return render_template("requests/pendingRequests.html", active = "pendingRequests")
 
 # route for request search
 @bp_request.route('/search')
@@ -81,10 +84,7 @@ def search_requests ():
 @login_required
 def make_requests ():
     if (request.method == "GET"):
-        if session['user']['RoleID'] == 1: 
-            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to request items from the database."), 403
-        else: 
-            return render_template("requests/request.html")
+        return render_template("requests/request.html")
 
     if (request.method == "POST"):
         if session['user']['RoleID'] == 1: 
@@ -174,7 +174,11 @@ def receive_request():
 @bp_request.route('/approvedRequests')
 @login_required
 def approvedRequests ():
-    return render_template("requests/approvedRequests.html", active = "approvedRequests")
+    if session['user']['RoleID'] != 1: 
+        return render_template("error.html", errcode = 403, errmsg = "You do not have permission to see the users in the database."), 403
+    else: 
+        return render_template("requests/approvedRequests.html", active = "approvedRequests")
+    
 
 # route for request items
 @bp_request.route('/approvedRequests/issue/item', methods = ["POST"])
