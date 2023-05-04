@@ -211,6 +211,9 @@ async function populateRequests (tbody, keyword = "", type = "") {
             tr.appendChild(td);
         }
 
+        let readyForIssue = 1;          // Used for approved requests page to check if all items checked
+        let allItemsUnavailable = 1;    // Checks if all items are unavailable
+
         for (let j of req["Items"]) {
             for (let k of requestColumns.slice(4)) {
                 let td = document.createElement("div");
@@ -222,6 +225,54 @@ async function populateRequests (tbody, keyword = "", type = "") {
                 tr.appendChild(td)
             }
             tr.appendChild(document.createElement("div")); // Temporary fix to easily add buttons at the rightmost
+
+            // Generate buttons in Approved Requests page
+            if (type == 'approved'){
+                if (j["ItemIssued"] == null) {
+                    readyForIssue = 0;
+                    allItemsUnavailable = 0;
+                    let btn = document.createElement("button");
+                    btn.type = "button";
+                    btn.innerText = "Available";
+                    btn.classList.add("available-btn");
+                    btn.value = j["ItemID"];
+
+                    let btn2 = document.createElement("button");
+                    btn2.type = "button";
+                    btn2.innerText = "Not Available";
+                    btn2.classList.add("not-available-btn");
+                    btn2.value = j["ItemID"];
+
+                    tr.lastChild.appendChild(btn);
+                    tr.lastChild.appendChild(btn2);
+                } else if (j["ItemIssued"]){
+                    allItemsUnavailable = 0;
+                    tr.lastChild.innerText = j["IssueAmount"];
+                } else {
+                    tr.lastChild.innerText = "Item Unavailable";
+                }
+                tr.appendChild(document.createElement("div"));
+            }
+        }
+
+        if (type == 'approved'){
+            if (allItemsUnavailable) {
+                let btn = document.createElement("button");
+                btn.innerText = "Cancel";
+                btn.classList.add("cancel-issue-btn");
+                btn.type = "button";
+                btn.value = req["RequestID"];
+
+                tr.lastChild.append(btn);
+            } else if (readyForIssue){
+                let btn = document.createElement("button");
+                btn.innerText = "Issue";
+                btn.classList.add("issue-btn");
+                btn.type = "button";
+                btn.value = req["RequestID"];
+
+                tr.lastChild.append(btn);
+            }
         }
 
         if (type == 'pending'){
@@ -374,5 +425,36 @@ async function cancelRequest(requestID){
         })
     }).then(d => {
         if (d.status === 200) window.location = encodeURI(`/requests`);
+    });
+}
+
+async function issueRequestItem(decision = 1, amount = 0, requestID = "", itemID = ""){
+    fetch(encodeURI(`/requests/approvedRequests/issue/item`), {
+        "method": "POST",
+        "headers": {
+            "Content-Type": "application/json"
+        }, 
+        "body":JSON.stringify({
+            "decision": decision,
+            "amount": amount,
+            "RequestID": requestID,
+            "ItemID": itemID
+        })
+    }).then(d => {
+        if (d.status === 200) window.location = encodeURI(`/requests/approvedRequests`);
+    });
+}
+
+async function issueRequest(requestID){
+    fetch(encodeURI(`/requests/approvedRequests/issue`), {
+        "method": "POST",
+        "headers": {
+            "Content-Type": "application/json"
+        }, 
+        "body":JSON.stringify({
+            "requestID": requestID
+        })
+    }).then(d => {
+        if (d.status === 200) window.location = encodeURI(`/requests/approvedRequests`);
     });
 }

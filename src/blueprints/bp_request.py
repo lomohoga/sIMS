@@ -41,7 +41,7 @@ def search_requests ():
     x = f"StatusName LIKE '%{requestType}%'" if requestType not in ['all', 'user'] else ""
     w = ' AND '.join(filter(None, [u, v, x]))
 
-    db.execute(f"SELECT RequestID, RequestedBy, DATE_FORMAT(RequestDate, '%d %b %Y') AS RequestDate, StatusName as Status, ItemID, ItemName, ItemDescription, RequestQuantity, AvailableStock, Unit FROM request INNER JOIN request_status USING (StatusID) INNER JOIN request_item USING (RequestID) INNER JOIN stock USING (ItemID){' WHERE RequestID IN (SELECT DISTINCT RequestID FROM request INNER JOIN request_item USING (RequestID) INNER JOIN item USING (ItemID) WHERE ' + w + ')' if w != '' else ''} ORDER BY RequestID, ItemID")
+    db.execute(f"SELECT RequestID, RequestedBy, DATE_FORMAT(RequestDate, '%d %b %Y') AS RequestDate, StatusName as Status, ItemID, ItemName, ItemDescription, RequestQuantity, AvailableStock, Unit, Availability, AvailableQuantity FROM request INNER JOIN request_status USING (StatusID) INNER JOIN request_item USING (RequestID) INNER JOIN stock USING (ItemID){' WHERE RequestID IN (SELECT DISTINCT RequestID FROM request INNER JOIN request_item USING (RequestID) INNER JOIN item USING (ItemID) WHERE ' + w + ')' if w != '' else ''} ORDER BY RequestID, ItemID")
     requests = db.fetchall()
     cxn.close()
 
@@ -69,7 +69,9 @@ def search_requests ():
             "ItemDescription": req[6],
             "RequestQuantity": locale.format("%s", req[7], grouping = True),
             "AvailableStock": locale.format("%s", req[8], grouping = True),
-            "Unit": req[9]
+            "Unit": req[9],
+            "ItemIssued": req[10],
+            "IssueAmount": req[11]
         })
 
     return { "requests": grouped }
@@ -154,3 +156,47 @@ def cancel_request():
 @login_required
 def approvedRequests ():
     return render_template("requests/approvedRequests.html", active = "approvedRequests")
+
+# route for request items
+@bp_request.route('/approvedRequests/issue/item', methods = ["POST"])
+@login_required
+def issue_requestItem ():
+    if (request.method == "POST"):
+        if (session['user']['RoleID'] != 1):
+            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to view this page."), 403
+        else:
+            body = request.get_json()
+
+            try:
+                cxn = connect_db()
+                db = cxn.cursor()
+                db.execute(f"UPDATE request_item SET Availability = {body['decision']} {', AvailableQuantity = ' + str(body['amount']) if body['decision'] else ''} WHERE RequestID = {body['RequestID']} AND ItemID = \"{body['ItemID']}\";")
+                cxn.commit()
+            except Exception as e:
+                return { "error": e.args[1] }, 500
+            finally:
+                cxn.close()
+        
+        return Response(status = 200)
+
+# route for issuing requests
+@bp_request.route('/approvedRequests/issue', methods = ["POST"])
+@login_required
+def issue_request():
+    if (request.method == "POST"):
+        if (session['user']['RoleID'] != 1):
+            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to view this page."), 403
+        else:
+            body = request.get_json()
+
+            try:
+                cxn = connect_db()
+                db = cxn.cursor()
+                db.execute(f"UPDATE request SET StatusID = 3 WHERE RequestID = {body['requestID']}")
+                cxn.commit()
+            except Exception as e:
+                return { "error": e.args[1] }, 500
+            finally:
+                cxn.close()
+        
+        return Response(status = 200)

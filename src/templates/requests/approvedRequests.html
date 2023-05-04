@@ -18,7 +18,7 @@
 </div>
 
 <div class="table-wrapper">
-    <div class="table-main request-table">
+    <div class="table-main request-table approved-table">
         <div class="table-header">
             <div class="table-row">
                 <div class="table-sortable">
@@ -46,7 +46,8 @@
                 <div>Request Quantity</div>
                 <div>Available Quantity</div>
                 <div>Unit</div>
-                <div>Issue?</div>
+                <div>Available?</div>
+                <div>Ready for Issue</div>
             </div>
         </div>
         <div class="table-body">
@@ -93,6 +94,26 @@
         if (document.querySelector(".request-table .bi-chevron-down")) document.querySelector(".request-table .bi-chevron-down").classList.remove("bi-chevron-down");
         document.querySelector(".request-table .bi-chevron-expand").classList.add("bi-chevron-up");
         document.querySelector(".request-table .bi-chevron-expand").classList.remove("bi-chevron-expand");
+
+        document.querySelectorAll(".available-btn").forEach(x => x.addEventListener("click", () => {
+            amount = Number(prompt("Enter amount of the item to be released:"));
+            requestQuantity = Number(x.parentElement.previousElementSibling.previousElementSibling.previousElementSibling.innerText);
+            if (amount > requestQuantity) alert("Please enter amount equal or less than the requested amount.")
+            else if (amount != 0) issueRequestItem(1, amount, x.parentNode.parentNode.firstChild.innerText, x.value); // Change third input value if layout is different
+        }));
+
+        document.querySelectorAll(".not-available-btn").forEach(x => x.addEventListener("click", () => {
+            if (confirm("Are you sure the item is unavailable?")) issueRequestItem(0, 0, x.parentNode.parentNode.firstChild.innerText, x.value); // Change third input value if layout is different
+        }));
+
+        document.querySelectorAll(".issue-btn").forEach(x => x.addEventListener("click", () => {
+            if (confirm("Are you sure want to issue this request?")) issueRequest(x.value); // Change third input value if layout is different
+        }));
+
+        document.querySelectorAll(".cancel-issue-btn").forEach(x => x.addEventListener("click", () => {
+            if (confirm("Are you sure want to cancel this request?")) cancelRequest(x.value); // Change third input value if layout is different
+        }));
+
     });
 
     window.addEventListener("load", () => populateRequests(document.querySelector(".request-table .table-body"), "", "approved"))
