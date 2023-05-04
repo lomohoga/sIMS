@@ -25,6 +25,7 @@
                 <a class="link {{ 'active' if active == 'inventory' }}" href="{{ url_for('bp_inventory.inventory') }}">Inventory</a>
                 {% if session['user']['RoleID'] == 1 %}
                     <a class="link {{ 'active' if active == 'deliveries' }}" href="{{ url_for('bp_delivery.deliveries') }}">Deliveries</a>
+                    <a class="link {{ 'active' if active == 'approvedRequests' }}" href="{{ url_for('bp_request.approvedRequests') }}">Approved Requests</a>
                 {% endif %}
                 <a class="link {{ 'active' if active == 'requests' }}" href="{{ url_for('bp_request.requests') }}">My Requests</a>
                 {% if session['user']['RoleID'] == 0 %}

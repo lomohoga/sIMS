@@ -4,7 +4,7 @@
 
 <div id="content-top">
     <h1 class="main-header">
-        Pending Requests
+        Approved Requests
     </h1>
 
     <div id="inputs">
@@ -46,7 +46,7 @@
                 <div>Request Quantity</div>
                 <div>Available Quantity</div>
                 <div>Unit</div>
-                <div>Approve?</div>
+                <div>Issue?</div>
             </div>
         </div>
         <div class="table-body">
@@ -69,10 +69,10 @@
             currentSort = sortTable(document.querySelector(".request-table"), Array.prototype.indexOf.call(p.parentElement.children, p), currentSort, { shelfLife: x.innerText.includes("Shelf Life"), date: x.innerText.includes("Date") });
         });
     });
-
+    
     document.querySelector("#search").addEventListener("submit", e => {
         e.preventDefault();
-        populateRequests(document.querySelector(".request-table .table-body"), document.querySelector("#search-box").value, "pending");
+        populateRequests(document.querySelector(".request-table .table-body"), document.querySelector("#search-box").value, "approved");
 
         let oldSym = document.querySelector(`.request-table .table-header .table-row > :nth-child(${currentSort[0] + 1}) .bi`);
         oldSym.classList.remove(`bi-chevron-${currentSort[1] ? "up" : "down"}`);
@@ -93,16 +93,9 @@
         if (document.querySelector(".request-table .bi-chevron-down")) document.querySelector(".request-table .bi-chevron-down").classList.remove("bi-chevron-down");
         document.querySelector(".request-table .bi-chevron-expand").classList.add("bi-chevron-up");
         document.querySelector(".request-table .bi-chevron-expand").classList.remove("bi-chevron-expand");
-
-        document.querySelectorAll(".approve-btn").forEach(x => x.addEventListener("click", () => {
-            if (confirm("Are you sure you want to approve this request?")) decidePendingRequest(1, x.parentNode.parentNode.firstChild.innerText);
-        }));
-        document.querySelectorAll(".deny-btn").forEach(x => x.addEventListener("click", () => {
-            if (confirm("Are you sure you want to deny this request?")) decidePendingRequest(0, x.parentNode.parentNode.firstChild.innerText)
-        }));
     });
 
-    window.addEventListener("load", () => populateRequests(document.querySelector(".request-table .table-body"), "", "pending"))
+    window.addEventListener("load", () => populateRequests(document.querySelector(".request-table .table-body"), "", "approved"))
 </script>
 
 {% endblock %}

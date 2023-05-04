@@ -108,6 +108,7 @@ def make_requests ():
 
         return Response(status = 200)
 
+# route for deciding on pending requests
 @bp_request.route('/pendingRequests/decide', methods = ["POST"])
 @login_required
 def decide_pendingRequest():
@@ -129,6 +130,7 @@ def decide_pendingRequest():
         
         return Response(status = 200)
 
+# route for cancelling requests
 @bp_request.route('/cancel', methods = ["POST"])
 @login_required
 def cancel_request():
@@ -146,3 +148,9 @@ def cancel_request():
             cxn.close()
     
     return Response(status = 200)
+
+# route for approved requests
+@bp_request.route('/approvedRequests')
+@login_required
+def approvedRequests ():
+    return render_template("requests/approvedRequests.html", active = "approvedRequests")
