@@ -411,7 +411,7 @@ def change_email ():
 
         except Exception as e:
             # TODO: Fix this
-            return Response(status = 500)
+            return { "error": e.args[0] }, 500
         finally:
             cxn.close()
 

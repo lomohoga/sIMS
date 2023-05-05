@@ -281,7 +281,7 @@
 
             if (d.status === 500){
                 let m = document.querySelector('#step2-message');
-                m.innerHTML = "An error occured. Please try again.";
+                m.innerHTML = "An error occurred. Please try again later."
                 m.style.color = "red"
                 m.style.display = "block";
             }
@@ -358,15 +358,22 @@
             }
 
             if (d.status === 500){
-                //Duplicate email
                 document.querySelector('#old-password2').value = '';
                 document.querySelector('#old-password2').focus();
                 document.querySelector('#new-email').value = '';
 
-                let m = document.querySelector('#step3-message');
-                m.innerHTML = "An error occured. Please try again.";
-                m.style.color = "red"
-                m.style.display = "block";
+                d.json().then(a => {
+                    let m = document.querySelector('#step3-message');
+                    if(a['error'] === 1062){
+                        m.innerHTML = "Email already taken.";
+                    }
+                    else{
+                        m.innerHTML = "An error occurred. Please try again later."
+                    }
+                    
+                    m.style.color = "red"
+                    m.style.display = "block";
+                })
             }
 
             submit_email.value = 'Submit'
