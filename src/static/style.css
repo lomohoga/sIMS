@@ -183,46 +183,42 @@ main {
     overflow: hidden;
 }
 
-.valid {
-    color: green;
-  }
-  
-.valid:before {
-    margin-right: 10px;
-    content: '\2714';
+#profile-options{
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    margin: 0px;
+    right: 0px;
+
+    width: 200px;
+    max-height: 0;
+    padding: 8px;
+
+    background-color: var(--white);
+    border: 1px solid var(--gray);
+    border-radius: 20px;
+    box-shadow: 0rem 0.2rem 0.4rem var(--btn-shadow);;
+    
+    overflow:hidden;
+    transition: max-height 0.1s ease-in-out;
+    z-index: 1000;
 }
 
-/* Add a red text color and an "x" icon when the requirements are wrong */
-.invalid {
-    color: red;
+#profile-options p{
+    border-radius: 10px;
+    padding: 7px;
+    
+    text-align: left;
+    font-weight: lighter;
 }
 
-.invalid:before {
-    margin-right: 10px;
-    content: '\2716';
+#profile-options p:hover{
+    background: var(--light-gray);
 }
 
-#c-password{
-    margin-bottom: 15px;
-    padding: 1rem 1.4rem;
-    background: var(--white);
-    box-shadow: 0rem 0.2rem 0.4rem var(--btn-shadow);
-    border-radius: 0.5rem;
-    transition: background 0.1s, box-shadow 0.1s;
-}
-
-#new-email{
-    width: 265px;
-    padding: 5px;
-    margin-left: 10px;
-    margin-right: 10px;
-
-    border: none;
-    background: none;
-    border-bottom: 1px solid var(--gray);
-}
-
-#new-email:focus{
-    outline: none;
-    border-bottom: 1px solid var(--blue);
+#add-user-form{
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    justify-content: flex-end;
 }

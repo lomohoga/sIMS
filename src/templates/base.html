@@ -8,16 +8,108 @@
         <link rel="stylesheet" href="{{ url_for('static', filename = 'style_table.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename = 'style_inventory.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename = 'style_request.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename = 'style_dialog.css') }}">
         <script src="{{ url_for('static', filename = 'script_table.js') }}"></script>
     </head>
 
     <body>
         <header>
-            <a href = "{{ url_for('index') }}" style="text-decoration: none;"><h1 id="title"><span>s</span>IMS</h1></a>
+            <a href = "{{ url_for('index') }}" style="text-decoration: none; cursor: pointer;">
+                <h1 id="title"><span>s</span>IMS</h1>
+            </a>
+
             <div id="profile">
                 <p class="info" id="profile-name">{{ session['user']['FirstName'] }} {{ session['user']['LastName'] }}</p>
                 <p class="info" id="profile-role">{{ session['user']['RoleName'] }}</p>
+
+                <div id="profile-options">
+                    <p>Reset password</p>
+                    <p>Change email address</p>
+                </div>
             </div>
+
+            <dialog id="change-password-dialog">
+                <div id="step1">
+                    <h1>Verify user</h1>
+
+                    <div>
+                        <label for="old-password">Enter old password:</label>
+                        <br>
+                        <input type="password" id="old-password" name="old-password" autofocus>
+                        <p class='message' id="step1-message"></p>
+                    </div>
+                    
+                    <form id="old-password-form">
+                        <input type="submit" value="Submit" disabled>
+                    </form>
+                </div>
+
+                <div id="step2">
+                    <h1>Reset password</h1>
+    
+                    <div>
+                        <p>Password must have <em><b>8 to 12 alphanumeric characters</b></em>.</p>
+                        <label for="new-password">Enter new password:</label>
+                        <div style="height: 20%">
+                            <input type="password" id="new-password" name="new-password" pattern="(?=.*[a-zA-Z0-9]).{8,12}" required>
+                        </div>
+                        <br>
+    
+                        <label for="new-password2" style="margin-top: 20px">Enter new password again:</label>
+                        <div>
+                            <input type="password" id="new-password2" name="new-password2" required>
+                        </div>
+                        <p class='message' id="step2-message"></p>
+                    </div>
+    
+                    <form id="password-form">
+                        <input type="submit" value="Submit" id="submit" disabled>
+                    </form>
+                </div>
+
+                <div id="step3">
+                    <div class="password-reset-success">
+                        <h1 style="text-align: center;">Password reset successfully &#127881;</h1>
+                        <form method="dialog">
+                            <input type="submit" value="Close">
+                        </form>
+                    </div>
+                </div>
+            </dialog>
+
+            <dialog id="change-email-dialog">
+                <div id="step1">
+                    <h1>Change email</h1>
+                    <p>Email must have a <em><b>gmail.com</b></em> domain.</p>
+
+                    <div>
+                        <label for="old-password2">Enter your password:</label>
+                        <br>
+                        <input type="password" id="old-password2" name="old-password" autofocus>
+                        <p class='message' id="step3-message"></p>
+                    </div>
+
+                    <div style="margin-top: 20px; height: 45%;">
+                        <label for="new-email">Enter new email address:</label>
+                        <br>
+                        <input type="email" id="new-email" name="new-email" placeholder="{{ session['user']['Email'] }}" maxlength="50" title="Email address must have a gmail.com domain">
+                        <p class='message' id="step3-message"></p>
+                    </div>
+                    
+                    <form id='new-email-form' style="align-self: flex-end;">
+                        <input type="submit" value="Submit" id="submit" disabled>
+                    </form>
+                </div>
+
+                <div id="step2">
+                    <div class="password-reset-success">
+                        <h1 style="text-align: center;">Email changed successfully &#127881;</h1>
+                        <form method="dialog">
+                            <input type="submit" value="Close">
+                        </form>
+                    </div>
+                </div>
+            </dialog>
         </header>
 
         <div id="sidebar">
@@ -32,7 +124,6 @@
                     <a class="link {{ 'active' if active == 'pendingRequests' }}" href="{{ url_for('bp_request.pendingRequests') }}">Pending Requests</a>
                     <a class="link {{ 'active' if active == 'users' }}" href="{{ url_for('bp_user.show_users') }}">Users</a>
                 {% endif %}
-                <a class="link {{ 'active' if active == 'settings' }}" href="{{ url_for('bp_user.change_account_settings') }}">Account settings</a>
                 <a class="link logout" href="{{ url_for('bp_auth.logout') }}">Log out</a>
             </nav>
             
@@ -50,3 +141,236 @@
         </main>
     </body>
 </html>
+
+<script>
+    document.querySelector("#profile").addEventListener('click', () => {
+        let content = document.querySelector('#profile-options');
+        content.style.display = 'flex';
+
+        if (content.style.maxHeight){
+            content.style.display = 'none'
+            content.style.maxHeight = null;
+        } 
+        else {
+            content.style.maxHeight = content.scrollHeight + "px";
+        } 
+    });
+
+    // CHANGE PASSWORD DIALOG
+    document.querySelector('#profile-options p').addEventListener('click', () => {
+        document.querySelector('#change-password-dialog #step1').style.display = 'block'
+
+        document.querySelectorAll('#change-password-dialog input[type=text], #change-password-dialog input[type=password], #change-password-dialog input[type=email]').forEach(
+            x => {x.value = ''}
+        )
+
+        document.querySelector('#change-password-dialog').showModal();
+    });
+
+    document.querySelector('#change-password-dialog').addEventListener('close', () => {
+        location.reload();
+    });
+
+    // Step 1
+    let submit_password = document.querySelector('#old-password-form input[type=submit]');
+    document.querySelector('#old-password').addEventListener('keyup', (e) => {
+        submit_password.disabled = e.target.value.length === 0
+    })
+
+    document.querySelector("#old-password-form").addEventListener("submit", e => {
+        e.preventDefault();
+
+        submit_password.disabled = 1;
+        submit_password.value = 'Checking password...'
+
+        fetch("{{ url_for('bp_user.check_password') }}", {
+            "method": "POST",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": JSON.stringify({ "values": document.querySelector('#old-password').value })
+        }).then(d => {
+            if (d.status === 200){
+                document.querySelector('#step1').style.display = 'none';
+                document.querySelector('#step2').style.display = 'block';
+
+                document.querySelector('#new-password').focus();
+            }
+
+            if (d.status === 304){
+                document.querySelector('#old-password').value = '';
+
+                let m = document.querySelector('#step1-message');
+                m.innerHTML = "Wrong password";
+                m.style.display = "block";
+                m.style.color = 'red'
+
+                let n = document.querySelector('#old-password');
+                n.style.borderColor = 'red'
+            }
+
+            submit_password.value = 'Submit'
+            document.querySelector('#old-password-form input[type=submit]').disabled = 1;
+        });
+    });
+
+    // Step 2
+    function isValidPassword(){
+        let a = document.querySelector('#new-password');
+        let format = /^(?=.*[a-zA-Z0-9]).{8,12}$/g
+        return a.value.match(format)
+    }
+
+    function equalPassword(){
+        let a = document.querySelector('#new-password');
+        let b = document.querySelector('#new-password2');
+        return a.value === b.value;
+    }
+
+    document.querySelectorAll('#step2 input[type=password]').forEach(x => {x.addEventListener('keyup', e => {
+        let submit = document.querySelector('#step2 #submit')
+        let isValid = isValidPassword();
+        let isEqual = equalPassword();
+
+        let p = document.querySelector('#new-password');
+        let q = document.querySelector('#new-password2');
+
+        let r = document.querySelector('#step2 > div > div');
+        let s = document.querySelector('#step2 > div > div ~ div')
+        if(isValid){
+            r.classList.add('pvalid');
+            p.style.borderColor = 'green';
+
+            if(isEqual){
+                s.classList.add('pvalid');
+                q.style.borderColor = 'green';
+            }
+            else{
+                s.classList.remove('pvalid');
+                q.style.borderColor = 'var(--gray)';
+            }
+        }
+        else{
+            r.classList.remove('pvalid');
+            s.classList.remove('pvalid');
+
+            p.style.borderColor = 'var(--gray)';
+            q.style.borderColor = 'var(--gray)';
+        }
+
+        submit.disabled = !(isEqual && isValid);
+    })})
+
+    document.querySelector("#password-form").addEventListener("submit", e => {
+        e.preventDefault();
+
+        document.querySelector('#step2 #submit').disabled = 1;
+        document.querySelector('#step2 #submit').value = 'Resetting password...'
+
+        fetch("{{ url_for('bp_user.change_password') }}", {
+            "method": "POST",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": JSON.stringify({ "password": document.querySelector('#new-password').value })
+        }).then(d => {
+            if (d.status === 200){
+                document.querySelector('#step2').style.display = 'none';
+                document.querySelector('#step3').style.display = 'block';
+            }
+
+            if (d.status === 500){
+                let m = document.querySelector('#step2-message');
+                m.innerHTML = "An error occured. Please try again.";
+                m.style.color = "red"
+                m.style.display = "block";
+            }
+
+            document.querySelector('#step2 #submit').value = 'Submit'
+            document.querySelector('#password-form input[type=submit]').disabled = 1;
+        });
+    });
+
+    // CHANGE EMAIL DIALOG
+
+    document.querySelector('#profile-options p ~ p').addEventListener('click', () => {
+        document.querySelector('#change-email-dialog #step1').style.display = 'block'
+
+        document.querySelectorAll('#change-email-dialog input[type=password], #change-email-dialog input[type=email]').forEach(
+            x => {x.value = ''}
+        )
+
+        document.querySelector('#change-email-dialog').showModal();
+    });
+
+    document.querySelector('#change-email-dialog').addEventListener('close', () => {
+        location.reload();
+    });
+
+    function isValidEmail(){
+        let email = document.querySelector('#new-email');
+        let format = /^\w+([\.\-\+]?\w+)*@gmail\.com/g;
+        return email.value.match(format);
+    }
+
+    function notEmpty(){
+        let password = document.querySelector('#old-password2');
+        return password.value.length > 0
+    }
+
+    let submit_email = document.querySelector('#change-email-dialog input[type=submit]');
+    let new_email = document.querySelector('#new-email')
+    document.querySelector('#change-email-dialog #step1').addEventListener("keyup", (e)=>{
+        submit_email.disabled = !(isValidEmail() && notEmpty() && (new_email.value !== new_email.placeholder))
+    })
+
+    document.querySelector('#new-email-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        submit_email.disabled = 1;
+        submit_email.value = 'Changing email...'
+
+        fetch("{{ url_for('bp_user.change_email') }}", {
+            "method": "POST",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": JSON.stringify({ "password": document.querySelector('#old-password2').value, "email": document.querySelector('#new-email').value })
+        }).then(d => {
+            if (d.status === 200){
+                document.querySelector('#change-email-dialog #step1').style.display = 'none';
+                document.querySelector('#change-email-dialog #step2').style.display = 'block';
+            }
+
+            if (d.status === 304){
+                //Wrong password
+                document.querySelector('#old-password2').value = '';
+                document.querySelector('#old-password2').focus();
+                document.querySelector('#new-email').value = '';
+
+                let m = document.querySelector('#step3-message');
+                m.innerHTML = "Wrong password";
+                m.style.color = "red"
+                m.style.display = "block";
+
+                let n = document.querySelector('#old-password2');
+                n.style.borderColor = 'red'
+            }
+
+            if (d.status === 500){
+                //Duplicate email
+                document.querySelector('#old-password2').value = '';
+                document.querySelector('#old-password2').focus();
+                document.querySelector('#new-email').value = '';
+
+                let m = document.querySelector('#step3-message');
+                m.innerHTML = "An error occured. Please try again.";
+                m.style.color = "red"
+                m.style.display = "block";
+            }
+
+            submit_email.value = 'Submit'
+            document.querySelector('#new-email-form input[type=submit]').disabled = 1;
+        });
+    });
+</script>

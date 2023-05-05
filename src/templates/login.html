@@ -6,6 +6,7 @@
         <link rel="stylesheet" href="{{ url_for('static', filename = 'fonts/fonts.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename = 'style.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename = 'style_login.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename = 'style_dialog.css') }}">
     </head>
 
     <body id="login-body">
@@ -17,16 +18,298 @@
 
             <div id="login-right">
                 <form id="login-form" method="post">
-                    <input id="login-username" type="text" class="field" placeholder="Username" name="uname" required autofocus>
+                    <input id="login-username" type="text" class="field" placeholder="Username or email" name="uname" required autofocus>
                     <input id="login-password" type="password" class="field" placeholder="Password" name="pword" required>
-                    <span>
-                        <input type="submit" id="login-submit" value="Log in">
-                        {% if msg|length != 0 %}
-                            <span id="login-error">{{ msg }}</span>
-                        {% endif %}
-                    </span>
+                    <input type="submit" id="login-submit" value="Log in">
+                    {% if msg|length != 0 %}
+                        <span id="login-error">{{ msg }}</span>
+                    {% endif %}
                 </form>
+                <button id="forgot-password">Forgot password</button>
             </div>
         </main>
+
+        <dialog id="forgot-password-dialog">
+            <div id="step1">
+                <h1>Find your account</h1>
+
+                <div>
+                    <label for="email">Enter the email associated with your account to change your password.</label>
+                    <br>
+                    <input type="email" id="email" name="email" minlength="1" placeholder="Email" title="Email must have a gmail.com domain." required autofocus>
+                    <p class='message' id="step1-message"></p>
+                </div>
+                
+                <form id="email-form">
+                    <input type="submit" value="Submit" id="submit" disabled>
+                </form>
+            </div>
+
+            <div id="step2">
+                <h1>Verify email</h1>
+
+                <div>
+                    <label for="code">Kindly provide the code sent to <b><em><span id="email-add"></span></em></b>. The code will expire in 3 minutes.</label>
+                    <br>
+                    <input type="text" inputmode="numeric" id="code" name="code" placeholder="Code" required autofocus>
+                    <p class='message' id="step2-message"></p>
+                </div>
+                
+                <input type="button" value="Resend code" id="resend">
+                <form id="code-form">
+                    <input type="submit" value="Submit" id="submit" disabled>
+                </form>
+            </div>
+
+            <div id="step3">
+                <h1>Reset password</h1>
+
+                <div>
+                    <p>Password must have <em><b>8 to 12 alphanumeric characters</b></em>.</p>
+                    <label for="new-password">Enter new password:</label>
+                    <div style="height: 20%">
+                        <input type="password" id="new-password" name="new-password" pattern="(?=.*[a-zA-Z0-9]).{8,12}" required>
+                    </div>
+                    <br>
+
+                    <label for="new-password2" style="margin-top: 20px">Enter new password again:</label>
+                    <div>
+                        <input type="password" id="new-password2" name="new-password2" required>
+                    </div>
+                    <p class='message' id="step3-message"></p>
+                </div>
+
+                <form id="password-form">
+                    <input type="submit" value="Submit" id="submit" disabled>
+                </form>
+            </div>
+
+            <div id="step4">
+                <div class="password-reset-success">
+                    <h1 style="text-align: center;">Password reset successfully &#127881;</h1>
+                    <form method="dialog">
+                        <input type="submit" value="Close">
+                    </form>
+                </div>
+            </div>
+        </dialog>
     </body>
 </html>
+
+<script>
+
+    // Display dialog
+    document.querySelector('#forgot-password').addEventListener('click', () => {
+        document.querySelector('#step1').style.display = "block"
+
+        document.querySelectorAll('#forgot-password-dialog input[type=text], #forgot-password-dialog input[type=password], #forgot-password-dialog input[type=email]').forEach(
+            x => {x.value = ''}
+        )
+
+        document.querySelector('#forgot-password-dialog').showModal();
+    });
+
+    // Close dialog
+    document.querySelector('#forgot-password-dialog').addEventListener('close', () => {
+        location.reload();
+    });
+
+    // STEP 1
+    let submit_email = document.querySelector('#email-form #submit');
+    document.querySelector('#email').addEventListener('keyup', (e) => {
+        let format = /^\w+([\.\-\+]?\w+)*@gmail\.com/g
+        submit_email.disabled = !(e.target.value.match(format))
+    })
+
+    document.querySelector("#email-form").addEventListener("submit", e => {
+        e.preventDefault();
+
+        submit_email.disabled = 1;
+        submit_email.value = "Checking email..."
+
+        fetch("{{ url_for('bp_user.check_email') }}", {
+            "method": "POST",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": JSON.stringify({ "email": document.querySelector('#email').value })
+        }).then(d => {
+            if (d.status === 200){
+                document.querySelector('#step1').style.display = 'none';
+                document.querySelector('#step2').style.display = 'block';
+
+                document.querySelector('#email-add').innerHTML = document.querySelector('#email').value
+                document.querySelector('#code').focus();
+            }
+
+            if (d.status === 304){
+                document.querySelector('#email').value = '';
+
+                let m = document.querySelector('#step1-message');
+                m.innerHTML = "Email not found";
+                m.style.display = "block";
+
+                let n = document.querySelector('#email');
+                n.style.borderColor = 'red'
+            }
+
+            if (d.status === 500){
+                let m = document.querySelector('#step1-message');
+                m.innerHTML = "An error occured. Please try again.";
+                m.style.display = "block";
+            }
+
+            submit_email.value = "Submit"
+            document.querySelector('#email-form #submit').disabled = 1;
+        });
+    });
+
+    // STEP 2
+    let submit_code = document.querySelector('#code-form #submit');
+    document.querySelector('#code').addEventListener('keyup', (e) => {
+        let format = /^\d+/g
+        submit_code.disabled = !(e.target.value.match(format))
+    })
+
+    document.querySelector("#code-form").addEventListener("submit", e => {
+        e.preventDefault();
+
+        submit_code.disabled = 1;
+        submit_code.value = "Verifying code..."
+
+        fetch("{{ url_for('bp_user.check_code') }}", {
+            "method": "POST",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": JSON.stringify({ "code": document.querySelector('#code').value, "email": document.querySelector('#email').value })
+        }).then(d => {
+            if (d.status === 200){
+                document.querySelector('#step2').style.display = 'none';
+                document.querySelector('#step3').style.display = 'block';
+                document.querySelector('#new-password').focus();
+            }
+
+            if (d.status === 304){
+                document.querySelector('#code').value = '';
+
+                let m = document.querySelector('#step2-message');
+                m.innerHTML = "Invalid code";
+                m.style.color = "red"
+                m.style.display = "block";
+
+                let n = document.querySelector('#code');
+                n.style.borderColor = 'red'
+            }
+
+            if (d.status === 500){
+                let m = document.querySelector('#step2-message');
+                m.innerHTML = "An error occured. Please try again.";
+                m.style.color = "red"
+                m.style.display = "block";
+            }
+
+            submit_code.value = "Submit"
+            document.querySelector('#code-form #submit').disabled = 1;
+        });
+    });
+
+    document.querySelector('#resend').addEventListener('click', (e) => {
+        e.target.value = "Resending code..."
+        e.target.disabled = 1;
+
+        fetch("{{ url_for('bp_user.generate_code') }}", {
+            "method": "POST",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": JSON.stringify({ "email": document.querySelector('#email').value })
+        }).then(() => {
+            document.querySelector('#code').value = '';
+
+            let m = document.querySelector('#step2-message');
+            m.innerHTML = "Code sent";
+            m.style.color = "black"
+            m.style.display = "block";
+
+            e.target.value = "Resend"
+        });
+    })
+
+    // STEP 3
+    function isValidPassword(){
+        let a = document.querySelector('#new-password');
+        let format = /^(?=.*[a-zA-Z0-9]).{8,12}$/g
+        return a.value.match(format)
+    }
+
+    function equalPassword(){
+        let a = document.querySelector('#new-password');
+        let b = document.querySelector('#new-password2');
+        return a.value === b.value;
+    }
+
+    document.querySelectorAll('#step3 input[type=password]').forEach(x => {x.addEventListener('keyup', e => {
+        let submit = document.querySelector('#step3 #submit')
+        let isValid = isValidPassword();
+        let isEqual = equalPassword();
+
+        let p = document.querySelector('#new-password');
+        let q = document.querySelector('#new-password2');
+
+        let r = document.querySelector('#step3 > div > div');
+        let s = document.querySelector('#step3 > div > div ~ div')
+        if(isValid){
+            r.classList.add('pvalid');
+            p.style.borderColor = 'green';
+
+            if(isEqual){
+                s.classList.add('pvalid');
+                q.style.borderColor = 'green';
+            }
+            else{
+                s.classList.remove('pvalid');
+                q.style.borderColor = 'var(--gray)';
+            }
+        }
+        else{
+            r.classList.remove('pvalid');
+            s.classList.remove('pvalid');
+
+            p.style.borderColor = 'var(--gray)';
+            q.style.borderColor = 'var(--gray)';
+        }
+
+        submit.disabled = !(isEqual && isValid);
+    })})
+
+    document.querySelector("#password-form").addEventListener("submit", e => {
+        e.preventDefault();
+
+        document.querySelector('#step3 #submit').value = "Resetting password..."
+        document.querySelector('#step3 #submit').disabled = 1;
+
+        fetch("{{ url_for('bp_user.change_password2') }}", {
+            "method": "POST",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": JSON.stringify({ "password": document.querySelector('#new-password').value, "email": document.querySelector('#email').value })
+        }).then(d => {
+            if (d.status === 200){
+                document.querySelector('#step3').style.display = 'none';
+                document.querySelector('#step4').style.display = 'block';
+            }
+
+            if (d.status === 500){
+                let m = document.querySelector('#step3-message');
+                m.innerHTML = "An error occured. Please try again.";
+                m.style.color = "red"
+                m.style.display = "block";
+            }
+
+            document.querySelector('#password-form #submit').value = 'Submit';
+            document.querySelector('#password-form #submit').disabled = 1;
+        });
+    });
+</script>

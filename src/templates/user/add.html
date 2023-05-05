@@ -27,9 +27,12 @@
     </div>
 </div>
 
-<form id="submit-form">
-    <input type="submit" id="add-btn" value="Add users" name="add-btn" disabled>
-</form>
+<div id="add-user-form">
+    <p class="message" style="display:none"></p>
+    <form id="submit-form">
+        <input type="submit" id="add-btn" value="Add users" name="add-btn" disabled>
+    </form>
+</div>
 
 <script>
     function disableButton () {
@@ -68,7 +71,7 @@
                 el.type = "email"
                 el.minLength = 1;
                 el.maxLength = 100;
-                el.pattern = "^\\w+([\\.-]?\\w+)*@gmail\\.com"
+                el.pattern = "^\\w+([\\.\\-\\+]?\\w+)*@gmail\\.com$"
                 el.title = "Email address must have a gmail.com domain"
                 wrapper.appendChild(el);
                 row.appendChild(wrapper);
@@ -112,6 +115,9 @@
     document.querySelector("#submit-form").addEventListener("submit", e => {
         e.preventDefault();
 
+        document.querySelector('#submit-form input[type=submit]').disabled = 1;
+        document.querySelector('#submit-form input[type=submit]').value = 'Adding users...'
+
         let values = [];
 
         for (let row of Array.from(document.querySelectorAll("#add-table .table-body .table-row:not(#add-row)"))) {
@@ -132,9 +138,22 @@
             "body": JSON.stringify({ "values": values })
         }).then(d => {
             if (d.status === 200) window.location = "{{ url_for('bp_user.show_users') }}";
-        });
+            if(d.status === 500){
+                d.json().then(a => {
+                    let p = document.querySelector('#add-user-form p')
+                    p.innerHTML = a['error']
+                    p.style.display = 'block'
+                });
 
-        disableButton();
+                document.querySelector('#submit-form input[type=submit]').value = 'Submit' 
+            }
+        }).catch(() => {
+            let p = document.querySelector('#add-user-form p')
+            p.innerHTML = 'Server unavailable. Please try again later'
+            p.style.display = 'block'
+
+            document.querySelector('#submit-form input[type=submit]').value = 'Submit' 
+        });
     });
 
     document.querySelector("#add-table").addEventListener("input", disableButton);
