@@ -1,11 +1,13 @@
 import smtplib
+import random
+import time
 from email.message import EmailMessage
 
 from flask import Blueprint, Response, redirect, render_template, url_for, request, session
 
 from src.blueprints.decode_keyword import decode_keyword
 from src.blueprints.database import connect_db
-from src.blueprints.auth import login_required
+from src.blueprints.auth import login_required, update_session
 from src.blueprints.bp_auth import generateHash
 
 # create SMTP session for sending the mail
@@ -41,7 +43,10 @@ def send_email (session, type, recipient, username = "", password = ""):
         msg.set_content("Your account password was changed.")
     elif(type == "email"):
         msg["Subject"] = "Email updated"
-        msg.set_content("Your account email was updated.")         
+        msg.set_content("Your account email was updated.") 
+    elif(type == "code"):
+        msg["Subject"] = "Reset password"
+        msg.set_content(f'Your 4-digit code is {username}.')         
     
     text = msg.as_string()
     session.sendmail(sender_address, recipient, text)
@@ -74,6 +79,7 @@ bp_user = Blueprint("bp_user", __name__, url_prefix = "/users")
 @bp_user.route('/')
 @login_required
 def show_users ():
+    update_session();
     if session['user']['RoleID'] != 0: 
         return render_template("error.html", errcode = 403, errmsg = "You do not have permission to see the users in the database."), 403
     else: 
@@ -103,19 +109,24 @@ def add_users ():
 
             mail_session = start_email_session()
 
+            #Add users in database
             default = generateHash('ilovesims')
-            for v in values:
-                userID = generate_userID(v[0], v[1])
-                
-                db.execute(f"INSERT INTO user VALUES ('{userID}', '{default}', '{v[0]}', '{v[1]}', '{v[2]}', {v[3]});")
-                send_email(mail_session, "add", v[2], userID, 'ilovesims')
+            try:
+                for v in values:
+                    userID = generate_userID(v[0], v[1])
+                    db.execute(f"INSERT INTO user VALUES ('{userID}', '{default}', '{v[0]}', '{v[1]}', '{v[2]}', {v[3]}, 0, 0);")
+                cxn.commit()
 
-            cxn.commit()
+                #Email here
+                for v in values:
+                    send_email(mail_session, "add", v[2], userID, 'ilovesims')
+            except Exception as e:
+                return { "error": e.args[1] }, 500
+            finally:
+                cxn.close()
+                mail_session.quit()
         except Exception as e:
-            return Response(status = 500)
-        finally:
-            cxn.close()
-            mail_session.quit()
+            return { "error": e.args[1] }, 500
         
         return Response(status = 200)
 
@@ -218,25 +229,141 @@ def search_users ():
         conditions.append(f"(Username LIKE '%{x}%' OR FirstName LIKE '%{x}%' OR LastName LIKE '%{x}%')")
 
     query = f"SELECT Username, LastName, FirstName, Email, RoleName FROM user LEFT JOIN role USING (RoleID) {'' if len(conditions) == 0 else 'WHERE (' + ' AND '.join(conditions) + ')'} ORDER BY Username;"
+    cxn = 0
+    try:
+        cxn = connect_db()
+        db = cxn.cursor()
+        db.execute(query)
+        users = db.fetchall()
+    except Exception as e:
+        return { "users": [] }, 500
+    finally:
+        if(cxn != 0):
+            cxn.close()
 
-    cxn = connect_db()
-    db = cxn.cursor()
-    db.execute(query)
-    users = db.fetchall()
-    cxn.close()
+    return { "users": users }, 200
 
-    return { "users": users }
+# route for checking password
+@bp_user.route('/check_password', methods = ["POST"])
+def check_password():
+    password = request.get_json()["values"]
+    if(session['user']['Password'] == generateHash(password)):
+        return Response(status = 200)
+    else:
+        return Response(status = 304)
 
-# route for updating user settings
-@bp_user.route('/settings')
-def change_account_settings ():
-    return render_template("user/settings.html", active = 'settings')
+# route for checking email
+@bp_user.route('/check_email', methods = ["POST"])
+def check_email():
+    email = request.get_json()["email"]
+
+    try:
+        cxn = connect_db()
+        db = cxn.cursor()
+
+        db.execute(f"SELECT COUNT(*) FROM user WHERE Email = '{email}';")
+        count = db.fetchone()
+
+        if(count[0] == 0):
+            return Response(status = 304)
+        
+        generate_code(email)
+    except Exception as e:
+        # TODO: Fix this
+        return { "error": e.args[1] }, 500
+    finally:
+        cxn.close()
+
+    return Response(status = 200)
+
+# route for generating code
+@bp_user.route('/generate_code', methods = ["POST"])
+def generate_code(email = ''):
+    # Set up email
+    if(email == ''):
+        email = request.get_json()["email"]
+    
+    # Generate code
+    code_key = random.randint(1000, 9999)
+    print(code_key)
+
+    #Update code in database
+    try:
+        cxn = connect_db()
+        db = cxn.cursor()
+
+        db.execute(f"UPDATE user SET Code = {code_key}, CodeIssueDate = {time.time()} WHERE Email = '{email}';")
+        cxn.commit()
+
+        # Email code
+        mail_session = start_email_session()
+        send_email(mail_session, "code", email, code_key)
+        mail_session.quit()
+
+    except Exception as e:
+        # TODO: Fix this
+        return { "error": e.args[1] }, 500
+    finally:
+        cxn.close()
+
+    return Response(status = 200)
+
+# route for checking code
+@bp_user.route('/verify_code', methods = ["POST"])
+def check_code():
+    code = request.get_json()["code"]
+    email = request.get_json()["email"]
+
+    #Get code in database
+    try:
+        cxn = connect_db()
+        db = cxn.cursor()
+
+        db.execute(f"SELECT Code, CodeIssueDate FROM user WHERE Email = '{email}';")
+        count = db.fetchone()
+    except Exception as e:
+        # TODO: Fix this
+        return { "error": e.args[1] }, 500
+    finally:
+        cxn.close()
+
+    print(count)
+    if(int(count[0]) == int(code) and time.time() - count[1] <= 180):
+        return Response(status = 200)
+    else:
+        return Response(status = 304)
+
+# route for updating password
+@bp_user.route('/settings/reset_password', methods = ["POST"])
+def change_password2():
+    password = request.get_json()['password']
+    email = request.get_json()['email']
+
+    try:
+        cxn = connect_db()
+        db = cxn.cursor()
+
+        new_password = generateHash(password)
+        db.execute(f"UPDATE user SET Password = '{new_password}' WHERE Email = '{email}';")
+        cxn.commit()
+
+        mail_session = start_email_session()
+        send_email(mail_session, "password", email)
+        mail_session.quit()
+
+    except Exception as e:
+        # TODO: Fix this
+        return { "error": e.args[1] }, 500
+    finally:
+        cxn.close()
+
+    return Response(status = 200)
 
 # route for updating password
 @bp_user.route('/settings/changepassword', methods = ["POST"])
 @login_required
 def change_password ():
-    req = request.form['new-password']
+    req = request.get_json()["password"]
 
     try:
         cxn = connect_db()
@@ -246,11 +373,10 @@ def change_password ():
         db.execute(f"UPDATE user SET Password = '{new_password}' WHERE Username = '{session['user']['Username']}';")
         cxn.commit()
 
-        if (session['user']['Email'] is not None) and (session['user']['Email'] != "NULL"):
-            mail_session = start_email_session()
-            send_email(mail_session, "password", session['user']['Email'])
-            mail_session.quit()
-
+        mail_session = start_email_session()
+        send_email(mail_session, "password", session['user']['Email'])
+        mail_session.quit()
+            
     except Exception as e:
         # TODO: Fix this
         return { "error": e.args[1] }, 500
@@ -263,23 +389,30 @@ def change_password ():
 @bp_user.route('/settings/emailchange', methods = ["POST"])
 @login_required
 def change_email ():
-    req = request.form['new-email']
+    password = request.get_json()["password"]
+    
+    if(session['user']['Password'] != generateHash(password)):
+        return Response(status = 304)
+    else:
+        email = request.get_json()["email"]
 
-    try:
-        cxn = connect_db()
-        db = cxn.cursor()
+        try:
+            cxn = connect_db()
+            db = cxn.cursor()
 
-        db.execute(f"UPDATE user SET Email = '{req}' WHERE Username = '{session['user']['Username']}';")
-        cxn.commit()
+            db.execute(f"UPDATE user SET Email = '{email}' WHERE Username = '{session['user']['Username']}';")
+            cxn.commit()
 
-        mail_session = start_email_session()
-        send_email(mail_session, "email", req)
-        mail_session.quit()
+            session['user']['Email'] = email
 
-    except Exception as e:
-        # TODO: Fix this
-        return { "error": e.args[1] }, 500
-    finally:
-        cxn.close()
+            mail_session = start_email_session()
+            send_email(mail_session, "email", email)
+            mail_session.quit()
 
-    return redirect(url_for('bp_inventory.inventory'))
+        except Exception as e:
+            # TODO: Fix this
+            return Response(status = 500)
+        finally:
+            cxn.close()
+
+        return redirect(url_for('bp_auth.logout'))

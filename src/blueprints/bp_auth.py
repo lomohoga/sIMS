@@ -16,7 +16,7 @@ def login ():
 
         cxn = connect_db()
         db = cxn.cursor()
-        db.execute(f"SELECT Username, Password, FirstName, LastName, RoleID, RoleName, Email FROM user LEFT JOIN role USING (RoleID) WHERE Username = '{username}'")
+        db.execute(f"SELECT Username, Password, FirstName, LastName, RoleID, RoleName, Email FROM user LEFT JOIN role USING (RoleID) WHERE Username = '{username}' OR Email = '{username}'")
         record = db.fetchone()
         cxn.close()
 

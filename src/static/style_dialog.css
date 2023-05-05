@@ -1,0 +1,104 @@
+/* Dialog */
+dialog{
+    border: 0;
+    border-radius: 20px;
+}
+
+dialog > div {
+    display: none;
+    width: 100%;
+    height: 100%;
+    padding: 20px;
+}
+
+#forgot-password-dialog > div{
+    width: fit-content;
+}
+
+dialog > div > div{
+    display: flex;
+    flex-direction: column;
+}
+
+#forgot-password-dialog,
+#change-password-dialog,
+#change-email-dialog{
+    width: 400px;
+    height: 600px;
+}
+
+dialog:not(#change-email-dialog) #step1 > div,
+#forgot-password-dialog #step3 > div,
+#change-password-dialog #step2 > div{
+    height: 75%;
+}
+
+#forgot-password-dialog #step2 > div{
+    height: 60%;
+}
+
+.password-reset-success{
+    height: 100%;
+    justify-content: center;
+}
+
+dialog input[type=email]:focus,
+dialog input[type=email]:is(#new-email):focus,
+dialog input[type=password]:focus,
+dialog input[type=text]:focus{
+    outline: none;
+    border: 1px solid var(--blue);
+}
+
+dialog input[type=email],
+dialog input[type=email]:is(#new-email), 
+dialog input[type=text], 
+dialog input[type=password]{
+    width: 100%;
+    height: 50px;
+
+    border: 1px solid var(--gray);
+    border-radius: 10px;
+    padding: 15px;
+
+    margin: 0px;
+    margin-top: 15px;
+}
+
+dialog input[type=submit], 
+dialog input[type=button]{
+    width: 100%;
+    height: 50px;
+
+    text-align: center;
+    border-radius: 15px;
+
+    margin: 0px;
+    margin-top: 10px;
+}
+
+.message{
+    display: none;
+    font-weight: lighter;
+    font-style: italic;
+    font-size: small;
+    color: var(--dark-red);
+
+    margin: 0;
+    margin-top: 5px;
+}
+
+#forgot-password-dialog #step3 > div > label,
+#change-password-dialog #step2 > div > label,
+#change-email-dialog label{
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+.pvalid::after{
+    content: '\2705';
+    opacity: 1;
+    top: -35px;
+    position: relative;
+    right: -300px;
+}
