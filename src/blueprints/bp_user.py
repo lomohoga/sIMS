@@ -111,15 +111,19 @@ def add_users ():
 
             #Add users in database
             default = generateHash('ilovesims')
+            userIDs = []
             try:
                 for v in values:
                     userID = generate_userID(v[0], v[1])
+                    userIDs.append(userID)
                     db.execute(f"INSERT INTO user VALUES ('{userID}', '{default}', '{v[0]}', '{v[1]}', '{v[2]}', {v[3]}, 0, 0);")
                 cxn.commit()
 
                 #Email here
+                i = 0
                 for v in values:
-                    send_email(mail_session, "add", v[2], userID, 'ilovesims')
+                    send_email(mail_session, "add", v[2], userIDs[i], 'ilovesims')
+                    i = i + 1
             except Exception as e:
                 return { "error": e.args[1] }, 500
             finally:
