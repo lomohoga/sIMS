@@ -171,7 +171,7 @@ def issue_request ():
     try:
         cxn = connect_db()
         db = cxn.cursor()
-        db.execute(f"UPDATE request SET StatusID = 3, Issuer = '{session['user']['Username']}' WHERE RequestID = {id}")
+        db.execute(f"UPDATE request SET StatusID = 3, IssuedBy = '{session['user']['Username']}' WHERE RequestID = {id}")
         cxn.commit()
     except Exception as e:
         return { "error": e.args[1] }, 500
