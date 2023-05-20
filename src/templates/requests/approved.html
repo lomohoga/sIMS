@@ -3,18 +3,12 @@
 {% block main %}
 
 <div id="content-top">
-    <h1 class="main-header">
-        Approved Requests
-    </h1>
-
-    <div id="inputs">
-        <div>
-            <form id="search">
-                <input type="search" id="search-box" placeholder="Search requests&hellip;" name="keyword" autofocus>
-                <input type="submit" id="search-btn" value="Search" name="search-btn">
-            </form>
-        </div>
-    </div>
+    <h1 class="main-header">Approved Requests</h1>
+    
+    <form id="search">
+        <input type="search" id="search-box" placeholder="Search requests&hellip;" name="keyword" autofocus>
+        <input type="submit" id="search-btn" value="Search" name="search-btn">
+    </form>
 </div>
 
 <div class="table-wrapper">
@@ -101,30 +95,30 @@
             if (amount > requestQuantity) alert("Please enter amount equal or less than the requested amount.")
             else if (amount != 0) {
                 let reqDetails = x.value.split(' ');
-                issueRequestItem(1, amount, reqDetails[0], reqDetails[1]);
-                window.location = encodeURI(`/requests/approvedRequests`);
+                issueRequestItem(reqDetails[0], reqDetails[1], amount);
+                window.location = encodeURI(`/requests/approved`);
             }
         }));
 
         document.querySelectorAll(".not-available-btn").forEach(x => x.addEventListener("click", () => {
             if (confirm("Are you sure the item is unavailable?")) {
                 let reqDetails = x.value.split(' ');
-                issueRequestItem(0, 0, reqDetails[0], reqDetails[1]);
-                window.location = encodeURI(`/requests/approvedRequests`);
+                issueRequestItem(reqDetails[0], reqDetails[1], 0);
+                window.location = encodeURI(`/requests/approved`);
             }
         }));
 
         document.querySelectorAll(".issue-btn").forEach(x => x.addEventListener("click", () => {
             if (confirm("Are you sure want to issue this request?")) {
                 issueRequest(x.value);
-                window.location = encodeURI(`/requests/approvedRequests`);
+                window.location = encodeURI(`/requests/approved`);
             }
         }));
 
         document.querySelectorAll(".cancel-issue-btn").forEach(x => x.addEventListener("click", () => {
             if (confirm("Are you sure want to cancel this request?")) {
                 cancelRequest(x.value);
-                window.location = encodeURI(`/requests/approvedRequests`);
+                window.location = encodeURI(`/requests/approved`);
             }
         }));
 

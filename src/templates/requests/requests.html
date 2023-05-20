@@ -1,24 +1,28 @@
 {% extends "base.html" %}
 
 {% block main %}
-
 <div id="content-top">
-    <h1 class="main-header">
-        My Requests
-    </h1>
+    <h1 class="main-header">{{ 'My' if session['user']['RoleID'] == 2 else 'Item' }} Requests</h1>
 
-    <div id="inputs">
-        <div>
-            <form id="search">
-                <input type="search" id="search-box" placeholder="Search requests&hellip;" name="keyword" autofocus>
-                <input type="submit" id="search-btn" value="Search" name="search-btn">
-            </form>
-        </div>
-    </div>
+    <form id="search">
+        <input type="search" id="search-box" placeholder="Search requests&hellip;" name="keyword" autofocus>
+        <input type="submit" id="search-btn" value="Search" name="search-btn">
+    </form>
+</div>
+
+<div id="request-filters">
+    <b>Filter:</b>
+    <button id="filter-all" role="button" type="button" class="selected">All</button>
+    <button class="yellow" role="button" type="button">Pending</button>
+    <button class="yellow" role="button" type="button">Approved</button>
+    <button class="yellow" role="button" type="button">Issued</button>
+    <button class="green" role="button" type="button">Completed</button>
+    <button class="red" role="button" type="button">Denied</button>
+    <button class="red" role="button" type="button">Cancelled</button>
 </div>
 
 <div class="table-wrapper">
-    <div class="table-main request-table user">
+    <div class="table-main request-table {{ 'custodian' if session['user']['RoleID'] == 1 else 'user' }}">
         <div class="table-header">
             <div class="table-row">
                 <div class="table-sortable">
@@ -27,6 +31,14 @@
                         <i class="bi bi-chevron-expand"></i>
                     </button>
                 </div>
+                {% if session['user']['RoleID'] == 1 %}
+                    <div class="table-sortable">
+                        <button role="button" class="sort-btn">
+                            Requested By
+                            <i class="bi bi-chevron-expand"></i>
+                        </button>
+                    </div>
+                {% endif %}
                 <div class="table-sortable">
                     <button role="button" class="sort-btn">
                         Request Date
@@ -38,9 +50,14 @@
                 <div>Item Name</div>
                 <div>Item Description</div>
                 <div>Request Quantity</div>
-                <div>Available Quantity</div>
+                <div>Quantity Issued</div>
+                <div>Available Stock</div>
                 <div>Unit</div>
-                <div>Actions</div>
+                {% if session['user']['RoleID'] == 1 %}
+                    <div style="grid-column: -1 / -3;">Actions</div>
+                {% else %}
+                    <div>Actions</div>
+                {% endif %}
             </div>
         </div>
         <div class="table-body">
@@ -48,7 +65,7 @@
                 <div>Please wait&hellip;</div>
             </div>
             <div class="table-empty table-row hide">
-                <div>No items found.</div>
+                <div>No requests found.</div>
             </div>
         </div>
     </div>
@@ -56,6 +73,7 @@
 
 <script>
     let currentSort = [0, true];
+    let privileges = +"{{ session['user']['RoleID'] }}";
 
     document.querySelectorAll(".request-table .sort-btn").forEach(x => {
         const p = x.parentElement;
@@ -66,7 +84,7 @@
 
     document.querySelector("#search").addEventListener("submit", e => {
         e.preventDefault();
-        populateRequests(document.querySelector(".request-table .table-body"), document.querySelector("#search-box").value, "user");
+        populateRequests(document.querySelector(".request-table .table-body"), document.querySelector("#search-box").value, privileges);
 
         let oldSym = document.querySelector(`.request-table .table-header .table-row > :nth-child(${currentSort[0] + 1}) .bi`);
         oldSym.classList.remove(`bi-chevron-${currentSort[1] ? "up" : "down"}`);
@@ -78,6 +96,19 @@
         newSym.classList.remove("bi-chevron-expand");
         newSym.classList.add("bi-chevron-up");
     });
+
+    document.querySelector("#filter-all").addEventListener("click", () => {
+        Array.prototype.forEach.call(document.querySelectorAll("#request-filters .selected"), x => x.classList.remove("selected"));
+        document.querySelector("#filter-all").classList.add("selected");
+        populateRequests(document.querySelector(".request-table .table-body"), "", privileges);
+    });
+
+    Array.prototype.forEach.call(document.querySelectorAll("#request-filters button:not(#filter-all)"), x => x.addEventListener("click", () => {
+        document.querySelector("#filter-all").classList.remove("selected");
+        x.classList.toggle("selected");
+        if (document.querySelector("#request-filters button.selected") === null) document.querySelector("#filter-all").classList.add("selected");
+        populateRequests(document.querySelector(".request-table .table-body"), "", privileges, Array.prototype.map.call(document.querySelectorAll("#request-filters button.selected:not(#filter-all)"), x => x.innerText.toLowerCase()));
+    }));
 
     document.addEventListener("tablerefresh", () => {
         currentSort = [0, true];
@@ -97,13 +128,13 @@
 
         document.querySelectorAll(".receive-btn").forEach(x => x.addEventListener("click", () => {
             if (confirm("Are you sure you have received the item?")) {
-                receiveRequest(x.value);
+                ReceivedByequest(x.value);
                 window.location = encodeURI(`/requests`);
             }
         }));
     });
 
-    window.addEventListener("load", () => populateRequests(document.querySelector(".request-table .table-body"), "", "user"))
+    window.addEventListener("load", () => populateRequests(document.querySelector(".request-table .table-body"), "", privileges));
 </script>
 
 {% endblock %}

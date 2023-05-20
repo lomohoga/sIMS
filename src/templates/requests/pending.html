@@ -97,13 +97,13 @@
         document.querySelectorAll(".approve-btn").forEach(x => x.addEventListener("click", () => {
             if (confirm("Are you sure you want to approve this request?")) {
                 decidePendingRequest(1, x.value);
-                window.location = encodeURI(`/requests/pendingRequests`);
+                window.location = encodeURI(`/requests/pending`);
             }
         }));
         document.querySelectorAll(".deny-btn").forEach(x => x.addEventListener("click", () => {
             if (confirm("Are you sure you want to deny this request?")) {
                 decidePendingRequest(0, x.value);
-                window.location = encodeURI(`/requests/pendingRequests`);
+                window.location = encodeURI(`/requests/pending`);
             }
         }));
     });

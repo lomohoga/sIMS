@@ -25,7 +25,7 @@
                         <span id="login-error">{{ msg }}</span>
                     {% endif %}
                 </form>
-                <button id="forgot-password">Forgot password</button>
+                <a id="forgot-password" class="btn">Forgot password?</a>
             </div>
         </main>
 
@@ -97,7 +97,6 @@
 </html>
 
 <script>
-
     // Display dialog
     document.querySelector('#forgot-password').addEventListener('click', () => {
         document.querySelector('#step1').style.display = "block"
@@ -289,12 +288,15 @@
         document.querySelector('#step3 #submit').value = "Resetting password..."
         document.querySelector('#step3 #submit').disabled = 1;
 
-        fetch("{{ url_for('bp_user.change_password2') }}", {
+        fetch("{{ url_for('bp_user.change_password') }}", {
             "method": "POST",
             "headers": {
                 "Content-Type": "application/json"
             },
-            "body": JSON.stringify({ "password": document.querySelector('#new-password').value, "email": document.querySelector('#email').value })
+            "body": JSON.stringify({
+                "password": document.querySelector('#new-password').value,
+                "email": document.querySelector('#email').value
+            })
         }).then(d => {
             if (d.status === 200){
                 document.querySelector('#step3').style.display = 'none';

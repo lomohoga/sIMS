@@ -63,33 +63,15 @@
     <div class="table-main selection-table update">
         <div class="table-header">
             <div class="table-row">
-                <div class="table-sortable">
-                    <button role="button" class="sort-btn">
-                        Item ID
-                        <i class="bi bi-chevron-expand"></i>
-                    </button>
-                </div>
-                <div class="table-sortable">
-                    <button role="button" class="sort-btn">
-                        Name
-                        <i class="bi bi-chevron-expand"></i>
-                    </button>
-                </div>
-                <div class="table-sortable">
-                    <button role="button" class="sort-btn">
-                        Description
-                        <i class="bi bi-chevron-expand"></i>
-                    </button>
-                </div>
-                <div class="table-sortable">
-                    <button role="button" class="sort-btn">
-                        <span>
-                            Shelf Life
-                            <br>
-                            <span style="font-weight: initial; font-style: italic; font-size: 80%;">(days)</span>
-                        </span>
-                        <i class="bi bi-chevron-expand"></i>
-                    </button>
+                <div>Item ID</div>
+                <div>Name</div>
+                <div>Description</div>
+                <div>
+                    <span>
+                        Shelf Life
+                        <br>
+                        <span style="font-weight: initial; font-style: italic; font-size: 80%;">(days)</span>
+                    </span>
                 </div>
                 <div>Unit Price</div>
                 <div>Unit</div>
@@ -216,7 +198,7 @@
         });
 
         let inv = document.createElement("div");
-        inv.classList.add("hide");
+        inv.classList.add("original-id");
         inv.innerHTML = row.children[0].innerHTML;
         newRow.appendChild(inv);
 
@@ -228,7 +210,7 @@
 
     function disableButtons () {
         if (document.querySelector(".selection-table .table-body").childElementCount > 0) {
-            let codes = Array.prototype.map.call(document.querySelectorAll(".selection-table .table-body .table-row > .hide"), x => x.innerText);
+            let codes = Array.prototype.map.call(document.querySelectorAll(".selection-table .table-body .table-row > .original-id"), x => x.innerText);
             Array.prototype.filter.call(document.querySelectorAll(".search-table .table-body .table-row"), x => codes.includes(x.firstChild.innerText)).forEach(x => x.querySelector(".select-row").disabled = true);
         }
     }
@@ -270,7 +252,7 @@
         for (let row of Array.from(document.querySelectorAll(".selection-table .table-body .table-row"))) {
             let children = row.children;
 
-            values[row.querySelector(".hide").innerText] = {
+            values[row.querySelector(".original-id").innerText] = {
                 "ItemID": children[0].firstChild.value,
                 "ItemName": children[1].firstChild.value,
                 "ItemDescription": children[2].firstChild.value,
@@ -279,7 +261,7 @@
                 "Unit": children[5].firstChild.value,
             }
         }
-        
+
         fetch("{{ url_for('bp_inventory.update_items') }}", {
             "method": "POST",
             "headers": {

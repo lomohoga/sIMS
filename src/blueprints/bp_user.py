@@ -333,24 +333,27 @@ def check_code():
     else:
         return Response(status = 304)
 
-# route for updating password
-@bp_user.route('/settings/reset_password', methods = ["POST"])
-def change_password2():
-    password = request.get_json()['password']
-    email = request.get_json()['email']
+# route for changing password
+@bp_user.route('/change_password', methods = ["POST"])
+@login_required
+def change_password ():
+    req = request.get_json()
+
+    if generateHash(req['old-password']) != session['user']['Password']: return { "error": "The old password you entered does not match your current password. Please try again." }, 500
 
     try:
         cxn = connect_db()
         db = cxn.cursor()
 
-        new_password = generateHash(password)
-        db.execute(f"UPDATE user SET Password = '{new_password}' WHERE Email = '{email}';")
+        db.execute(f"UPDATE user SET Password = '{generateHash(req['new-password'])}' WHERE Username = '{session['user']['Username']}';")
         cxn.commit()
 
-        mail_session = start_email_session()
-        send_email(mail_session, "password", email)
-        mail_session.quit()
-
+        # === TEMPORARILY DISABLED, REMEMBER TO UNCOMMENT! ===
+        #
+        # mail_session = start_email_session()
+        # send_email(mail_session, "password", session['user']['Email'])
+        # mail_session.quit()
+            
     except Exception as e:
         # TODO: Fix this
         return { "error": e.args[1] }, 500
@@ -359,40 +362,14 @@ def change_password2():
 
     return Response(status = 200)
 
-# route for updating password
-@bp_user.route('/settings/changepassword', methods = ["POST"])
-@login_required
-def change_password ():
-    req = request.get_json()["password"]
-
-    try:
-        cxn = connect_db()
-        db = cxn.cursor()
-
-        new_password = generateHash(req)
-        db.execute(f"UPDATE user SET Password = '{new_password}' WHERE Username = '{session['user']['Username']}';")
-        cxn.commit()
-
-        mail_session = start_email_session()
-        send_email(mail_session, "password", session['user']['Email'])
-        mail_session.quit()
-            
-    except Exception as e:
-        # TODO: Fix this
-        return { "error": e.args[1] }, 500
-    finally:
-        cxn.close()
-
-    return redirect(url_for('bp_auth.logout'))
-
 # route for changing email address
-@bp_user.route('/settings/emailchange', methods = ["POST"])
+@bp_user.route('/change_email', methods = ["POST"])
 @login_required
 def change_email ():
     password = request.get_json()["password"]
     
-    if(session['user']['Password'] != generateHash(password)):
-        return Response(status = 304)
+    if session['user']['Password'] != generateHash(password):
+        return { "error": "The password you have entered is incorrect. Please make sure you have entered your password correctly." }, 500
     else:
         email = request.get_json()["email"]
 
@@ -405,14 +382,16 @@ def change_email ():
 
             session['user']['Email'] = email
 
-            mail_session = start_email_session()
-            send_email(mail_session, "email", email)
-            mail_session.quit()
+            # === TEMPORARILY DISABLED, REMEMBER TO UNCOMMENT! ===
+            #
+            # mail_session = start_email_session()
+            # send_email(mail_session, "email", email)
+            # mail_session.quit()
 
         except Exception as e:
             # TODO: Fix this
-            return Response(status = 500)
+            return { "error": e.args[1] }, 500
         finally:
             cxn.close()
 
-        return redirect(url_for('bp_auth.logout'))
+        return Response(status = 200)

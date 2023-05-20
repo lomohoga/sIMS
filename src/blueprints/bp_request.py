@@ -4,85 +4,46 @@ from flask import Blueprint, Response, render_template, request, session
 
 from src.blueprints.database import connect_db
 from src.blueprints.decode_keyword import decode_keyword
+from src.blueprints.format_data import format_requests
 from src.blueprints.auth import login_required
 
 locale.setlocale(locale.LC_ALL, 'en_PH.utf8')
 bp_request = Blueprint("bp_request", __name__, url_prefix = "/requests")
 
 # route for requests
-@bp_request.route('/')
+@bp_request.route('/', methods=["GET"])
 @login_required
 def requests ():
     return render_template("requests/requests.html", active = "requests")
 
-# route for pending requests
-@bp_request.route('/pendingRequests')
-@login_required
-def pendingRequests ():
-    if session['user']['RoleID'] != 0: 
-        return render_template("error.html", errcode = 403, errmsg = "You do not have permission to see the users in the database."), 403
-    else: 
-        return render_template("requests/pendingRequests.html", active = "pendingRequests")
-
 # route for request search
-@bp_request.route('/search')
+@bp_request.route('/search', methods = ["GET"])
 @login_required
 def search_requests ():
     keywords = [] if "keywords" not in request.args else [decode_keyword(x).lower() for x in request.args.get("keywords").split(" ")]
-    requestType = request.args.get("type")
+    filter = [] if "filter" not in request.args else request.args.get("filter").split(",")
+    custodian = session['user']['RoleID'] == 1
 
     conditions = []
     for x in keywords:
-        a = f" OR RequestedBy LIKE '%{x}%'"
-        conditions.append(f"ItemID LIKE '%{x}%' OR ItemName LIKE '%{x}%' OR ItemDescription LIKE '%{x}%'{a if requestType == 'user' else ''}")
+        conditions.append(f"ItemID LIKE '%{x}%' OR ItemName LIKE '%{x}%' OR ItemDescription LIKE '%{x}%' OR RequestedBy LIKE '%{x}%'")
+    if len(filter) > 0: conditions.append(f'LOWER(StatusName) in {str(filter).replace("[", "(").replace("]", ")")}')
+
+    w = f"({' AND '.join(conditions)})" if len(conditions) > 0 else ""
 
     cxn = connect_db()
     db = cxn.cursor()
 
-    u = f"({' AND '.join(conditions)})" if len(conditions) > 0 else ""
-    v = f"RequestedBy = '{session['user']['Username']}'" if requestType == 'user' else ""
-    x = f"StatusName LIKE '%{requestType}%'" if requestType not in ['all', 'user'] else ""
-    w = ' AND '.join(filter(None, [u, v, x]))
-
-    db.execute(f"SELECT RequestID, RequestedBy, DATE_FORMAT(RequestDate, '%d %b %Y') AS RequestDate, StatusName as Status, ItemID, ItemName, ItemDescription, RequestQuantity, AvailableStock, Unit, Availability, AvailableQuantity FROM request INNER JOIN request_status USING (StatusID) INNER JOIN request_item USING (RequestID) INNER JOIN stock USING (ItemID){' WHERE RequestID IN (SELECT DISTINCT RequestID FROM request INNER JOIN request_item USING (RequestID) INNER JOIN item USING (ItemID) WHERE ' + w + ')' if w != '' else ''} ORDER BY RequestID, ItemID")
+    db.execute(f"SELECT RequestID, RequestedBy, DATE_FORMAT(RequestDate, '%d %b %Y') AS RequestDate, StatusName as Status, ItemID, ItemName, ItemDescription, RequestQuantity, QuantityIssued, AvailableStock, Unit FROM request INNER JOIN request_status USING (StatusID) INNER JOIN request_item USING (RequestID) INNER JOIN stock USING (ItemID){' WHERE RequestID IN (SELECT DISTINCT RequestID FROM request INNER JOIN request_item USING (RequestID) INNER JOIN item USING (ItemID) WHERE ' + w + ')' if w != '' else ''} ORDER BY RequestID, ItemID")
     requests = db.fetchall()
     cxn.close()
 
-    grouped = []
-    for req in requests:
-        d = next((g for g in grouped if g["RequestID"] == req[0]), None)
-        if d == None:
-            d = {
-                "RequestID": req[0],
-                "RequestedBy": req[1],
-                "RequestDate": req[2],
-                "Status": req[3],
-                "Items": []
-            } if requestType != 'user' else {
-                "RequestID": req[0],
-                "RequestDate": req[2],
-                "Status": req[3],
-                "Items": []
-            }
-            grouped.append(d)
-
-        d["Items"].append({
-            "ItemID": req[4],
-            "ItemName": req[5],
-            "ItemDescription": req[6],
-            "RequestQuantity": locale.format("%s", req[7], grouping = True),
-            "AvailableStock": locale.format("%s", req[8], grouping = True),
-            "Unit": req[9],
-            "ItemIssued": req[10],
-            "IssueAmount": req[11]
-        })
-
-    return { "requests": grouped }
+    return { "requests": format_requests(requests, session['user']['RoleID'] == 1) }
 
 # route for item request
 @bp_request.route('/request', methods = ["GET", "POST"])
 @login_required
-def make_requests ():
+def make_request ():
     if (request.method == "GET"):
         return render_template("requests/request.html")
 
@@ -110,39 +71,53 @@ def make_requests ():
 
         return Response(status = 200)
 
-# route for deciding on pending requests
-@bp_request.route('/pendingRequests/decide', methods = ["POST"])
-@login_required
-def decide_pendingRequest():
+# route for request approval
+@bp_request.route('/approve', methods = ["POST"])
+def approve_request ():
     if (request.method == "POST"):
-        if (session['user']['RoleID'] != 0):
-            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to view this page."), 403
-        else:
-            body = request.get_json()
+        id = request.get_json()['RequestID']
 
-            try:
-                cxn = connect_db()
-                db = cxn.cursor()
-                db.execute(f"UPDATE request SET StatusID = {'2' if body['decision'] else '5'}, ApprovedBy = \"{session['user']['Username']}\" WHERE RequestID = {body['requestID']}")
-                cxn.commit()
-            except Exception as e:
-                return { "error": e.args[1] }, 500
-            finally:
-                cxn.close()
-        
-        return Response(status = 200)
+        try:
+            cxn = connect_db()
+            db = cxn.cursor()
+            db.execute(f"UPDATE request SET StatusID = 2, ActingAdmin = '{session['user']['Username']}' WHERE RequestID = {id}")
+            cxn.commit()
+        except Exception as e:
+            return { "error": e.args[1] }, 500
+        finally:
+            cxn.close()
+    
+    return Response(status = 200)
 
-# route for cancelling requests
+# route for request denial
+@bp_request.route('/deny', methods = ["POST"])
+def deny_request ():
+    if (request.method == "POST"):
+        id = request.get_json()['RequestID']
+
+        try:
+            cxn = connect_db()
+            db = cxn.cursor()
+            db.execute(f"UPDATE request SET StatusID = 5, ActingAdmin = '{session['user']['Username']}' WHERE RequestID = {id}")
+            cxn.commit()
+        except Exception as e:
+            return { "error": e.args[1] }, 500
+        finally:
+            cxn.close()
+    
+    return Response(status = 200)
+
+# route for request cancellation
 @bp_request.route('/cancel', methods = ["POST"])
 @login_required
-def cancel_request():
+def cancel_request ():
     if (request.method == "POST"):
         body = request.get_json()
 
         try:
             cxn = connect_db()
             db = cxn.cursor()
-            db.execute(f"UPDATE request SET StatusID = 6 WHERE RequestID = {body['requestID']}")
+            db.execute(f"UPDATE request SET StatusID = 6 WHERE RequestID = {body['RequestID']}")
             cxn.commit()
         except Exception as e:
             return { "error": e.args[1] }, 500
@@ -151,75 +126,56 @@ def cancel_request():
     
     return Response(status = 200)
 
-# route for receiving requests
+# route for request receipt
 @bp_request.route('/receive', methods = ["POST"])
 @login_required
-def receive_request():
-    if (request.method == "POST"):
-        body = request.get_json()
+def receive_request ():
+    id = request.get_json()['RequestID']
 
-        try:
-            cxn = connect_db()
-            db = cxn.cursor()
-            db.execute(f"UPDATE request SET StatusID = 4, ReceivedBy = \"{session['user']['Username']}\"  WHERE RequestID = {body['requestID']}")
-            cxn.commit()
-        except Exception as e:
-            return { "error": e.args[1] }, 500
-        finally:
-            cxn.close()
+    try:
+        cxn = connect_db()
+        db = cxn.cursor()
+        db.execute(f"UPDATE request SET StatusID = 4, ReceivedBy = '{session['user']['Username']}' WHERE RequestID = {id}")
+        cxn.commit()
+    except Exception as e:
+        return { "error": e.args[1] }, 500
+    finally:
+        cxn.close()
+
+    return Response(status = 200)
+
+# route for individual issue of request item
+@bp_request.route('/issue/item', methods = ["POST"])
+@login_required
+def issue_item ():
+    body = request.get_json()
+
+    try:
+        cxn = connect_db()
+        db = cxn.cursor()
+        db.execute(f"UPDATE request_item SET QuantityIssued = {body['QuantityIssued']} WHERE RequestID = {body['RequestID']} AND ItemID = '{body['ItemID']}';")
+        cxn.commit()
+    except Exception as e:
+        return { "error": e.args[1] }, 500
+    finally:
+        cxn.close()
     
     return Response(status = 200)
 
-# route for approved requests
-@bp_request.route('/approvedRequests')
+# route for request issue
+@bp_request.route('/issue', methods = ["POST"])
 @login_required
-def approvedRequests ():
-    if session['user']['RoleID'] != 1: 
-        return render_template("error.html", errcode = 403, errmsg = "You do not have permission to see the users in the database."), 403
-    else: 
-        return render_template("requests/approvedRequests.html", active = "approvedRequests")
-    
+def issue_request ():
+    id = request.get_json()['RequestID']
 
-# route for request items
-@bp_request.route('/approvedRequests/issue/item', methods = ["POST"])
-@login_required
-def issue_requestItem ():
-    if (request.method == "POST"):
-        if (session['user']['RoleID'] != 1):
-            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to view this page."), 403
-        else:
-            body = request.get_json()
+    try:
+        cxn = connect_db()
+        db = cxn.cursor()
+        db.execute(f"UPDATE request SET StatusID = 3, Issuer = '{session['user']['Username']}' WHERE RequestID = {id}")
+        cxn.commit()
+    except Exception as e:
+        return { "error": e.args[1] }, 500
+    finally:
+        cxn.close()
 
-            try:
-                cxn = connect_db()
-                db = cxn.cursor()
-                db.execute(f"UPDATE request_item SET Availability = {body['decision']} {', AvailableQuantity = ' + str(body['amount']) if body['decision'] else ''} WHERE RequestID = {body['RequestID']} AND ItemID = \"{body['ItemID']}\";")
-                cxn.commit()
-            except Exception as e:
-                return { "error": e.args[1] }, 500
-            finally:
-                cxn.close()
-        
-        return Response(status = 200)
-
-# route for issuing requests
-@bp_request.route('/approvedRequests/issue', methods = ["POST"])
-@login_required
-def issue_request():
-    if (request.method == "POST"):
-        if (session['user']['RoleID'] != 1):
-            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to view this page."), 403
-        else:
-            body = request.get_json()
-
-            try:
-                cxn = connect_db()
-                db = cxn.cursor()
-                db.execute(f"UPDATE request SET StatusID = 3, IssuedBy = \"{session['user']['Username']}\" WHERE RequestID = {body['requestID']}")
-                cxn.commit()
-            except Exception as e:
-                return { "error": e.args[1] }, 500
-            finally:
-                cxn.close()
-        
-        return Response(status = 200)
+    return Response(status = 200)

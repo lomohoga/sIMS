@@ -15,6 +15,10 @@
     justify-content:center;
 }
 
+.request-table .table-body .table-row:not(.table-loading, .table-empty) {
+    border-bottom: 0.05rem solid var(--light-gray);
+}
+
 .request-table .table-row.item-not-found {
     background: var(--light-red-3);
     color: var(--red);
@@ -29,4 +33,107 @@
     font-weight: bold;
     font-style: italic;
     grid-column: 3 / 5;
+}
+
+.request-table .actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
+}
+
+/* request table action buttons */
+.request-table .issue:not(:disabled) {
+    background: var(--blue);
+    box-shadow: 0rem 0.2rem 0.4rem var(--blue-shadow);
+    color: white;
+}
+
+.request-table .issue:not(:disabled):hover,
+.request-table .issue:not(:disabled):focus {
+    background: var(--dark-blue);
+    box-shadow: 0rem 0.1rem 0.2rem var(--blue-shadow);
+}
+
+.request-table .actions .green:not(:disabled) {
+    background: var(--green);
+    box-shadow: 0rem 0.2rem 0.4rem var(--green-shadow);
+    color: white;
+}
+
+.request-table .actions .green:not(:disabled):hover, .request-table .actions .green:not(:disabled):focus {
+    background: var(--dark-green);
+    box-shadow: 0rem 0.1rem 0.2rem var(--green-shadow);
+}
+
+.request-table .actions .red:not(:disabled) {
+    background: var(--red);
+    box-shadow: 0rem 0.2rem 0.4rem var(--red-shadow);
+    color: white;
+}
+
+.request-table .actions .red:not(:disabled):hover, .request-table .actions .red:not(:disabled):focus {
+    background: var(--dark-red);
+    box-shadow: 0rem 0.1rem 0.2rem var(--red-shadow);
+}
+
+/* filter buttons */
+
+#request-filters {
+    display: flex;
+    gap: 0.5rem;
+    list-style: none;
+    align-items: center;
+}
+
+#request-filters .selected {
+    color: white;
+    font-weight: bold;
+    background: var(--blue);
+    box-shadow: 0rem 0.2rem 0.4rem var(--blue-shadow);
+}
+
+#request-filters .selected:hover,
+#request-filters .selected:focus {
+    background: var(--dark-blue);
+    box-shadow: 0rem 0.1rem 0.2rem var(--blue-shadow);
+}
+
+#request-filters .selected.green {
+    color: var(--status-green-text);
+    font-weight: bold;
+    background: var(--status-green);
+    box-shadow: 0rem 0.2rem 0.4rem var(--status-green-shadow);
+}
+
+#request-filters .selected.green:hover,
+#request-filters .selected.green:focus {
+    background: var(--status-green-dark);
+    box-shadow: 0rem 0.1rem 0.2rem var(--status-green-shadow);
+}
+
+#request-filters .selected.yellow {
+    color: var(--status-yellow-text);
+    font-weight: bold;
+    background: var(--status-yellow);
+    box-shadow: 0rem 0.2rem 0.4rem var(--status-yellow-shadow);
+}
+
+#request-filters .selected.yellow:hover,
+#request-filters .selected.yellow:focus {
+    background: var(--status-yellow-dark);
+    box-shadow: 0rem 0.1rem 0.2rem var(--status-yellow-shadow);
+}
+
+#request-filters .selected.red {
+    color: var(--status-red-text);
+    font-weight: bold;
+    background: var(--status-red);
+    box-shadow: 0rem 0.2rem 0.4rem var(--status-red-shadow);
+}
+
+#request-filters .selected.red:hover,
+#request-filters .selected.red:focus {
+    background: var(--status-red-dark);
+    box-shadow: 0rem 0.1rem 0.2rem var(--status-red-shadow);
 }

@@ -1,13 +1,11 @@
 {% extends "base.html" %}
 
 {% block main %}
-<!-- items is the list of items -->
-
 <div id="content-top">
     <h1 class="main-header">Item Request</h1>
 
     <form id="search">
-        <input type="search" id="search-box" placeholder="Search item&hellip;" name="keyword">
+        <input type="search" id="search-box" placeholder="Search item&hellip;" name="keyword" autofocus>
         <input type="submit" id="search-btn" value="Search" name="search-btn">
     </form>
 </div>
@@ -147,9 +145,10 @@
         amtWrap.classList.add("right");
         amtWrap.appendChild(amt);
         clone.insertBefore(amtWrap, clone.lastChild);
-
+        
         let b = document.querySelector(".selection-table .table-body");
         b.insertBefore(clone, b.firstChild);
+        amt.focus();
         row.lastChild.querySelector("button").disabled = true;
         enableSubmit();
     }
@@ -192,7 +191,7 @@
     document.querySelector("#submit-form").addEventListener("submit", e => {
         e.preventDefault();
         
-        fetch("{{ url_for('bp_request.make_requests') }}", {
+        fetch("{{ url_for('bp_request.make_request') }}", {
             "method": "POST",
             "headers": {
                 "Content-Type": "application/json"

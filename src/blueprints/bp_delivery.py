@@ -14,7 +14,6 @@ def deliveries ():
         return render_template("error.html", errcode = 403, errmsg = "You do not have permission to view deliveries."), 403
     else:
         return render_template("deliveries/deliveries.html", active = "deliveries")
-    
 
 @bp_delivery.route('/search')
 @login_required
@@ -37,7 +36,6 @@ def search_deliveries ():
     cxn.close()
 
     return { "deliveries": format_deliveries(deliveries) }
-
 
 @bp_delivery.route('/add', methods = ["GET", "POST"])
 @login_required

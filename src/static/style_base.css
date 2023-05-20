@@ -1,0 +1,86 @@
+header {
+    display: flex;
+    flex-direction: row;
+}
+
+#home h1 {
+    display: inline;
+}
+
+#home a {
+    text-decoration: none;
+}
+
+#home a:hover * {
+    text-decoration: underline;
+    text-decoration-thickness: 0.125rem;
+    text-underline-offset: 0.25rem;
+}
+    
+#profile {
+    position: relative;
+    flex-grow: 0;
+    padding: 0;
+    line-height: 1;
+    background: none;
+    box-shadow: none;
+}
+
+#profile > button {
+    text-align: right;
+    background: initial;
+    box-shadow: initial;
+    padding: initial;
+    outline-offset: 0.25rem;
+    border-radius: 0.025rem;
+}
+
+#profile > button:hover {
+    cursor: pointer;
+}
+
+#profile > button:hover, #profile > button:focus {
+    text-decoration: underline;
+}
+
+#profile-name {
+    font-weight: bold;
+}
+
+#profile-role {
+    font-size: smaller;
+    font-style: italic;
+}
+
+#profile-dropdown {
+    width: max-content;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 1;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    display: none;
+    flex-direction: column;
+    gap: 0.3rem;
+    border-radius: 0.5rem;
+    background: var(--white);
+    box-shadow: 0rem 0.2rem 0.4rem var(--btn-shadow);
+    border: none;
+}
+
+#profile-dropdown.show {
+    display: flex;
+}
+
+#profile-dropdown button {
+    width: 100%;
+    padding: 0.5rem 0.5rem;
+    background: initial;
+    box-shadow: initial;
+}
+
+#profile-dropdown button:hover,
+#profile-dropdown button:focus {
+    background: var(--light-gray);
+}

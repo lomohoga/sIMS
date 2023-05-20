@@ -4,22 +4,20 @@
 <div id="content-top">
     <h1 class="main-header">Inventory</h1>
 
-    <div id="inputs">
-        <div>
-            {% if session['user']['RoleID'] == 1 %}
-                <a class="btn" href="{{ url_for('bp_inventory.add_items') }}">Add items</a>
-                <a class="btn" href="{{ url_for('bp_inventory.remove_items') }}">Remove items</a>
-                <a class="btn" href="{{ url_for('bp_inventory.update_items') }}">Update items</a>
-            {% else %}
-                <a class="btn" href="{{ url_for('bp_request.make_requests') }}">Request items</a>
-            {% endif %}
-
-            <form id="search">
-                <input type="search" id="search-box" placeholder="Search item&hellip;" name="keyword" autofocus>
-                <input type="submit" id="search-btn" value="Search" name="search-btn">
-            </form>
-        </div>
+    <div class="btn-group">
+        {% if session['user']['RoleID'] == 1 %}
+            <a class="btn" href="{{ url_for('bp_inventory.add_items') }}">Add items</a>
+            <a class="btn" href="{{ url_for('bp_inventory.remove_items') }}">Remove items</a>
+            <a class="btn" href="{{ url_for('bp_inventory.update_items') }}">Update items</a>
+        {% else %}
+            <a class="btn" href="{{ url_for('bp_request.make_request') }}">Request items</a>
+        {% endif %}
     </div>
+
+    <form id="search">
+        <input type="search" id="search-box" placeholder="Search item&hellip;" name="keyword" autofocus>
+        <input type="submit" id="search-btn" value="Search" name="search-btn">
+    </form>
 </div>
 
 <div class="table-wrapper">

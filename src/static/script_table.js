@@ -7,13 +7,15 @@ const timeConv = {
 };
 
 const itemColumns = ["ItemID", "ItemName", "ItemDescription", "ShelfLife", "Price", "AvailableStock", "Unit"];
-const requestColumns = ["RequestID", "RequestedBy", "RequestDate", "Status", "ItemID", "ItemName", "ItemDescription", "RequestQuantity", "AvailableStock", "Unit"];
+const requestColumns = ["RequestID", "RequestedBy", "RequestDate", "Status", "ItemID", "ItemName", "ItemDescription", "RequestQuantity", "QuantityIssued", "AvailableStock", "Unit"];
 const deliveryColumns = ["DeliveryID", "ItemID", "ItemName", "ItemDescription", "DeliveryQuantity", "Unit", "ShelfLife", "DeliveryDate", "ReceivedBy", "IsExpired"];
 
+// converts escaped characters in keywords
 function escapeKeyword (k) {
     return k.replaceAll(/[\u2018\u2019\u201c\u201d]/gu, x => (x === '\u2018' || x === '\u2019') ? '"' : "'").replaceAll(/[:/?#\[\]@!$&'()*+,;=%]/g, x => "%" + x.charCodeAt(0).toString(16).toUpperCase());
 }
 
+// fetches users from database
 async function getUsers (keyword = "") {
     let a = fetch(encodeURI(`/users/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`));
     let b = a.then(d => d.json());
@@ -24,6 +26,7 @@ async function getUsers (keyword = "") {
     });
 }
 
+// populates user table with users from getUsers()
 async function populateUsers(tbody, keyword = "", type = "users") {
     while (tbody.childElementCount > 3) tbody.removeChild(tbody.lastChild);
 
@@ -128,13 +131,15 @@ async function populateUsers(tbody, keyword = "", type = "users") {
         }
     }
 
-    document.dispatchEvent(new CustomEvent("tablerefresh"));
+    document.dispatchEvent(new Event("tablerefresh"));
 }
 
+// fetches items from database
 async function getItems (keyword = "") {
     return fetch(encodeURI(`/inventory/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`)).then(d => d.json()).then(j => j["items"]);
 }
 
+// populates item table with items from getItems()
 async function populateItems (tbody, keyword = "", { stock = true, buttons = false, requesting = false } = {}) {
     while (tbody.childElementCount > 2) tbody.removeChild(tbody.lastChild);
 
@@ -193,23 +198,25 @@ async function populateItems (tbody, keyword = "", { stock = true, buttons = fal
     if (items.length > 0) tbody.querySelector(".table-empty").classList.add("hide");
     else tbody.querySelector(".table-empty").classList.remove("hide");
 
-    document.dispatchEvent(new CustomEvent("tablerefresh"));
+    document.dispatchEvent(new Event("tablerefresh"));
 
     return rows;
 }
 
-async function getRequests (keyword = "", type = "") {
-    return fetch(encodeURI(`/requests/search?type=${type}${keyword === "" ? "" : "&keywords=" + escapeKeyword(keyword) + ""}`)).then(d => d.json()).then(j => j["requests"]);
+// fetches requests from database
+async function getRequests (keyword = "", filter = []) {
+    return fetch(encodeURI(`/requests/search${keyword === "" ? "" : "&keywords=" + escapeKeyword(keyword) + ""}${filter.length === 0 ? "" : "&filter=" + filter.join(",")}`.replace("&", "?"))).then(d => d.json()).then(j => j["requests"]);
 }
 
-async function populateRequests (tbody, keyword = "", type = "") {
+// populates request table with requests from getRequests()
+async function populateRequests (tbody, keyword = "", privileges = "user", filter = undefined) {
     while (tbody.childElementCount > 2) tbody.removeChild(tbody.lastChild);
 
     tbody.querySelector(".table-loading").classList.remove("hide");
     tbody.querySelector(".table-empty").classList.add("hide");
 
-    let requests = await getRequests(keyword, type);
-
+    let requests = await getRequests(keyword, filter);
+    
     for (let req of requests) {
         let tr = document.createElement("div");
         tr.classList.add("table-row")
@@ -231,11 +238,10 @@ async function populateRequests (tbody, keyword = "", type = "") {
             tr.appendChild(td);
         }
 
-        let readyForIssue = 1;          // Used for approved requests page to check if all items checked
-        let allItemsUnavailable = 1;    // Checks if all items are unavailable
-
         for (let j of req["Items"]) {
             for (let k of requestColumns.slice(4)) {
+                if (k === 'RequestedBy' && !custodian) continue;
+
                 let td = document.createElement("div");
                 if (k === 'ItemID') td.classList.add("mono");
                 if (k === 'ItemDescription') td.classList.add("left");
@@ -244,96 +250,203 @@ async function populateRequests (tbody, keyword = "", type = "") {
                 
                 tr.appendChild(td)
             }
-            tr.appendChild(document.createElement("div")); // Temporary fix to easily add buttons at the rightmost
+            
+            if (privileges === 1 && req["Items"].map(x => x['QuantityIssued']).some(x => x === '\u2014')) {
+                let div = document.createElement("div");
 
-            // Generate buttons in Approved Requests page
-            if (type == 'approved'){
-                if (j["ItemIssued"] == null) {
-                    readyForIssue = 0;
-                    allItemsUnavailable = 0;
+                if (j['QuantityIssued'] === '\u2014') {
                     let btn = document.createElement("button");
+                    btn.classList.add("issue");
                     btn.type = "button";
-                    btn.innerText = "Available";
-                    btn.classList.add("available-btn");
-                    btn.value = req["RequestID"] + ' ' + j["ItemID"];
+                    btn.role = "button";
+                    btn.title = "Issue item";
+                    btn.innerHTML = "<i class='bi bi-box-seam'></i>";
 
-                    let btn2 = document.createElement("button");
-                    btn2.type = "button";
-                    btn2.innerText = "Not Available";
-                    btn2.classList.add("not-available-btn");
-                    btn2.value = req["RequestID"] + ' ' + j["ItemID"];
+                    btn.addEventListener("click", () => {
+                        let q = prompt("How much of this item would you like to issue?", j['RequestQuantity']);
 
-                    tr.lastChild.appendChild(btn);
-                    tr.lastChild.appendChild(btn2);
-                } else if (j["ItemIssued"]){
-                    allItemsUnavailable = 0;
-                    tr.lastChild.innerText = j["IssueAmount"];
-                } else {
-                    tr.lastChild.innerText = "Item Unavailable";
+                        fetch("./issue/item", {
+                            "method": "POST",
+                            "headers": {
+                                "Content-Type": "application/json"
+                            },
+                            "body": JSON.stringify({
+                                "RequestID": req['RequestID'],
+                                "ItemID": j["ItemID"],
+                                "QuantityIssued": +q
+                            })
+                        }).then(d => {
+                            if (d.status === 200) window.location.reload();
+                        });
+                    });
+
+                    div.appendChild(btn);
                 }
-                tr.appendChild(document.createElement("div"));
+
+                tr.appendChild(div);
             }
         }
+        
+        let actions = document.createElement("div");
+        actions.classList.add("actions");
+        actions.style.gridColumn = '-1 / -2';
+        actions.style.gridRow = `1 / ${req["Items"].length + 1}`;
+        
+        if (req['Status'] === 'Approved' && privileges === 1) {
+            if (req["Items"].map(x => x['QuantityIssued']).every(x => x !== '\u2014')) {
+                actions.style.gridColumn = '-1 / -3';
 
-        if (type == 'approved'){
-            if (allItemsUnavailable) {
-                let btn = document.createElement("button");
-                btn.innerText = "Cancel";
-                btn.classList.add("cancel-issue-btn");
-                btn.type = "button";
-                btn.value = req["RequestID"];
+                let issueBtn = document.createElement("button");
+                issueBtn.type = "button";
+                issueBtn.role = "button";
+                issueBtn.title = "Issue requested items";
+                issueBtn.innerHTML = "<i class='bi bi-check-circle'></i>";
+                issueBtn.classList.add("green");
 
-                tr.lastChild.append(btn);
-            } else if (readyForIssue){
-                let btn = document.createElement("button");
-                btn.innerText = "Issue";
-                btn.classList.add("issue-btn");
-                btn.type = "button";
-                btn.value = req["RequestID"];
+                issueBtn.addEventListener("click", () => {
+                    if (confirm("Are you sure you want to issue this request?")) fetch("./issue", {
+                        "method": "POST",
+                        "headers": {
+                            "Content-Type": "application/json"
+                        },
+                        "body": JSON.stringify({
+                            "RequestID": req['RequestID']
+                        })
+                    }).then(d => {
+                        if (d.status === 200) window.location.reload();
+                    });
+                });
 
-                tr.lastChild.append(btn);
+                actions.append(issueBtn);
             }
+            
+            let cancelBtn = document.createElement("button");
+            cancelBtn.type = "button";
+            cancelBtn.role = "button";
+            cancelBtn.title = "Cancel request";
+            cancelBtn.innerHTML = "<i class='bi bi-x-circle'></i>";
+            cancelBtn.classList.add("red");
+
+            cancelBtn.addEventListener("click", () => {
+                if (confirm("Are you sure you want to cancel this request?\nWARNING: This will forfeit ALL requested items!")) fetch("./cancel", {
+                    "method": "POST",
+                    "headers": {
+                        "Content-Type": "application/json"
+                    },
+                    "body": JSON.stringify({
+                        "RequestID": req['RequestID']
+                    })
+                }).then(d => {
+                    if (d.status === 200) window.location.reload();
+                });
+            });
+
+            actions.append(cancelBtn);
         }
-
-        if (type == 'pending'){
-            let td = tr.lastChild // Temporary fix to easily add buttons at the rightmost
-
+        
+        if (req['Status'] === 'Pending' && privileges === 0) {
             let approveBtn = document.createElement("button");
-            approveBtn.innerText = "Approve";
-            approveBtn.classList.add("approve-btn");
+            approveBtn.title = "Approve request";
             approveBtn.type = "button";
+            approveBtn.role = "button";
             approveBtn.value = req["RequestID"];
+            approveBtn.innerHTML = "<i class='bi bi-check-circle'></i>";
+            approveBtn.classList.add("green");
+
+            approveBtn.addEventListener("click", () => {
+                if (confirm("Are you sure you want to approve this request?")) fetch("./approve", {
+                    "method": "POST",
+                    "headers": {
+                        "Content-Type": "application/json"
+                    },
+                    "body": JSON.stringify({
+                        "RequestID": req['RequestID']
+                    })
+                }).then(d => {
+                    if (d.status === 200) window.location.reload();
+                });
+            });
 
             let denyBtn = document.createElement("button");
-            denyBtn.innerText = "Deny";
-            denyBtn.classList.add("deny-btn");
+            denyBtn.title = "Deny request";
             denyBtn.type = "button";
+            denyBtn.role = "button";
             denyBtn.value = req["RequestID"];
+            denyBtn.innerHTML = "<i class='bi bi-x-circle'></i>";
+            denyBtn.classList.add("red");
 
-            td.appendChild(approveBtn);
-            td.appendChild(denyBtn);
-
-            tr.appendChild(td);
+            denyBtn.addEventListener("click", () => {
+                if (confirm("Are you sure you want to deny this request?")) fetch("./deny", {
+                    "method": "POST",
+                    "headers": {
+                        "Content-Type": "application/json"
+                    },
+                    "body": JSON.stringify({
+                        "RequestID": req['RequestID']
+                    })
+                }).then(d => {
+                    if (d.status === 200) window.location.reload();
+                });
+            });
+            
+            actions.appendChild(approveBtn);
+            actions.appendChild(denyBtn);
         }
-
-        if (type == "user" && req["Status"] != "Cancelled" && req["Status"] != "Rejected" && req["Status"] != "Completed"){
-            let td = tr.lastChild; // Temporary fix to easily add buttons at the rightmost
-            let btn = document.createElement("button");
-            btn.type = "button";
-            btn.value = req["RequestID"];
-            if (req["Status"] == "Issued"){
-                btn.classList.add("receive-btn");
-                btn.innerText = "Receive";
+        
+        if (privileges === 2 && ['Pending', 'Approved', 'Issued'].includes(req['Status'])) {
+            if (req['Status'] === 'Issued') {
+                let receiveBtn = document.createElement("button");
+                receiveBtn.title = "Receive requested items";
+                receiveBtn.type = "button";
+                receiveBtn.role = "button";
+                receiveBtn.value = req["RequestID"];
+                receiveBtn.innerHTML = "<i class='bi bi-check-circle'></i>";
+                receiveBtn.classList.add("green");
                 
-            } else {
-                btn.classList.add("cancel-btn");
-                btn.innerText = "Cancel";
+                receiveBtn.addEventListener("click", () => {
+                    if (confirm("Are you sure you want to receive this request?")) fetch("./receive", {
+                        "method": "POST",
+                        "headers": {
+                            "Content-Type": "application/json"
+                        },
+                        "body": JSON.stringify({
+                            "RequestID": req['RequestID']
+                        })
+                    }).then(d => {
+                        if (d.status === 200) window.location.reload();
+                    });;
+                });
+
+                actions.append(receiveBtn);
             }
 
-            td.append(btn);
-            tr.appendChild(td);
-        }
+            let cancelBtn = document.createElement("button");
+            cancelBtn.title = "Cancel request";
+            cancelBtn.type = "button";
+            cancelBtn.role = "button";
+            cancelBtn.value = req["RequestID"];
+            cancelBtn.innerHTML = "<i class='bi bi-x-circle'></i>";
+            cancelBtn.classList.add("red");
 
+            cancelBtn.addEventListener("click", () => {
+                if (confirm("Are you sure you want to cancel this request?")) fetch("./cancel", {
+                    "method": "POST",
+                    "headers": {
+                        "Content-Type": "application/json"
+                    },
+                    "body": JSON.stringify({
+                        "RequestID": req['RequestID']
+                    })
+                }).then(d => {
+                    if (d.status === 200) window.location.reload();
+                });
+            });
+
+            actions.append(cancelBtn);
+        }
+        
+        tr.appendChild(actions);
+        
         tbody.appendChild(tr);
     }
 
@@ -341,13 +454,15 @@ async function populateRequests (tbody, keyword = "", type = "") {
     if (requests.length > 0) tbody.querySelector(".table-empty").classList.add("hide");
     else tbody.querySelector(".table-empty").classList.remove("hide");
 
-    document.dispatchEvent(new CustomEvent("tablerefresh"));
+    document.dispatchEvent(new Event("tablerefresh"));
 }
 
+// fetches deliveries from database
 async function getDeliveries (keyword = "") {
     return fetch(encodeURI(`/deliveries/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`)).then(d => d.json()).then(j => j["deliveries"]);
 }
 
+// populates delivery table with deliveries from getDeliveries()
 async function populateDeliveries (tbody, keyword = "") {
     while (tbody.childElementCount > 2) tbody.removeChild(tbody.lastChild);
 
@@ -387,9 +502,10 @@ async function populateDeliveries (tbody, keyword = "") {
     if (items.length > 0) tbody.querySelector(".table-empty").classList.add("hide");
     else tbody.querySelector(".table-empty").classList.remove("hide");
 
-    document.dispatchEvent(new CustomEvent("tablerefresh"));
+    document.dispatchEvent(new Event("tablerefresh"));
 }
 
+// sorts table based on column
 function sortTable (table, column, currentSort, { shelfLife = false, numerical = false, date = false } = {}) {
     let oldSym = table.querySelector(`.table-header .table-row > :nth-child(${currentSort[0] + 1}) .bi`);
     oldSym.classList.remove(`bi-chevron-${currentSort[1] ? "up" : "down"}`);
@@ -428,8 +544,9 @@ function sortTable (table, column, currentSort, { shelfLife = false, numerical =
     return currentSort;
 }
 
-async function decidePendingRequest(decision, requestID){
-    fetch(encodeURI(`/requests/pendingRequests/decide`), {
+// sets request status as either "Approved" or "Denied"
+async function decidePendingRequest(decision, requestID) {
+    fetch(encodeURI(`/requests/pending/decide`), {
         "method": "POST",
         "headers": {
             "Content-Type": "application/json"
@@ -443,7 +560,8 @@ async function decidePendingRequest(decision, requestID){
     });
 }
 
-async function cancelRequest(requestID){
+// sets request status as "Cancelled"
+async function cancelRequest(requestID) {
     fetch(encodeURI(`/requests/cancel`), {
         "method": "POST",
         "headers": {
@@ -457,29 +575,30 @@ async function cancelRequest(requestID){
     });
 }
 
-async function receiveRequest(requestID){
+// sets request status as "Received"
+async function ReceivedByequest(requestID) {
     fetch(encodeURI(`/requests/receive`), {
         "method": "POST",
         "headers": {
             "Content-Type": "application/json"
         }, 
         "body":JSON.stringify({
-            "requestID": requestID
+            "RequestID": requestID
         })
     }).then(d => {
         if (d.status === 200) return;
     });
 }
 
-async function issueRequestItem(decision = 1, amount = 0, requestID = "", itemID = ""){
-    fetch(encodeURI(`/requests/approvedRequests/issue/item`), {
+// sets status for individual item in request
+async function issueRequestItem(requestID, itemID, amount = 0) {
+    fetch(encodeURI(`/requests/approved/issue/item`), {
         "method": "POST",
         "headers": {
             "Content-Type": "application/json"
         }, 
         "body":JSON.stringify({
-            "decision": decision,
-            "amount": amount,
+            "Amount": amount,
             "RequestID": requestID,
             "ItemID": itemID
         })
@@ -488,8 +607,9 @@ async function issueRequestItem(decision = 1, amount = 0, requestID = "", itemID
     });
 }
 
-async function issueRequest(requestID){
-    fetch(encodeURI(`/requests/approvedRequests/issue`), {
+// sets request status as "Issued"
+async function issueRequest(requestID) {
+    fetch(encodeURI(`/requests/approved/issue`), {
         "method": "POST",
         "headers": {
             "Content-Type": "application/json"

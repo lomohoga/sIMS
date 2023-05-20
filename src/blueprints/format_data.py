@@ -8,39 +8,43 @@ def format_items (items):
             "ItemID": item[0],
             "ItemName": item[1],
             "ItemDescription": item[2],
-            "ShelfLife": locale.format("%s", item[3], grouping = True) if item[3] != None else "\u2014",
+            "ShelfLife": locale.format_string("%d", item[3], grouping = True) if item[3] != None else "\u2014",
             "Price": locale.currency(item[4], grouping = True),
-            "AvailableStock": locale.format("%s", item[5], grouping = True),
+            "AvailableStock": locale.format_string("%d", item[5], grouping = True),
             "Unit": item[6]
         } for item in items
     ]
 
 def format_requests (requests, custodian = True):
-    print(requests)
-    return [
-        {
-            "RequestID": req[0],
-            "ItemID": req[1],
-            "ItemName": req[2],
-            "ItemDescription": req[3],
-            "RequestedBy": req[4],
-            "RequestQuantity": locale.format("%s", req[5], grouping = True),
-            "Unit": req[6],
-            "RequestDate": req[7],
-            "Status": req[8]
-        } if custodian
-        else {
-            "RequestID": req[0],
-            "ItemID": req[1],
-            "ItemName": req[2],
-            "ItemDescription": req[3],
-            "RequestQuantity": locale.format("%s", req[5], grouping = True),
-            "Unit": req[6],
-            "RequestDate": req[7],
-            "Status": req[8]
-        } for req in requests
-    ]
+    grouped = []
 
+    for req in requests:
+        if len(list(filter(lambda x: x['RequestID'] == req[0], grouped))) == 0:
+            grouped.append({
+                "RequestID": req[0],
+                "RequestedBy": req[1],
+                "RequestDate": req[2],
+                "Status": req[3],
+                "Items": []
+            })
+        
+        z = list(filter(lambda x: x['RequestID'] == req[0], grouped))[0]
+        o = {
+            "ItemID": req[4],
+            "ItemName": req[5],
+            "ItemDescription": req[6],
+            "RequestQuantity": locale.format_string("%d", req[7], grouping = True),
+            "QuantityIssued": locale.format_string("%d", req[8], grouping = True) if req[8] is not None else '\u2014',
+            "AvailableStock": locale.format_string("%d", req[9], grouping = True),
+            "Unit": req[10]
+        }
+
+        z['Items'].append(o)
+
+    if not custodian:
+        for g in grouped: g.pop("RequestedBy")
+
+    return grouped
 
 def format_deliveries (deliveries):
     return [
@@ -49,9 +53,9 @@ def format_deliveries (deliveries):
             "ItemID": d[1],
             "ItemName": d[2],
             "ItemDescription": d[3],
-            "DeliveryQuantity": locale.format("%s", d[4], grouping = True),
+            "DeliveryQuantity": locale.format_string("%d", d[4], grouping = True),
             "Unit": d[5],
-            "ShelfLife": locale.format("%s", d[6], grouping = True) if d[6] is not None else "\u2014",
+            "ShelfLife": locale.format_string("%d", d[6], grouping = True) if d[6] is not None else "\u2014",
             "DeliveryDate": d[7],
             "ReceivedBy": d[8],
             "IsExpired": bool(d[9])

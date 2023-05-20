@@ -4,16 +4,11 @@
 <div id="content-top">
     <h1 class="main-header">Deliveries</h1>
 
-    <div id="inputs">
-        <div>
-            <a class="btn" href="{{ url_for('bp_delivery.add_deliveries') }}">Log deliveries</a>
-            
-            <form id="search">
-                <input type="search" id="search-box" placeholder="Search deliveries&hellip;" name="keyword" autofocus>
-                <input type="submit" id="search-btn" value="Search" name="search-btn">
-            </form>
-        </div>
-    </div>
+    <a class="btn" href="{{ url_for('bp_delivery.add_deliveries') }}">Log deliveries</a>
+    <form id="search">
+        <input type="search" id="search-box" placeholder="Search deliveries&hellip;" name="keyword" autofocus>
+        <input type="submit" id="search-btn" value="Search" name="search-btn">
+    </form>
 </div>
 
 <div class="table-wrapper">
