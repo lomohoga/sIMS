@@ -40,37 +40,6 @@ def search_requests ():
 
     return { "requests": format_requests(requests, session['user']['RoleID'] == 1) }
 
-# route for item request
-@bp_request.route('/request', methods = ["GET", "POST"])
-@login_required
-def make_request ():
-    if (request.method == "GET"):
-        return render_template("requests/request.html")
-
-    if (request.method == "POST"):
-        if session['user']['RoleID'] == 1: 
-            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to request items from the database."), 403
-        
-        req = request.get_json()["items"]
-
-        try:
-            cxn = connect_db()
-            db = cxn.cursor()
-
-            db.execute(f"INSERT INTO request (RequestedBy) VALUES ('{session['user']['Username']}')")
-            db.execute("SELECT LAST_INSERT_ID()")
-            requestID = int(db.fetchone()[0])
-
-            for x in req:
-                db.execute(f"INSERT INTO request_item (RequestID, ItemID, RequestQuantity) VALUES ({requestID}, '{x['ItemID']}', {x['RequestQuantity']})")
-            cxn.commit()
-        except Exception as e:
-            return { "error": e.args[1] }, 500
-        finally:
-            cxn.close()
-
-        return Response(status = 200)
-
 # route for request approval
 @bp_request.route('/approve', methods = ["POST"])
 def approve_request ():

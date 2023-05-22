@@ -3,17 +3,12 @@
     <head>
         <title>sIMS</title>
         <link rel="icon" href="{{ url_for('static', filename = 'favicon.png') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename = 'fonts/fonts.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename = 'style.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename = 'style_table.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename = 'style_inventory.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename = 'style_request.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename = 'style_dialog.css') }}">
         <script src="{{ url_for('static', filename = 'script_table.js') }}"></script>
     </head>
 
-    <div id="modal-change-password" class="modal-wrapper">
-        <div class="modal-background"></div>
+    <dialog id="modal-change-password">
+        <div class="modal-back"></div>
         <div class="modal-main">
             <button type="button" role="button" class="modal-close">&times;</button>
             <h1>Change password</h1>
@@ -21,11 +16,11 @@
                 <form id="form-change-password">
                     <span class="form-grid">
                         <label for="old-password">Enter old password:</label>
-                        <input id="old-password" type="password" minlength="8" maxlength="12">
+                        <input id="old-password" type="password" minlength="8" maxlength="12" required autofocus>
                         <label for="new-password">Enter new password:</label>
-                        <input id="new-password" type="password" minlength="8" maxlength="12">
+                        <input id="new-password" type="password" minlength="8" maxlength="12" required>
                         <label for="confirm-password">Re-enter new password:</label>
-                        <input id="confirm-password" type="password" minlength="8" maxlength="12">
+                        <input id="confirm-password" type="password" minlength="8" maxlength="12" required>
                     </span>
                     <span id="password-note">
                         <p><b>NOTE:</b> Your new password must contain the following:</p>
@@ -38,18 +33,19 @@
                     </span>
                     <span>
                         <p class="form-msg"></p>
+                        <input type="button" class="cancel" value="Cancel">
                         <input type="submit" value="Submit" disabled>
                     </span>
                 </form>
             </div>
-            <div id="modal-change-password-2">
+            <div id="modal-change-password-2" class="hidden">
                 <p>Your password has been changed successfully. You will be logged out of your account in a few seconds.</p>
             </div>
         </div>
-    </div>
+    </dialog>
 
-    <div id="modal-change-email" class="modal-wrapper">
-        <div class="modal-background"></div>
+    <dialog id="modal-change-email">
+        <div class="modal-back"></div>
         <div class="modal-main">
             <button type="button" role="button" class="modal-close">&times;</button>
             <h1>Change email address</h1>
@@ -57,22 +53,23 @@
                 <form id="form-change-email">
                     <span class="form-grid">
                         <label for="password">Enter password:</label>
-                        <input id="password" type="password" minlength="8" maxlength="12">
+                        <input id="password" type="password" minlength="8" maxlength="12" required autofocus>
                         <label for="new-email">Enter new email address:</label>
-                        <input id="new-email" type="email" placeholder="example@gmail.com" pattern="^([0-9a-z]|([0-9a-z][\.\-_\+]{1}[0-9a-z]))+@gmail.com$">
+                        <input id="new-email" type="email" placeholder="example@gmail.com" pattern="^([0-9a-z]|([0-9a-z][\.\-_\+]{1}[0-9a-z]))+@gmail.com$" required>
                     </span>
                     <p style="font-size: smaller;"><i><b>NOTE:</b> Due to technical restrictions, only Gmail emails are accepted at this time.</i></p>
                     <span>
                         <p class="form-msg"></p>
+                        <input type="button" class="cancel" value="Cancel">
                         <input type="submit" value="Submit" disabled>
                     </span>
                 </form>
             </div>
-            <div id="modal-change-email-2">
+            <div id="modal-change-email-2" class="hidden">
                 <p>The email associated with your account has been changed successfully. You will be logged out of your account in a few seconds.</p>
             </div>
         </div>
-    </div>
+    </dialog>
 
     <body>
         <header>
@@ -94,89 +91,6 @@
                     <button type="button" role="button" id="change-email">Change email address</a>
                 </div>
             </div>
-
-            <!-- <dialog id="change-password-dialog">
-                <div id="step1">
-                    <h1>Verify user</h1>
-
-                    <div>
-                        <label for="old-password">Enter old password:</label>
-                        <br>
-                        <input type="password" id="old-password" name="old-password" autofocus>
-                        <p class='message' id="step1-message"></p>
-                    </div>
-                    
-                    <form id="old-password-form">
-                        <input type="submit" value="Submit" disabled>
-                    </form>
-                </div>
-
-                <div id="step2">
-                    <h1>Reset password</h1>
-    
-                    <div>
-                        <p>Password must have <em><b>8 to 12 alphanumeric characters</b></em>.</p>
-                        <label for="new-password">Enter new password:</label>
-                        <div style="height: 20%">
-                            <input type="password" id="new-password" name="new-password" pattern="(?=.*[a-zA-Z0-9]).{8,12}" required>
-                        </div>
-                        <br>
-    
-                        <label for="new-password2" style="margin-top: 20px">Enter new password again:</label>
-                        <div>
-                            <input type="password" id="new-password2" name="new-password2" required>
-                        </div>
-                        <p class='message' id="step2-message"></p>
-                    </div>
-    
-                    <form id="password-form">
-                        <input type="submit" value="Submit" id="submit" disabled>
-                    </form>
-                </div>
-
-                <div id="step3">
-                    <div class="password-reset-success">
-                        <h1 style="text-align: center;">Password reset successfully &#127881;</h1>
-                        <form method="dialog">
-                            <input type="submit" value="Close">
-                        </form>
-                    </div>
-                </div>
-            </dialog>
-
-            <dialog id="change-email-dialog">
-                <div id="step1">
-                    <h1>Change email</h1>
-                    <p>Email must have a <em><b>gmail.com</b></em> domain.</p>
-
-                    <div>
-                        <label for="old-password2">Enter your password:</label>
-                        <br>
-                        <input type="password" id="old-password2" name="old-password" autofocus>
-                        <p class='message' id="step3-message"></p>
-                    </div>
-
-                    <div style="margin-top: 20px; height: 45%;">
-                        <label for="new-email">Enter new email address:</label>
-                        <br>
-                        <input type="email" id="new-email" name="new-email" placeholder="{{ session['user']['Email'] }}" maxlength="50" title="Email address must have a gmail.com domain">
-                        <p class='message' id="step3-message"></p>
-                    </div>
-                    
-                    <form id='new-email-form' style="align-self: flex-end;">
-                        <input type="submit" value="Submit" id="submit" disabled>
-                    </form>
-                </div>
-
-                <div id="step2">
-                    <div class="password-reset-success">
-                        <h1 style="text-align: center;">Email changed successfully &#127881;</h1>
-                        <form method="dialog">
-                            <input type="submit" value="Close">
-                        </form>
-                    </div>
-                </div>
-            </dialog> -->
         </header>
 
         <div id="sidebar">
@@ -208,15 +122,6 @@
 </html>
 
 <script>
-    function showModal (modal) {
-        modal.classList.add("show");
-    }
-
-    function hideModal (modal) {
-        modal.classList.remove("show");
-        modal.querySelector("form").reset();
-    }
-
     function changeEmailValidity () {
         let t = document.querySelector("#form-change-email");
         t.querySelector("input[type=submit]").disabled = !(t.checkValidity()
@@ -226,61 +131,41 @@
 
     function changePasswordValidity () {
         let t = document.querySelector("#form-change-password");
-
-        t.querySelector("input[type=submit]").disabled = !(t.checkValidity()
-                                                           && Array.prototype.every.call(t.querySelectorAll("input"), x => x.value !== '')
-                                                           && Array.prototype.map.call(document.querySelectorAll("#new-password, #confirm-password"), x => [/[A-Z]+/, /[a-z]+/, /[0-9]+/].map(y => x.value.match(y) !== null).every(y => y)).every(x => x));
+        t.querySelector("input[type=submit]").disabled = !(t.checkValidity() && Array.prototype.map.call(document.querySelectorAll("#new-password, #confirm-password"), x => [/[A-Z]+/, /[a-z]+/, /[0-9]+/].map(y => x.value.match(y) !== null).every(y => y)).every(x => x));
     }
 
-    // modal open & close events
-    document.querySelector("#modal-change-password").addEventListener("modalopen", () => {
-        showModal(document.querySelector("#modal-change-password"));
-        document.querySelector("#modal-change-password-1").style.display = "";
-        document.querySelector("#modal-change-password-2").style.display = "none";
-        document.querySelector("#form-change-password").reset();
-        document.querySelector("#form-change-password input:first-of-type").focus();
-        document.querySelector('#form-change-password .form-msg').classList.remove("error");
-        document.querySelector('#form-change-password .form-msg').innerText = '';
-    });
-
-    document.querySelector("#modal-change-password").addEventListener("modalclose", () => {
-        hideModal(document.querySelector("#modal-change-password"));
-    });
-
-    document.querySelector("#modal-change-email").addEventListener("modalopen", () => {
-        showModal(document.querySelector("#modal-change-email"));
-        document.querySelector("#modal-change-email-1").style.display = "";
-        document.querySelector("#modal-change-email-2").style.display = "none";
-        document.querySelector("#form-change-email").reset();
-        document.querySelector("#form-change-email input:first-of-type").focus();
-        document.querySelector('#form-change-email .form-msg').classList.remove("error");
-        document.querySelector('#form-change-email .form-msg').innerText = '';
-    });
-
-    document.querySelector("#modal-change-email").addEventListener("modalclose", () => {
-        hideModal(document.querySelector("#modal-change-email"));
-    });
-
+    // modal open & close event listeners
     document.querySelector("#change-password").addEventListener("click", () => {
-        document.querySelector("#modal-change-password").dispatchEvent(new Event("modalopen"));
+        document.querySelector("#modal-change-password").showModal();
+        document.querySelector("#modal-change-password input:first-of-type").focus();
+    });
+
+    document.querySelectorAll("#modal-change-password .cancel, #modal-change-password .modal-back, #modal-change-password .modal-close").forEach(x => x.addEventListener("click", () => {
+        document.querySelector("#modal-change-password").close();
+    }));
+
+    document.querySelector("#modal-change-password").addEventListener("close", () => {
+        document.querySelector("#modal-change-password form").reset();
+        document.querySelector("#modal-change-password-2").classList.add("hidden");
+        changePasswordValidity();
     });
 
     document.querySelector("#change-email").addEventListener("click", () => {
-        document.querySelector("#modal-change-email").dispatchEvent(new Event("modalopen"));
+        document.querySelector("#modal-change-email").showModal();
+        document.querySelector("#modal-change-email input:first-of-type").focus();
     });
 
-    document.querySelectorAll(".modal-background").forEach(x => {
-        x.addEventListener("click", () => x.dispatchEvent(new Event("modalclose", { bubbles: true })));
-        x.addEventListener("keydown", e => {
-            if (e.key === 'Escape') x.dispatchEvent(new Event("modalclose", { bubbles: true }));
-        });
+    document.querySelectorAll("#modal-change-email .cancel, #modal-change-email .modal-back, #modal-change-email .modal-close").forEach(x => x.addEventListener("click", () => {
+        document.querySelector("#modal-change-email").close();
+    }));
+
+    document.querySelector("#modal-change-email").addEventListener("close", () => {
+        document.querySelector("#modal-change-email form").reset();
+        document.querySelector("#modal-change-email-2").classList.add("hidden");
+        changeEmailValidity();
     });
 
-    document.querySelectorAll(".modal-close").forEach(x => {
-        x.addEventListener("click", () => x.dispatchEvent(new Event("modalclose", { bubbles: true })));
-    });
-
-    // modal form events
+    // modal form event listeners
     document.querySelector("#form-change-email").addEventListener("input", () => {
         changeEmailValidity();
         document.querySelector("#form-change-email .form-msg").innerText = '';
@@ -303,8 +188,8 @@
             })
         }).then(async d => {
             if (d.status === 200) {
-                document.querySelector("#modal-change-email-1").style.display = "none";
-                document.querySelector("#modal-change-email-2").style.display = "initial";
+                document.querySelector("#modal-change-email-1").classList.add("hidden");
+                document.querySelector("#modal-change-email-2").classList.remove("hidden");
                 window.setTimeout(() => window.location = "{{ url_for('bp_auth.logout') }}", 3000);
             } else {
                 document.querySelector("#form-change-email").reset();
@@ -343,8 +228,8 @@
                 })
             }).then(async d => {
                 if (d.status === 200) {
-                    document.querySelector("#modal-change-password-1").style.display = "none";
-                    document.querySelector("#modal-change-password-2").style.display = "initial";
+                    document.querySelector("#modal-change-password-1").classList.add("hidden");
+                    document.querySelector("#modal-change-password-2").classList.remove("hidden");
                     window.setTimeout(() => window.location = "{{ url_for('bp_auth.logout') }}", 3000);
                 } else {
                     document.querySelector("#form-change-password").reset();

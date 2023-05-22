@@ -10,7 +10,7 @@
             <a class="btn" href="{{ url_for('bp_inventory.remove_items') }}">Remove items</a>
             <a class="btn" href="{{ url_for('bp_inventory.update_items') }}">Update items</a>
         {% else %}
-            <a class="btn" href="{{ url_for('bp_request.make_request') }}">Request items</a>
+            <a class="btn" href="{{ url_for('bp_inventory.request_items') }}">Request items</a>
         {% endif %}
     </div>
 

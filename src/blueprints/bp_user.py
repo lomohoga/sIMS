@@ -1,6 +1,7 @@
 import smtplib
 import random
 import time
+from secrets import randbelow
 from email.message import EmailMessage
 
 from flask import Blueprint, Response, redirect, render_template, url_for, request, session
@@ -245,7 +246,7 @@ def search_users ():
 
 # route for checking password
 @bp_user.route('/check_password', methods = ["POST"])
-def check_password():
+def check_password ():
     password = request.get_json()["values"]
     if(session['user']['Password'] == generateHash(password)):
         return Response(status = 200)
@@ -254,7 +255,7 @@ def check_password():
 
 # route for checking email
 @bp_user.route('/check_email', methods = ["POST"])
-def check_email():
+def check_email ():
     email = request.get_json()["email"]
 
     try:
@@ -264,8 +265,7 @@ def check_email():
         db.execute(f"SELECT COUNT(*) FROM user WHERE Email = '{email}';")
         count = db.fetchone()
 
-        if(count[0] == 0):
-            return Response(status = 304)
+        if (count[0] == 0): return { "error": "There are no accounts associated with this email address in the database." }, 500
         
         generate_code(email)
     except Exception as e:
@@ -278,16 +278,16 @@ def check_email():
 
 # route for generating code
 @bp_user.route('/generate_code', methods = ["POST"])
-def generate_code(email = ''):
+def generate_code (email = ''):
     # Set up email
     if(email == ''):
         email = request.get_json()["email"]
     
     # Generate code
-    code_key = random.randint(1000, 9999)
+    code_key = randbelow(9000) + 1000
     print(code_key)
 
-    #Update code in database
+    # Update code in database
     try:
         cxn = connect_db()
         db = cxn.cursor()
@@ -299,7 +299,6 @@ def generate_code(email = ''):
         mail_session = start_email_session()
         send_email(mail_session, "code", email, code_key)
         mail_session.quit()
-
     except Exception as e:
         # TODO: Fix this
         return { "error": e.args[1] }, 500
@@ -310,11 +309,11 @@ def generate_code(email = ''):
 
 # route for checking code
 @bp_user.route('/verify_code', methods = ["POST"])
-def check_code():
+def check_code ():
     code = request.get_json()["code"]
     email = request.get_json()["email"]
 
-    #Get code in database
+    # Get code in database
     try:
         cxn = connect_db()
         db = cxn.cursor()
@@ -327,13 +326,15 @@ def check_code():
     finally:
         cxn.close()
 
-    print(count)
-    if(int(count[0]) == int(code) and time.time() - count[1] <= 180):
+    print(count[0], code)
+    if (int(count[0]) != code):
+        return { "error": "The code you entered is incorrect. Please try again. "}, 500
+    elif (int(count[0]) == code and time.time() - count[1] <= 180):
         return Response(status = 200)
     else:
-        return Response(status = 304)
-
-# route for changing password
+        return { "error": "Your code has expired. Please generate a new code by clicking the \"Resend code\" button above." }, 500
+    
+# route for changing password (update password)
 @bp_user.route('/change_password', methods = ["POST"])
 @login_required
 def change_password ():
@@ -348,12 +349,34 @@ def change_password ():
         db.execute(f"UPDATE user SET Password = '{generateHash(req['new-password'])}' WHERE Username = '{session['user']['Username']}';")
         cxn.commit()
 
-        # === TEMPORARILY DISABLED, REMEMBER TO UNCOMMENT! ===
-        #
-        # mail_session = start_email_session()
-        # send_email(mail_session, "password", session['user']['Email'])
-        # mail_session.quit()
+        mail_session = start_email_session()
+        send_email(mail_session, "password", session['user']['Email'])
+        mail_session.quit()
             
+    except Exception as e:
+        # TODO: Fix this
+        return { "error": e.args[1] }, 500
+    finally:
+        cxn.close()
+
+    return Response(status = 200)
+
+# route for changing password (forgot password)
+@bp_user.route('/change_password', methods = ["POST"])
+@login_required
+def forgot_password ():
+    password = request.get_json()['new-password']
+
+    try:
+        cxn = connect_db()
+        db = cxn.cursor()
+
+        db.execute(f"UPDATE user SET Password = '{generateHash(password)}' WHERE Username = '{session['user']['Username']}';")
+        cxn.commit()
+
+        mail_session = start_email_session()
+        send_email(mail_session, "password", session['user']['Email'])
+        mail_session.quit()
     except Exception as e:
         # TODO: Fix this
         return { "error": e.args[1] }, 500
@@ -382,11 +405,9 @@ def change_email ():
 
             session['user']['Email'] = email
 
-            # === TEMPORARILY DISABLED, REMEMBER TO UNCOMMENT! ===
-            #
-            # mail_session = start_email_session()
-            # send_email(mail_session, "email", email)
-            # mail_session.quit()
+            mail_session = start_email_session()
+            send_email(mail_session, "email", email)
+            mail_session.quit()
 
         except Exception as e:
             # TODO: Fix this

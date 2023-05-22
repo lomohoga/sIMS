@@ -1,0 +1,62 @@
+:root {
+    --black: hsl(255, 15%, 15%);
+    --shadow: hsla(255, 15%, 15%, 5%);
+    --btn-shadow: hsla(255, 15%, 15%, 10%);
+
+    --light-gray: hsl(255, 10%, 92%);
+    --light-gray-2: hsl(255, 10%, 95%);
+    --gray: hsl(255, 10%, 75%);
+
+    --white: hsl(255, 10%, 99%);
+
+    --light-blue: hsl(220, 80%, 95%);
+    --blue: hsl(220, 100%, 65%);
+    --dark-blue: hsl(220, 75%, 45%);
+    --blue-shadow: hsla(220, 100%, 65%, 30%);
+
+    --red: hsl(345, 100%, 65%);
+    --light-red: hsl(345, 100%, 95%);
+    --light-red-2: hsl(345, 100%, 85%);
+    --light-red-3: hsl(345, 100%, 98%);
+    --light-red-4: hsl(345, 100%, 93%);
+    --dark-red: hsl(345, 80%, 50%);
+    --red-shadow: hsla(345, 100%, 65%, 30%);
+
+    --green: hsl(135, 80%, 57%);
+    --dark-green: hsl(135, 80%, 44%);
+    --green-shadow: hsla(135, 80%, 57%, 30%);
+
+    --translucent: hsla(255, 10%, 99%, 80%);
+
+    --status-green: hsl(105, 80%, 57%);
+    --status-green-shadow: hsla(105, 80%, 57%, 50%);
+    --status-green-dark: hsl(105, 80%, 45%);
+    --status-green-text: white;
+    --status-yellow: hsl(44, 100%, 62%);
+    --status-yellow-shadow: hsla(44, 100%, 62%, 50%);
+    --status-yellow-dark: hsl(44, 100%, 45%);
+    --status-yellow-text: black;
+    --status-red: hsl(5, 100%, 61%);
+    --status-red-shadow: hsla(5, 100%, 61%, 50%);
+    --status-red-dark: hsl(5, 100%, 45%);
+    --status-red-text: white;
+
+    --status-pending: var(--status-yellow);
+    --status-pending-text: var(--status-yellow-text);
+    --status-approved: var(--status-yellow);
+    --status-approved-text: var(--status-yellow-text);
+    --status-issued: var(--status-yellow);
+    --status-issued-text: var(--status-yellow-text);
+    --status-completed: var(--status-green);
+    --status-completed-text: var(--status-green-text);
+    --status-denied: var(--status-red);
+    --status-denied-text: var(--status-red-text);
+    --status-cancelled: var(--status-red);
+    --status-cancelled-text: var(--status-red-text);
+    --status-expired: var(--status-red);
+    --status-expired-text: var(--status-red-text);
+}
+
+::backdrop {
+    --modal-bg: hsla(255, 15%, 15%, 50%);
+}

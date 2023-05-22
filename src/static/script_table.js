@@ -254,7 +254,7 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
             if (privileges === 1 && req["Items"].map(x => x['QuantityIssued']).some(x => x === '\u2014')) {
                 let div = document.createElement("div");
 
-                if (j['QuantityIssued'] === '\u2014') {
+                if (req['Status'] === 'Approved' && j['QuantityIssued'] === '\u2014') {
                     let btn = document.createElement("button");
                     btn.classList.add("issue");
                     btn.type = "button";
@@ -263,20 +263,34 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                     btn.innerHTML = "<i class='bi bi-box-seam'></i>";
 
                     btn.addEventListener("click", () => {
-                        let q = prompt("How much of this item would you like to issue?", j['RequestQuantity']);
+                        let modal = document.querySelector("#modal-requests");
 
-                        fetch("./issue/item", {
-                            "method": "POST",
-                            "headers": {
-                                "Content-Type": "application/json"
-                            },
-                            "body": JSON.stringify({
-                                "RequestID": req['RequestID'],
-                                "ItemID": j["ItemID"],
-                                "QuantityIssued": +q
-                            })
-                        }).then(d => {
-                            if (d.status === 200) window.location.reload();
+                        modal.showModal();
+                        modal.querySelector("h1").innerText = "Issue item";
+                        modal.querySelector("p").style.display = "none";
+                        modal.querySelector("#quantity-span").style.display = "";
+                        modal.querySelector("input[type=number]").focus();
+                        modal.querySelector("input[type=number]").min = 0;
+                        modal.querySelector("input[type=number]").max = Math.min(+j['AvailableStock'].replace(",", ""), +j['RequestQuantity'].replace(",", ""));
+                        modal.querySelector("input[type=number]").step = 1;
+                        modal.querySelector("input[type=number]").value = Math.min(+j['AvailableStock'].replace(",", ""), +j['RequestQuantity'].replace(",", ""));
+                        modal.querySelector("input[type=number] ~ span").innerText = j['Unit'];
+                        modal.querySelector("input[type=submit]").value = "Issue item";
+
+                        modal.querySelector("input[type=submit]").addEventListener("click", () => {
+                            fetch("./issue/item", {
+                                "method": "POST",
+                                "headers": {
+                                    "Content-Type": "application/json"
+                                },
+                                "body": JSON.stringify({
+                                    "RequestID": req['RequestID'],
+                                    "ItemID": j['ItemID'],
+                                    "QuantityIssued": +modal.querySelector("input[type=number]").value
+                                })
+                            }).then(d => {
+                                if (d.status === 200) window.location.reload();
+                            });
                         });
                     });
 
@@ -304,16 +318,29 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                 issueBtn.classList.add("green");
 
                 issueBtn.addEventListener("click", () => {
-                    if (confirm("Are you sure you want to issue this request?")) fetch("./issue", {
-                        "method": "POST",
-                        "headers": {
-                            "Content-Type": "application/json"
-                        },
-                        "body": JSON.stringify({
-                            "RequestID": req['RequestID']
-                        })
-                    }).then(d => {
-                        if (d.status === 200) window.location.reload();
+                    let modal = document.querySelector("#modal-requests");
+
+                    modal.showModal();
+                    modal.querySelector("h1").innerText = "Issue request";
+                    modal.querySelector("p").innerHTML = "<span>Are you sure you want to issue <b>all</b> items in this request?</span>";
+                    modal.querySelector("input[type=submit]").value = "Issue request";
+                    modal.querySelector("input[type=submit]").classList.add("btn-green");
+                    modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
+                    modal.querySelector("input[type=submit]").offsetHeight;
+                    modal.querySelector("input[type=submit]").style.transitionDuration = '';
+
+                    modal.querySelector("input[type=submit]").addEventListener("click", () => {
+                        fetch("./issue", {
+                            "method": "POST",
+                            "headers": {
+                                "Content-Type": "application/json"
+                            },
+                            "body": JSON.stringify({
+                                "RequestID": req['RequestID']
+                            })
+                        }).then(d => {
+                            if (d.status === 200) window.location.reload();
+                        });
                     });
                 });
 
@@ -328,16 +355,29 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
             cancelBtn.classList.add("red");
 
             cancelBtn.addEventListener("click", () => {
-                if (confirm("Are you sure you want to cancel this request?\nWARNING: This will forfeit ALL requested items!")) fetch("./cancel", {
-                    "method": "POST",
-                    "headers": {
-                        "Content-Type": "application/json"
-                    },
-                    "body": JSON.stringify({
-                        "RequestID": req['RequestID']
-                    })
-                }).then(d => {
-                    if (d.status === 200) window.location.reload();
+                let modal = document.querySelector("#modal-requests");
+
+                modal.showModal();
+                modal.querySelector("h1").innerText = "Cancel request";
+                modal.querySelector("p").innerHTML = "Are you sure you want to cancel this request?<br><i><b style='color: var(--red);'>WARNING:</b> This will forfeit <b>all</b> items in this request!</i>";
+                modal.querySelector("input[type=submit]").value = "Cancel request";
+                modal.querySelector("input[type=submit]").classList.add("btn-red");
+                modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
+                modal.querySelector("input[type=submit]").offsetHeight;
+                modal.querySelector("input[type=submit]").style.transitionDuration = '';
+
+                modal.querySelector("input[type=submit]").addEventListener("click", () => {
+                    fetch("./cancel", {
+                        "method": "POST",
+                        "headers": {
+                            "Content-Type": "application/json"
+                        },
+                        "body": JSON.stringify({
+                            "RequestID": req['RequestID']
+                        })
+                    }).then(d => {
+                        if (d.status === 200) window.location.reload();
+                    });
                 });
             });
 
@@ -354,16 +394,29 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
             approveBtn.classList.add("green");
 
             approveBtn.addEventListener("click", () => {
-                if (confirm("Are you sure you want to approve this request?")) fetch("./approve", {
-                    "method": "POST",
-                    "headers": {
-                        "Content-Type": "application/json"
-                    },
-                    "body": JSON.stringify({
-                        "RequestID": req['RequestID']
-                    })
-                }).then(d => {
-                    if (d.status === 200) window.location.reload();
+                let modal = document.querySelector("#modal-requests");
+
+                modal.showModal();
+                modal.querySelector("h1").innerText = "Approve request";
+                modal.querySelector("p").innerHTML = "Are you sure you want to approve this request?";
+                modal.querySelector("input[type=submit]").value = "Approve request";
+                modal.querySelector("input[type=submit]").classList.add("btn-green");
+                modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
+                modal.querySelector("input[type=submit]").offsetHeight;
+                modal.querySelector("input[type=submit]").style.transitionDuration = '';
+
+                modal.querySelector("input[type=submit]").addEventListener("click", () => {
+                    fetch("./approve", {
+                        "method": "POST",
+                        "headers": {
+                            "Content-Type": "application/json"
+                        },
+                        "body": JSON.stringify({
+                            "RequestID": req['RequestID']
+                        })
+                    }).then(d => {
+                        if (d.status === 200) window.location.reload();
+                    });
                 });
             });
 
@@ -376,16 +429,29 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
             denyBtn.classList.add("red");
 
             denyBtn.addEventListener("click", () => {
-                if (confirm("Are you sure you want to deny this request?")) fetch("./deny", {
-                    "method": "POST",
-                    "headers": {
-                        "Content-Type": "application/json"
-                    },
-                    "body": JSON.stringify({
-                        "RequestID": req['RequestID']
-                    })
-                }).then(d => {
-                    if (d.status === 200) window.location.reload();
+                let modal = document.querySelector("#modal-requests");
+
+                modal.showModal();
+                modal.querySelector("h1").innerText = "Deny request";
+                modal.querySelector("p").innerHTML = "Are you sure you want to deny this request?";
+                modal.querySelector("input[type=submit]").value = "Deny request";
+                modal.querySelector("input[type=submit]").classList.add("btn-red");
+                modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
+                modal.querySelector("input[type=submit]").offsetHeight;
+                modal.querySelector("input[type=submit]").style.transitionDuration = '';
+
+                modal.querySelector("input[type=submit]").addEventListener("click", () => {
+                    fetch("./deny", {
+                        "method": "POST",
+                        "headers": {
+                            "Content-Type": "application/json"
+                        },
+                        "body": JSON.stringify({
+                            "RequestID": req['RequestID']
+                        })
+                    }).then(d => {
+                        if (d.status === 200) window.location.reload();
+                    });
                 });
             });
             
@@ -404,17 +470,30 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                 receiveBtn.classList.add("green");
                 
                 receiveBtn.addEventListener("click", () => {
-                    if (confirm("Are you sure you want to receive this request?")) fetch("./receive", {
-                        "method": "POST",
-                        "headers": {
-                            "Content-Type": "application/json"
-                        },
-                        "body": JSON.stringify({
-                            "RequestID": req['RequestID']
-                        })
-                    }).then(d => {
-                        if (d.status === 200) window.location.reload();
-                    });;
+                    let modal = document.querySelector("#modal-requests");
+
+                    modal.showModal();
+                    modal.querySelector("h1").innerText = "Receive request";
+                    modal.querySelector("p").innerHTML = "Are you sure you want to receive this request?";
+                    modal.querySelector("input[type=submit]").value = "Receive request";
+                    modal.querySelector("input[type=submit]").classList.add("btn-green");
+                    modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
+                    modal.querySelector("input[type=submit]").offsetHeight;
+                    modal.querySelector("input[type=submit]").style.transitionDuration = '';
+
+                    modal.querySelector("input[type=submit]").addEventListener("click", () => {
+                        fetch("./receive", {
+                            "method": "POST",
+                            "headers": {
+                                "Content-Type": "application/json"
+                            },
+                            "body": JSON.stringify({
+                                "RequestID": req['RequestID']
+                            })
+                        }).then(d => {
+                            if (d.status === 200) window.location.reload();
+                        });
+                    });
                 });
 
                 actions.append(receiveBtn);
@@ -429,16 +508,29 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
             cancelBtn.classList.add("red");
 
             cancelBtn.addEventListener("click", () => {
-                if (confirm("Are you sure you want to cancel this request?")) fetch("./cancel", {
-                    "method": "POST",
-                    "headers": {
-                        "Content-Type": "application/json"
-                    },
-                    "body": JSON.stringify({
-                        "RequestID": req['RequestID']
-                    })
-                }).then(d => {
-                    if (d.status === 200) window.location.reload();
+                let modal = document.querySelector("#modal-requests");
+
+                modal.showModal();
+                modal.querySelector("h1").innerText = "Cancel request";
+                modal.querySelector("p").innerHTML = "Are you sure you want to cancel this request?<br><i><b style='color: var(--red);'>WARNING:</b> This will forfeit <b>all</b> items in this request!</i>";
+                modal.querySelector("input[type=submit]").value = "Cancel request";
+                modal.querySelector("input[type=submit]").classList.add("btn-red");
+                modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
+                modal.querySelector("input[type=submit]").offsetHeight;
+                modal.querySelector("input[type=submit]").style.transitionDuration = '';
+
+                modal.querySelector("input[type=submit]").addEventListener("click", () => {
+                    fetch("./cancel", {
+                        "method": "POST",
+                        "headers": {
+                            "Content-Type": "application/json"
+                        },
+                        "body": JSON.stringify({
+                            "RequestID": req['RequestID']
+                        })
+                    }).then(d => {
+                        if (d.status === 200) window.location.reload();
+                    });
                 });
             });
 
@@ -576,7 +668,7 @@ async function cancelRequest(requestID) {
 }
 
 // sets request status as "Received"
-async function ReceivedByequest(requestID) {
+async function receiveRequest(requestID) {
     fetch(encodeURI(`/requests/receive`), {
         "method": "POST",
         "headers": {

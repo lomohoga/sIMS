@@ -1,0 +1,206 @@
+:root {
+    font-size: 1rem;
+    font-family: "IBM Plex Sans", sans-serif;
+    font-weight: 450;
+}
+
+* {
+    box-sizing: border-box;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+html {
+    color: var(--black);
+    background: var(--white);
+}
+
+body {
+    display: grid;
+    align-items: center;
+}
+
+html, body {
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+}
+
+a {
+    color: inherit;
+}
+
+input, textarea, select, button {
+    appearance: none;
+    font: inherit;
+    text-align: inherit;
+}
+
+textarea {
+    resize: vertical;
+}
+
+input[type=text], input[type=password], input[type=search], input[type=number], input[type=email], textarea {
+    padding: 0.3rem 0rem;
+    background: none;
+    border: none;
+    border-bottom: 0.05rem solid var(--gray);
+    border-radius: 0;
+    transition: background 0.1s, border-bottom 0.1s;
+}
+
+input[type=number]:invalid, input[type=email]:invalid {
+    background: var(--light-red);
+    border-bottom: 0.05rem solid var(--light-red-2);
+    color: var(--red);
+    font-weight: bold;
+}
+
+input[type=number]:invalid:focus, input[type=email]:invalid:focus {
+    border-bottom: 0.05rem solid var(--red);
+}
+
+input[type=text]:disabled, input[type=search]:disabled, input[type=number]:disabled, input[type=email]:disabled, textarea:disabled {
+    background: var(--light-gray);
+}
+
+input[type=text]:focus, input[type=password]:focus, input[type=search]:focus, input[type=number]:focus, input[type=email]:focus, textarea:focus {
+    outline: none;
+    border-bottom: 0.05rem solid var(--dark-blue);
+}
+
+input[type=submit], input[type=button], input[type=date], a.btn, select, button {
+    padding: 0.5rem 0.7rem;
+    background: var(--white);
+    box-shadow: 0rem 0.2rem 0.4rem var(--btn-shadow);
+    border: none;
+    border-radius: 0.5rem;
+    width: -moz-fit-content;
+    width: fit-content;
+    text-decoration: none;
+    transition: background 0.1s, box-shadow 0.1s;
+}
+
+input[type=submit]:hover, input[type=button]:hover, input[type=date]:hover, a.btn:hover, select:hover, button:hover {
+    cursor: pointer;
+}
+
+input[type=button]:not(:disabled):hover, input[type=date]:not(:disabled):hover, a.btn:not(:disabled):hover, select:not(:disabled):hover, button:not(:disabled):hover,
+input[type=button]:focus, input[type=date]:focus, a.btn:focus, select:focus, button:focus {
+    background: var(--light-gray-2);
+    box-shadow: 0rem 0.1rem 0.2rem var(--btn-shadow);
+}
+
+input[type=submit] {
+    color: white;
+    font-weight: bold;
+}
+
+input[type=submit]:not(:disabled) {
+    background: var(--blue);
+    box-shadow: 0rem 0.2rem 0.4rem var(--blue-shadow);
+}
+
+input[type=submit]:not(:disabled):hover, input[type=submit]:not(:disabled):focus {
+    background: var(--dark-blue);
+    box-shadow: 0rem 0.1rem 0.2rem var(--blue-shadow);
+}
+
+input[type=submit].btn-red:not(:disabled) {
+    background: var(--red);
+    box-shadow: 0rem 0.2rem 0.4rem var(--red-shadow);
+}
+
+input[type=submit].btn-red:not(:disabled):hover, input[type=submit].btn-red:not(:disabled):focus {
+    background: var(--dark-red);
+    box-shadow: 0rem 0.1rem 0.2rem var(--red-shadow);
+}
+
+input[type=submit].btn-green:not(:disabled) {
+    background: var(--green);
+    box-shadow: 0rem 0.2rem 0.4rem var(--green-shadow);
+}
+
+input[type=submit].btn-green:not(:disabled):hover, input[type=submit].btn-green:not(:disabled):focus {
+    background: var(--dark-green);
+    box-shadow: 0rem 0.1rem 0.2rem var(--green-shadow);
+}
+
+input[type=submit]:disabled, input[type=button]:disabled, a.btn:disabled, select:disabled, button:disabled {
+    background: var(--gray);
+    color: white;
+    cursor: not-allowed;
+}
+
+input[type=submit]:focus, input[type=button]:focus, input[type=date]:focus, a.btn:focus, button:focus, select:focus,
+input[type=submit]:active, input[type=button]:active, input[type=date]:active, a.btn:active, button:active, select:active {
+    outline: 0.05rem solid var(--black);
+}
+
+#err-wrapper {
+    height: 100%;
+    width: 100%;
+    display: grid;
+    grid-template-rows: 100%;
+    grid-template-columns: 100%;
+    align-items: center;
+    justify-items: center;
+    text-align: center;
+}
+
+#err-code {
+    font-size: 8rem;
+    color: var(--red);
+    line-height: 80%;
+}
+
+#err-msg {
+    font-size: 1.25rem;
+    font-weight: bold;
+    font-style: italic;
+}
+
+main {
+    overflow: hidden;
+}
+
+#profile-options {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    margin: 0px;
+    right: 0px;
+
+    width: 200px;
+    max-height: 0;
+    padding: 8px;
+
+    background-color: var(--white);
+    border: 1px solid var(--gray);
+    border-radius: 20px;
+    box-shadow: 0rem 0.2rem 0.4rem var(--btn-shadow);;
+    
+    overflow:hidden;
+    transition: max-height 0.1s ease-in-out;
+    z-index: 1000;
+}
+
+#profile-options p {
+    border-radius: 10px;
+    padding: 7px;
+    
+    text-align: left;
+    font-weight: lighter;
+}
+
+#profile-options p:hover {
+    background: var(--light-gray);
+}
+
+#add-user-form {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    justify-content: flex-end;
+}

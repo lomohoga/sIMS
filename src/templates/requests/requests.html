@@ -1,6 +1,28 @@
 {% extends "base.html" %}
 
 {% block main %}
+<dialog id="modal-requests">
+    <div class="modal-back"></div>
+    <div class="modal-main">
+        <button type="button" role="button" class="modal-close">&times;</button>
+        <h1></h1>
+        <p></p>
+        <form id="form-requests">
+            <span class="form-grid" id="quantity-span" style="display: none;">
+                <label for="issue-quantity">Enter desired quantity to issue:</label>
+                <span>
+                    <input id="issue-quantity" type="number">
+                    <span></span>
+                </span>
+            </span>
+            <span>
+                <input type="button" class="cancel" value="Cancel">
+                <input type="submit">
+            </span>
+        </form>
+    </div>
+</dialog>
+
 <div id="content-top">
     <h1 class="main-header">{{ 'My' if session['user']['RoleID'] == 2 else 'Item' }} Requests</h1>
 
@@ -128,11 +150,22 @@
 
         document.querySelectorAll(".receive-btn").forEach(x => x.addEventListener("click", () => {
             if (confirm("Are you sure you have received the item?")) {
-                ReceivedByequest(x.value);
+                receiveRequest(x.value);
                 window.location = encodeURI(`/requests`);
             }
         }));
     });
+
+    // modal events
+
+    document.querySelector("#modal-requests").addEventListener("close", () => {
+        document.querySelector("#modal-requests input[type=submit]").classList.remove("btn-red", "btn-green");
+        document.querySelector("#modal-requests input[type=submit]").replaceWith(document.querySelector("#modal-requests input[type=submit]").cloneNode());
+    });
+
+    document.querySelector("#modal-requests .modal-back").addEventListener("click", () => document.querySelector("#modal-requests").close());
+    document.querySelector("#modal-requests .modal-close").addEventListener("click", () => document.querySelector("#modal-requests").close());
+    document.querySelector("#modal-requests .cancel").addEventListener("click", () => document.querySelector("#modal-requests").close());
 
     window.addEventListener("load", () => populateRequests(document.querySelector(".request-table .table-body"), "", privileges));
 </script>
