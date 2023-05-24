@@ -132,7 +132,7 @@
         
         clone.lastChild.querySelector("button").addEventListener("click", () => {
             clone.parentElement.removeChild(clone);
-            let r = Array.from(document.querySelectorAll("#item-search-requests .table-body .table-row")).filter(x => x.firstChild.innerText === clone.firstChild.innerText);
+            let r = Array.from(document.querySelectorAll(".search-table .table-body .table-row")).filter(x => x.firstChild.innerText === clone.firstChild.innerText);
             if (r.length > 0) r[0].lastChild.querySelector("button").disabled = false;
             enableSubmit();
         });
@@ -168,8 +168,6 @@
         e.preventDefault();
         populateItems(document.querySelector(".search-table .table-body"), document.querySelector("#search-box").value, { buttons: true, requesting: true });
     });
-
-    window.addEventListener("load", () => populateItems(document.querySelector(".search-table .table-body"), document.querySelector("#search-box").value, { buttons: true, requesting: true }));
 
     document.querySelector(".selection-table").addEventListener("input", enableSubmit);
 
@@ -207,7 +205,9 @@
         }).then(d => {
             if (d.status === 200) window.location = "{{ url_for('bp_inventory.inventory') }}";
         });
-    })
+    });
+    
+    window.addEventListener("load", () => populateItems(document.querySelector(".search-table .table-body"), document.querySelector("#search-box").value, { buttons: true, requesting: true }));
 </script>
 
 {% endblock %}

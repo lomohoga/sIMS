@@ -277,7 +277,9 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                         modal.querySelector("input[type=number] ~ span").innerText = j['Unit'];
                         modal.querySelector("input[type=submit]").value = "Issue item";
 
-                        modal.querySelector("input[type=submit]").addEventListener("click", () => {
+                        modal.querySelector("input[type=submit]").addEventListener("click", e => {
+                            e.preventDefault();
+                            
                             fetch("./issue/item", {
                                 "method": "POST",
                                 "headers": {
@@ -329,7 +331,9 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                     modal.querySelector("input[type=submit]").offsetHeight;
                     modal.querySelector("input[type=submit]").style.transitionDuration = '';
 
-                    modal.querySelector("input[type=submit]").addEventListener("click", () => {
+                    modal.querySelector("input[type=submit]").addEventListener("click", e => {
+                        e.preventDefault();
+                        
                         fetch("./issue", {
                             "method": "POST",
                             "headers": {
@@ -366,7 +370,9 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                 modal.querySelector("input[type=submit]").offsetHeight;
                 modal.querySelector("input[type=submit]").style.transitionDuration = '';
 
-                modal.querySelector("input[type=submit]").addEventListener("click", () => {
+                modal.querySelector("input[type=submit]").addEventListener("click", e => {
+                    e.preventDefault();
+
                     fetch("./cancel", {
                         "method": "POST",
                         "headers": {
@@ -405,7 +411,9 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                 modal.querySelector("input[type=submit]").offsetHeight;
                 modal.querySelector("input[type=submit]").style.transitionDuration = '';
 
-                modal.querySelector("input[type=submit]").addEventListener("click", () => {
+                modal.querySelector("input[type=submit]").addEventListener("click", e => {
+                    e.preventDefault();
+
                     fetch("./approve", {
                         "method": "POST",
                         "headers": {
@@ -440,7 +448,9 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                 modal.querySelector("input[type=submit]").offsetHeight;
                 modal.querySelector("input[type=submit]").style.transitionDuration = '';
 
-                modal.querySelector("input[type=submit]").addEventListener("click", () => {
+                modal.querySelector("input[type=submit]").addEventListener("click", e => {
+                    e.preventDefault();
+                    
                     fetch("./deny", {
                         "method": "POST",
                         "headers": {
@@ -481,7 +491,9 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                     modal.querySelector("input[type=submit]").offsetHeight;
                     modal.querySelector("input[type=submit]").style.transitionDuration = '';
 
-                    modal.querySelector("input[type=submit]").addEventListener("click", () => {
+                    modal.querySelector("input[type=submit]").addEventListener("click", e => {
+                        e.preventDefault();
+                        
                         fetch("./receive", {
                             "method": "POST",
                             "headers": {
@@ -519,7 +531,9 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                 modal.querySelector("input[type=submit]").offsetHeight;
                 modal.querySelector("input[type=submit]").style.transitionDuration = '';
 
-                modal.querySelector("input[type=submit]").addEventListener("click", () => {
+                modal.querySelector("input[type=submit]").addEventListener("click", e => {
+                    e.preventDefault();
+                    
                     fetch("./cancel", {
                         "method": "POST",
                         "headers": {
@@ -634,82 +648,4 @@ function sortTable (table, column, currentSort, { shelfLife = false, numerical =
     newSym.classList.add(`bi-chevron-${currentSort[1] ? "up" : "down"}`);
 
     return currentSort;
-}
-
-// sets request status as either "Approved" or "Denied"
-async function decidePendingRequest(decision, requestID) {
-    fetch(encodeURI(`/requests/pending/decide`), {
-        "method": "POST",
-        "headers": {
-            "Content-Type": "application/json"
-        }, 
-        "body":JSON.stringify({
-            "decision": decision,
-            "requestID": requestID
-        })
-    }).then(d => {
-        if (d.status === 200) return;
-    });
-}
-
-// sets request status as "Cancelled"
-async function cancelRequest(requestID) {
-    fetch(encodeURI(`/requests/cancel`), {
-        "method": "POST",
-        "headers": {
-            "Content-Type": "application/json"
-        }, 
-        "body":JSON.stringify({
-            "requestID": requestID
-        })
-    }).then(d => {
-        if (d.status === 200) return;
-    });
-}
-
-// sets request status as "Received"
-async function receiveRequest(requestID) {
-    fetch(encodeURI(`/requests/receive`), {
-        "method": "POST",
-        "headers": {
-            "Content-Type": "application/json"
-        }, 
-        "body":JSON.stringify({
-            "RequestID": requestID
-        })
-    }).then(d => {
-        if (d.status === 200) return;
-    });
-}
-
-// sets status for individual item in request
-async function issueRequestItem(requestID, itemID, amount = 0) {
-    fetch(encodeURI(`/requests/approved/issue/item`), {
-        "method": "POST",
-        "headers": {
-            "Content-Type": "application/json"
-        }, 
-        "body":JSON.stringify({
-            "Amount": amount,
-            "RequestID": requestID,
-            "ItemID": itemID
-        })
-    }).then(d => {
-        if (d.status === 200) return;
-    });
-}
-
-// sets request status as "Issued"
-async function issueRequest(requestID) {
-    fetch(encodeURI(`/requests/approved/issue`), {
-        "method": "POST",
-        "headers": {
-            "Content-Type": "application/json"
-        }, 
-        "body":JSON.stringify({
-            "requestID": requestID
-        })
-    }).then(d => {
-        if (d.status === 200) return;
-    });
 }
