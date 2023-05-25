@@ -57,3 +57,53 @@
     display: flex;
     flex-direction: column;
 }
+
+/* table column widths */
+
+.inventory-table .table-row {
+    grid-template-columns: 0.625fr 0.75fr 2fr 0.5fr 0.75fr 0.5fr 0.5fr;
+}
+
+.add-table .table-row {
+    grid-template-columns: 0.625fr 0.75fr 2fr 1fr 0.75fr 0.5fr 3rem;
+}
+
+.search-table .table-row {
+    grid-template-columns: 0.625fr 0.75fr 2fr 0.5fr 0.75fr 0.5fr 0.5fr 3rem;
+}
+
+.search-table.update .table-row {
+    grid-template-columns: 0.625fr 0.75fr 2fr 0.5fr 0.75fr 0.5fr 3rem;
+}
+
+.selection-table.remove .table-row {
+    grid-template-columns: 0.625fr 0.75fr 2fr 0.5fr 0.75fr 0.5fr 0.5fr 3rem;
+}
+
+.selection-table.request .table-row {
+    grid-template-columns: 0.625fr 0.75fr 2fr 0.5fr 0.75fr 0.5fr 0.5fr 0.5fr 3rem;
+}
+
+.selection-table.update .table-row {
+    grid-template-columns: 0.625fr 0.75fr 2fr 1fr 0.75fr 0.5fr 3rem;
+}
+
+.selection-table.delivery .table-row {
+    grid-template-columns: 0.625fr 0.75fr 2fr 0.5fr 0.75fr 0.5fr 0.75fr 0.5fr 3rem;
+}
+
+.delivery-table .table-row {
+    grid-template-columns: 0.375fr 0.625fr 0.75fr 2fr 0.5fr 0.75fr 0.5fr 0.75fr 0.75fr 0.5fr;
+}
+
+.request-table.custodian .table-row {
+    grid-template-columns: 0.375fr 0.5fr 0.75fr 0.5fr 0.625fr 0.75fr 2fr 0.5fr 0.5fr 0.5fr 0.5fr 0.375fr 0.375fr;
+}
+
+.request-table.user .table-row {
+    grid-template-columns: 0.375fr 0.75fr 0.5fr 0.625fr 0.75fr 2fr 0.5fr 0.5fr 0.5fr 0.5fr 0.75fr;
+}
+
+.user-table .table-row {
+    grid-template-columns: 0.5fr 0.75fr 0.75fr 0.75fr 0.5fr 0.25fr;
+}

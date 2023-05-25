@@ -9,6 +9,7 @@ const timeConv = {
 const itemColumns = ["ItemID", "ItemName", "ItemDescription", "ShelfLife", "Price", "AvailableStock", "Unit"];
 const requestColumns = ["RequestID", "RequestedBy", "RequestDate", "Status", "ItemID", "ItemName", "ItemDescription", "RequestQuantity", "QuantityIssued", "AvailableStock", "Unit"];
 const deliveryColumns = ["DeliveryID", "ItemID", "ItemName", "ItemDescription", "DeliveryQuantity", "Unit", "ShelfLife", "DeliveryDate", "ReceivedBy", "IsExpired"];
+const userColumns = ["Username", "FirstName", "LastName", "Email", "Role"];
 
 // converts escaped characters in keywords
 function escapeKeyword (k) {
@@ -17,15 +18,124 @@ function escapeKeyword (k) {
 
 // fetches users from database
 async function getUsers (keyword = "") {
-    let a = fetch(encodeURI(`/users/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`));
-    let b = a.then(d => d.json());
-    let c = a.then(d => d.status);
-
-    return Promise.all([b, c]).then((e) => {
-        return [e[1], e[0]['users']]
-    });
+    return fetch(encodeURI(`/users/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`)).then(d => d.json()).then(j => j["users"]);
 }
 
+async function populateUsers (tbody, keyword = "") {
+    while (tbody.childElementCount > 2) tbody.removeChild(tbody.lastChild);
+
+    tbody.querySelector(".table-loading").classList.remove("hide");
+    tbody.querySelector(".table-empty").classList.add("hide");
+
+    let users = await getUsers(keyword);
+    let rows = [];
+
+    for (let user of users) {
+        let tr = document.createElement("div");
+        tr.classList.add("table-row");
+
+        for (let i of userColumns) {
+            let y = user[i];
+            let td = document.createElement("div");
+            
+            td.innerHTML = y;
+
+            tr.appendChild(td);
+        }
+
+        if (user['Role'] !== 'Admin') {
+            let div = document.createElement("div");
+            let btn = document.createElement("button");
+            btn.type = "button";
+            btn.role = "button";
+
+            if (user['Role'] === 'Custodian') {
+                btn.title = "Demote user";
+                btn.innerText = "Demote";
+                btn.classList.add("red");
+
+                btn.addEventListener("click", () => {
+                    let modal = document.querySelector("#modal-users");
+
+                    modal.showModal();
+                    modal.querySelector("h1").innerText = "Demote user";
+                    modal.querySelector("p").innerHTML = `<span>Are you sure you want to demote user <b>${user['Username']}</b> to Personnel?</span>`;
+                    modal.querySelector("input[type=submit]").value = "Demote user";
+                    modal.querySelector("input[type=submit]").classList.add("btn-red");
+                    modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
+                    modal.querySelector("input[type=submit]").offsetHeight;
+                    modal.querySelector("input[type=submit]").style.transitionDuration = '';
+
+                    modal.querySelector("input[type=submit]").addEventListener("click", e => {
+                        e.preventDefault();
+                        
+                        fetch("./demote", {
+                            "method": "POST",
+                            "headers": {
+                                "Content-Type": "application/json"
+                            },
+                            "body": JSON.stringify({
+                                "Username": user['Username']
+                            })
+                        }).then(d => {
+                            if (d.status === 200) window.location.reload();
+                        });
+                    });
+                });
+            }
+
+            if (user['Role'] === 'Personnel') {
+                btn.title = "Promote user";
+                btn.innerText = "Promote";
+                btn.classList.add("green");
+
+                btn.addEventListener("click", () => {
+                    let modal = document.querySelector("#modal-users");
+
+                    modal.showModal();
+                    modal.querySelector("h1").innerText = "Promote user";
+                    modal.querySelector("p").innerHTML = `<span>Are you sure you want to promote user <b>${user['Username']}</b> to Custodian?</span>`;
+                    modal.querySelector("input[type=submit]").value = "Promote user";
+                    modal.querySelector("input[type=submit]").classList.add("btn-green");
+                    modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
+                    modal.querySelector("input[type=submit]").offsetHeight;
+                    modal.querySelector("input[type=submit]").style.transitionDuration = '';
+
+                    modal.querySelector("input[type=submit]").addEventListener("click", e => {
+                        e.preventDefault();
+                        
+                        fetch("./promote", {
+                            "method": "POST",
+                            "headers": {
+                                "Content-Type": "application/json"
+                            },
+                            "body": JSON.stringify({
+                                "Username": user['Username']
+                            })
+                        }).then(d => {
+                            if (d.status === 200) window.location.reload();
+                        });
+                    });
+                });
+            }
+
+            div.appendChild(btn)
+            tr.appendChild(div);
+        }
+
+        tbody.appendChild(tr);
+        rows.push(tr);
+    }
+
+    tbody.querySelector(".table-loading").classList.add("hide");
+    if (users.length > 0) tbody.querySelector(".table-empty").classList.add("hide");
+    else tbody.querySelector(".table-empty").classList.remove("hide");
+
+    document.dispatchEvent(new Event("tablerefresh"));
+
+    return rows;
+}
+/*
 // populates user table with users from getUsers()
 async function populateUsers(tbody, keyword = "", type = "users") {
     while (tbody.childElementCount > 3) tbody.removeChild(tbody.lastChild);
@@ -60,7 +170,7 @@ async function populateUsers(tbody, keyword = "", type = "users") {
             tr.appendChild(td);
         }
 
-        if(type === 'users'){
+        if (type === 'users') {
             let a = document.createElement("button");
             if(x[4] === "Personnel"){
                 a.innerHTML = "Promote";
@@ -79,7 +189,7 @@ async function populateUsers(tbody, keyword = "", type = "users") {
                     });
                 });
             }
-            else{
+            else {
                 a.innerHTML = "Demote";
                 a.addEventListener("click", (e) => {
                     e.target.innerHTML = 'Demoting...'
@@ -133,7 +243,7 @@ async function populateUsers(tbody, keyword = "", type = "users") {
 
     document.dispatchEvent(new Event("tablerefresh"));
 }
-
+*/
 // fetches items from database
 async function getItems (keyword = "") {
     return fetch(encodeURI(`/inventory/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`)).then(d => d.json()).then(j => j["items"]);

@@ -1,15 +1,3 @@
-.table-main .request-items-table{
-    padding:10px 0px;
-}
-
-.table-row.request-details{
-    display:grid;
-    grid-auto-flow:column;
-    padding-top:10px;
-    padding-bottom:10px;
-    grid-template-columns: 10% 10% 10% 10%;
-}
-
 .request-details > div {
     display:flex;
     justify-content:center;
@@ -43,36 +31,39 @@
 }
 
 /* request table action buttons */
-.request-table .issue:not(:disabled) {
+
+.request-table .issue {
     background: var(--blue);
     box-shadow: 0rem 0.2rem 0.4rem var(--blue-shadow);
     color: white;
 }
 
-.request-table .issue:not(:disabled):hover,
-.request-table .issue:not(:disabled):focus {
+.request-table .issue:hover,
+.request-table .issue:focus {
     background: var(--dark-blue);
     box-shadow: 0rem 0.1rem 0.2rem var(--blue-shadow);
 }
 
-.request-table .actions .green:not(:disabled) {
+.request-table .actions .green {
     background: var(--green);
     box-shadow: 0rem 0.2rem 0.4rem var(--green-shadow);
     color: white;
 }
 
-.request-table .actions .green:not(:disabled):hover, .request-table .actions .green:not(:disabled):focus {
+.request-table .actions .green:hover,
+.request-table .actions .green:focus {
     background: var(--dark-green);
     box-shadow: 0rem 0.1rem 0.2rem var(--green-shadow);
 }
 
-.request-table .actions .red:not(:disabled) {
+.request-table .actions .red {
     background: var(--red);
     box-shadow: 0rem 0.2rem 0.4rem var(--red-shadow);
     color: white;
 }
 
-.request-table .actions .red:not(:disabled):hover, .request-table .actions .red:not(:disabled):focus {
+.request-table .actions .red:hover,
+.request-table .actions .red:focus {
     background: var(--dark-red);
     box-shadow: 0rem 0.1rem 0.2rem var(--red-shadow);
 }

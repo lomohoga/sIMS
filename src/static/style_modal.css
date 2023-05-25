@@ -93,7 +93,7 @@ dialog form .form-msg.error {
     color: var(--red);
 }
 
-.modal-close:not(:disabled) {
+.modal-close {
     background: none;
     font-weight: bold;
     font-size: 2rem;
@@ -111,16 +111,16 @@ dialog form .form-msg.error {
     transition: color 0.1s;
 }
 
-.modal-close:not(:disabled):hover,
-.modal-close:not(:disabled):focus {
+.modal-close:hover,
+.modal-close:focus {
     background: none;
     color: var(--red);
     box-shadow: none;
 }
 
-.modal-close:not(:disabled):hover,
-.modal-close:not(:disabled):focus,
-.modal-close:not(:disabled):active {
+.modal-close:hover,
+.modal-close:focus,
+.modal-close:active {
     outline: none;
 }
 
