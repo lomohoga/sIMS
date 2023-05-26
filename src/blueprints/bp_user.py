@@ -1,10 +1,9 @@
 import smtplib
-import random
 import time
 from secrets import randbelow
 from email.message import EmailMessage
 
-from flask import Blueprint, Response, redirect, render_template, url_for, request, session
+from flask import Blueprint, Response, render_template, request, session
 
 from src.blueprints.decode_keyword import decode_keyword
 from src.blueprints.database import connect_db
@@ -22,7 +21,7 @@ def start_email_session ():
 # send email based on request type
 # TODO: Fix email content (too bland)
 def send_email (session, type, recipient, username = "", password = ""):
-    #Contruct message
+    # construct message
     msg = EmailMessage()
     msg['From'] = "sIMS <" + sender_address + ">"
     msg['To'] = recipient
@@ -35,10 +34,10 @@ def send_email (session, type, recipient, username = "", password = ""):
         msg.set_content("Your account was deleted.")
     elif(type == "promote"):
         msg["Subject"] = "Account promoted"
-        msg.set_content("Your account was promoted to custodian. This means that\n(a) You can now add, delete, and update items in the inventory.\n(b) You can now approve or deny item requests.")
+        msg.set_content("Your account was promoted to Custodian. This means that\n(a) You can now add, delete, and update items in the inventory.\n(b) You can now approve or deny item requests.")
     elif(type == "demote"):
         msg["Subject"] = "Account demoted"
-        msg.set_content("Your account was demoted to personnel. This means that\n(a) You can no longer add, delete, and update items in the inventory.\n(b) You can no longer approve or deny item requests.")
+        msg.set_content("Your account was demoted to Personnel. This means that\n(a) You can no longer add, delete, and update items in the inventory.\n(b) You can no longer approve or deny item requests.")
     elif(type == "password"):
         msg["Subject"] = "Password changed"
         msg.set_content("Your account password was changed.")
@@ -177,12 +176,13 @@ def promote_user ():
         db = cxn.cursor()
 
         db.execute(f"UPDATE user SET RoleID = 1 WHERE Username = '{username}';")
+        db.execute(f"SELECT Email FROM user WHERE Username = '{username}';")
+        email = db.fetchone()[0]
         cxn.commit()
 
-        # if values[1] and values[1] != "NULL":
-            # mail_session = start_email_session()
-            # send_email(mail_session, "promote", values[1])
-            # mail_session.quit()
+        mail_session = start_email_session()
+        send_email(mail_session, "promote", email)
+        mail_session.quit()
     except Exception as e:
         return Response(status = 500)
     finally:
@@ -201,12 +201,13 @@ def demote_user ():
         db = cxn.cursor()
 
         db.execute(f"UPDATE user SET RoleID = 2 WHERE Username = '{username}';")
+        db.execute(f"SELECT Email FROM user WHERE Username = '{username}';")
+        email = db.fetchone()[0]
         cxn.commit()
 
-        # if values[1] and values[1] != "NULL":
-            # mail_session = start_email_session()
-            # send_email(mail_session, "demote", values[1])
-            # mail_session.quit()
+        mail_session = start_email_session()
+        send_email(mail_session, "demote", email)
+        mail_session.quit()
     except Exception as e:
         return Response(status = 500)
     finally:
@@ -283,8 +284,7 @@ def check_email ():
 @bp_user.route('/generate_code', methods = ["POST"])
 def generate_code (email = ''):
     # Set up email
-    if(email == ''):
-        email = request.get_json()["email"]
+    if (email == ''): email = request.get_json()["email"]
     
     # Generate code
     code_key = randbelow(9000) + 1000
@@ -329,14 +329,36 @@ def check_code ():
     finally:
         cxn.close()
 
-    print(count[0], code)
     if (int(count[0]) != code):
         return { "error": "The code you entered is incorrect. Please try again. "}, 500
     elif (int(count[0]) == code and time.time() - count[1] <= 180):
         return Response(status = 200)
     else:
         return { "error": "Your code has expired. Please generate a new code by clicking the \"Resend code\" button above." }, 500
-    
+
+# route for changing password (forgot password)
+@bp_user.route('/forgot_password', methods = ["POST"])
+def forgot_password ():
+    [email, password] = request.get_json()
+
+    try:
+        cxn = connect_db()
+        db = cxn.cursor()
+
+        db.execute(f"UPDATE user SET Password = '{generateHash(password)}' WHERE Email = '{email}';")
+        cxn.commit()
+
+        mail_session = start_email_session()
+        send_email(mail_session, "password", email)
+        mail_session.quit()
+    except Exception as e:
+        # TODO: Fix this
+        return { "error": e.args[1] }, 500
+    finally:
+        cxn.close()
+
+    return Response(status = 200)
+
 # route for changing password (update password)
 @bp_user.route('/change_password', methods = ["POST"])
 @login_required
@@ -350,31 +372,6 @@ def change_password ():
         db = cxn.cursor()
 
         db.execute(f"UPDATE user SET Password = '{generateHash(req['new-password'])}' WHERE Username = '{session['user']['Username']}';")
-        cxn.commit()
-
-        mail_session = start_email_session()
-        send_email(mail_session, "password", session['user']['Email'])
-        mail_session.quit()
-            
-    except Exception as e:
-        # TODO: Fix this
-        return { "error": e.args[1] }, 500
-    finally:
-        cxn.close()
-
-    return Response(status = 200)
-
-# route for changing password (forgot password)
-@bp_user.route('/change_password', methods = ["POST"])
-@login_required
-def forgot_password ():
-    password = request.get_json()['new-password']
-
-    try:
-        cxn = connect_db()
-        db = cxn.cursor()
-
-        db.execute(f"UPDATE user SET Password = '{generateHash(password)}' WHERE Username = '{session['user']['Username']}';")
         cxn.commit()
 
         mail_session = start_email_session()
@@ -411,7 +408,6 @@ def change_email ():
             mail_session = start_email_session()
             send_email(mail_session, "email", email)
             mail_session.quit()
-
         except Exception as e:
             # TODO: Fix this
             return { "error": e.args[1] }, 500

@@ -21,6 +21,7 @@ async function getUsers (keyword = "") {
     return fetch(encodeURI(`/users/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`)).then(d => d.json()).then(j => j["users"]);
 }
 
+// populates user table with users from getUsers()
 async function populateUsers (tbody, keyword = "") {
     while (tbody.childElementCount > 2) tbody.removeChild(tbody.lastChild);
 
@@ -78,7 +79,10 @@ async function populateUsers (tbody, keyword = "") {
                                 "Username": user['Username']
                             })
                         }).then(d => {
-                            if (d.status === 200) window.location.reload();
+                            if (d.status === 200) {
+                                modal.close();
+                                populateUsers(tbody, keyword);
+                            }
                         });
                     });
                 });
@@ -113,7 +117,10 @@ async function populateUsers (tbody, keyword = "") {
                                 "Username": user['Username']
                             })
                         }).then(d => {
-                            if (d.status === 200) window.location.reload();
+                            if (d.status === 200) {
+                                modal.close();
+                                populateUsers(tbody, keyword);
+                            }
                         });
                     });
                 });
@@ -135,115 +142,7 @@ async function populateUsers (tbody, keyword = "") {
 
     return rows;
 }
-/*
-// populates user table with users from getUsers()
-async function populateUsers(tbody, keyword = "", type = "users") {
-    while (tbody.childElementCount > 3) tbody.removeChild(tbody.lastChild);
 
-    tbody.querySelector(".table-loading").classList.remove("hide");
-    tbody.querySelector(".table-empty").classList.add("hide");
-    tbody.querySelector(".table-error").classList.add("hide");
-
-    let [code, users] = await getUsers(keyword);
-
-    for (let x of users) {
-        if(x[4] === "Admin"){
-            continue;
-        }
-        
-        let tr = document.createElement("div");
-        tr.classList.add("table-row");
-        tr.classList.add("delete-user-table");
-
-        for (let i = 0; i < 5; i++) {
-            let y = x[i];
-            let td = document.createElement("div");
-            if(y === "NULL"){
-                td.innerHTML = "-"
-            }
-            else if(y){
-                td.innerHTML = y
-            }
-            else{
-                td.innerHTML = "-"
-            }
-            tr.appendChild(td);
-        }
-
-        if (type === 'users') {
-            let a = document.createElement("button");
-            if(x[4] === "Personnel"){
-                a.innerHTML = "Promote";
-                a.addEventListener("click", (e) => {
-                    e.target.innerHTML = 'Promoting...'
-                    e.target.disabled = 1;
-
-                    fetch("/users/promote", {
-                        "method": "POST",
-                        "headers": {
-                            "Content-Type": "application/json"
-                        },
-                        "body": JSON.stringify({ "values": [x[0], x[3]] })
-                    }).then(d => {
-                        if (d.status === 200) window.location = "/users";
-                    });
-                });
-            }
-            else {
-                a.innerHTML = "Demote";
-                a.addEventListener("click", (e) => {
-                    e.target.innerHTML = 'Demoting...'
-                    e.target.disabled = 1;
-
-                    fetch("/users/demote", {
-                        "method": "POST",
-                        "headers": {
-                            "Content-Type": "application/json"
-                        },
-                        "body": JSON.stringify({ "values": [x[0], x[3]] })
-                    }).then(d => {
-                        if (d.status === 200) window.location = "/users";
-                    });
-                });
-            }
-
-            tr.appendChild(a);
-        }
-
-        if (type === 'delete') {
-            let e = document.createElement("div");
-            let c = document.createElement("input");
-            c.type = "checkbox";
-            e.appendChild(c);
-            tr.insertBefore(e, tr.firstChild);
-        } else if (type === 'user-search') {
-            let e = document.createElement("div");
-            let b = document.createElement("button");
-            b.type = "button";
-            b.role = "button";
-            b.innerHTML = "<i class='bi bi-plus-circle'></i><i class='bi bi-plus-circle-fill'></i>";
-            b.classList.add("select-row");
-            e.appendChild(b);
-            tr.appendChild(e);
-        }
-
-        tbody.appendChild(tr);
-    }
-
-    tbody.querySelector(".table-loading").classList.add("hide");
-    if (users.length > 0) tbody.querySelector(".table-empty").classList.add("hide");
-    else{
-        if(code === 500){
-            tbody.querySelector(".table-error").classList.remove("hide");
-        }
-        else{
-            tbody.querySelector(".table-empty").classList.remove("hide");
-        }
-    }
-
-    document.dispatchEvent(new Event("tablerefresh"));
-}
-*/
 // fetches items from database
 async function getItems (keyword = "") {
     return fetch(encodeURI(`/inventory/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`)).then(d => d.json()).then(j => j["items"]);
@@ -401,7 +300,10 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                                     "QuantityIssued": +modal.querySelector("input[type=number]").value
                                 })
                             }).then(d => {
-                                if (d.status === 200) window.location.reload();
+                                if (d.status === 200) {
+                                    modal.close();
+                                    populateRequests(tbody, keyword, privileges, filter);
+                                }
                             });
                         });
                     });
@@ -453,7 +355,10 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                                 "RequestID": req['RequestID']
                             })
                         }).then(d => {
-                            if (d.status === 200) window.location.reload();
+                            if (d.status === 200) {
+                                modal.close();
+                                populateRequests(tbody, keyword, privileges, filter);
+                            }
                         });
                     });
                 });
@@ -492,7 +397,10 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                             "RequestID": req['RequestID']
                         })
                     }).then(d => {
-                        if (d.status === 200) window.location.reload();
+                        if (d.status === 200) {
+                            modal.close();
+                            populateRequests(tbody, keyword, privileges, filter);
+                        }
                     });
                 });
             });
@@ -533,7 +441,10 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                             "RequestID": req['RequestID']
                         })
                     }).then(d => {
-                        if (d.status === 200) window.location.reload();
+                        if (d.status === 200) {
+                            modal.close();
+                            populateRequests(tbody, keyword, privileges, filter);
+                        }
                     });
                 });
             });
@@ -570,7 +481,10 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                             "RequestID": req['RequestID']
                         })
                     }).then(d => {
-                        if (d.status === 200) window.location.reload();
+                        if (d.status === 200) {
+                            modal.close();
+                            populateRequests(tbody, keyword, privileges, filter);
+                        }
                     });
                 });
             });
@@ -613,7 +527,10 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                                 "RequestID": req['RequestID']
                             })
                         }).then(d => {
-                            if (d.status === 200) window.location.reload();
+                            if (d.status === 200) {
+                                modal.close();
+                                populateRequests(tbody, keyword, privileges, filter);
+                            }
                         });
                     });
                 });
@@ -653,7 +570,10 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                             "RequestID": req['RequestID']
                         })
                     }).then(d => {
-                        if (d.status === 200) window.location.reload();
+                        if (d.status === 200) {
+                            modal.close();
+                            populateRequests(tbody, keyword, privileges, filter);
+                        }
                     });
                 });
             });

@@ -199,6 +199,7 @@
                     "Content-Type": "application/json"
                 },
                 "body": JSON.stringify({
+                    "email": document.querySelector('#email').value,
                     "new-password": document.querySelector('#new-password').value
                 })
             }).then(async d => {
