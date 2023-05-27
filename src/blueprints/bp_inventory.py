@@ -87,7 +87,7 @@ def remove_items ():
             cxn = connect_db()
             db = cxn.cursor()
             for x in items:
-                db.execute(f"DELETE FROM item WHERE ItemID = {x}")
+                db.execute(f"DELETE FROM item WHERE ItemID = '{x}'")
             cxn.commit()
         except Exception as e:
             return Response(status = 500)

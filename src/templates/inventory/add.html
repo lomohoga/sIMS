@@ -139,7 +139,7 @@
                 "ItemDescription": children[2].firstChild.value,
                 "ShelfLife": children[3].lastChild.value === "-1" ? null : +children[3].firstChild.value * +children[3].lastChild.value,
                 "Price": +children[4].firstChild.value,
-                "Unit": children[5].firstChild.value,
+                "Unit": children[5].firstChild.value.toLowerCase(),
             })
         }
         
