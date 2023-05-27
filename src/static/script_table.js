@@ -32,6 +32,10 @@ async function populateUsers (tbody, keyword = "") {
     let rows = [];
 
     for (let user of users) {
+        if(user['Role'] === 'Admin'){
+            continue;
+        }
+        
         let tr = document.createElement("div");
         tr.classList.add("table-row");
 
@@ -44,91 +48,89 @@ async function populateUsers (tbody, keyword = "") {
             tr.appendChild(td);
         }
 
-        if (user['Role'] !== 'Admin') {
-            let div = document.createElement("div");
-            let btn = document.createElement("button");
-            btn.type = "button";
-            btn.role = "button";
+        let div = document.createElement("div");
+        let btn = document.createElement("button");
+        btn.type = "button";
+        btn.role = "button";
 
-            if (user['Role'] === 'Custodian') {
-                btn.title = "Demote user";
-                btn.innerText = "Demote";
-                btn.classList.add("red");
+        if (user['Role'] === 'Custodian') {
+            btn.title = "Demote user";
+            btn.innerText = "Demote";
+            btn.classList.add("red");
 
-                btn.addEventListener("click", () => {
-                    let modal = document.querySelector("#modal-users");
+            btn.addEventListener("click", () => {
+                let modal = document.querySelector("#modal-users");
 
-                    modal.showModal();
-                    modal.querySelector("h1").innerText = "Demote user";
-                    modal.querySelector("p").innerHTML = `<span>Are you sure you want to demote user <b>${user['Username']}</b> to Personnel?</span>`;
-                    modal.querySelector("input[type=submit]").value = "Demote user";
-                    modal.querySelector("input[type=submit]").classList.add("btn-red");
-                    modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
-                    modal.querySelector("input[type=submit]").offsetHeight;
-                    modal.querySelector("input[type=submit]").style.transitionDuration = '';
+                modal.showModal();
+                modal.querySelector("h1").innerText = "Demote user";
+                modal.querySelector("p").innerHTML = `<span>Are you sure you want to demote user <b>${user['Username']}</b> to Personnel?</span>`;
+                modal.querySelector("input[type=submit]").value = "Demote user";
+                modal.querySelector("input[type=submit]").classList.add("btn-red");
+                modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
+                modal.querySelector("input[type=submit]").offsetHeight;
+                modal.querySelector("input[type=submit]").style.transitionDuration = '';
 
-                    modal.querySelector("input[type=submit]").addEventListener("click", e => {
-                        e.preventDefault();
-                        
-                        fetch("./demote", {
-                            "method": "POST",
-                            "headers": {
-                                "Content-Type": "application/json"
-                            },
-                            "body": JSON.stringify({
-                                "Username": user['Username']
-                            })
-                        }).then(d => {
-                            if (d.status === 200) {
-                                modal.close();
-                                populateUsers(tbody, keyword);
-                            }
-                        });
+                modal.querySelector("input[type=submit]").addEventListener("click", e => {
+                    e.preventDefault();
+                    
+                    fetch("./demote", {
+                        "method": "POST",
+                        "headers": {
+                            "Content-Type": "application/json"
+                        },
+                        "body": JSON.stringify({
+                            "Username": user['Username']
+                        })
+                    }).then(d => {
+                        if (d.status === 200) {
+                            modal.close();
+                            populateUsers(tbody, keyword);
+                        }
                     });
                 });
-            }
-
-            if (user['Role'] === 'Personnel') {
-                btn.title = "Promote user";
-                btn.innerText = "Promote";
-                btn.classList.add("green");
-
-                btn.addEventListener("click", () => {
-                    let modal = document.querySelector("#modal-users");
-
-                    modal.showModal();
-                    modal.querySelector("h1").innerText = "Promote user";
-                    modal.querySelector("p").innerHTML = `<span>Are you sure you want to promote user <b>${user['Username']}</b> to Custodian?</span>`;
-                    modal.querySelector("input[type=submit]").value = "Promote user";
-                    modal.querySelector("input[type=submit]").classList.add("btn-green");
-                    modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
-                    modal.querySelector("input[type=submit]").offsetHeight;
-                    modal.querySelector("input[type=submit]").style.transitionDuration = '';
-
-                    modal.querySelector("input[type=submit]").addEventListener("click", e => {
-                        e.preventDefault();
-                        
-                        fetch("./promote", {
-                            "method": "POST",
-                            "headers": {
-                                "Content-Type": "application/json"
-                            },
-                            "body": JSON.stringify({
-                                "Username": user['Username']
-                            })
-                        }).then(d => {
-                            if (d.status === 200) {
-                                modal.close();
-                                populateUsers(tbody, keyword);
-                            }
-                        });
-                    });
-                });
-            }
-
-            div.appendChild(btn)
-            tr.appendChild(div);
+            });
         }
+
+        if (user['Role'] === 'Personnel') {
+            btn.title = "Promote user";
+            btn.innerText = "Promote";
+            btn.classList.add("green");
+
+            btn.addEventListener("click", () => {
+                let modal = document.querySelector("#modal-users");
+
+                modal.showModal();
+                modal.querySelector("h1").innerText = "Promote user";
+                modal.querySelector("p").innerHTML = `<span>Are you sure you want to promote user <b>${user['Username']}</b> to Custodian?</span>`;
+                modal.querySelector("input[type=submit]").value = "Promote user";
+                modal.querySelector("input[type=submit]").classList.add("btn-green");
+                modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
+                modal.querySelector("input[type=submit]").offsetHeight;
+                modal.querySelector("input[type=submit]").style.transitionDuration = '';
+
+                modal.querySelector("input[type=submit]").addEventListener("click", e => {
+                    e.preventDefault();
+                    
+                    fetch("./promote", {
+                        "method": "POST",
+                        "headers": {
+                            "Content-Type": "application/json"
+                        },
+                        "body": JSON.stringify({
+                            "Username": user['Username']
+                        })
+                    }).then(d => {
+                        if (d.status === 200) {
+                            modal.close();
+                            populateUsers(tbody, keyword);
+                        }
+                    });
+                });
+            });
+        }
+
+        div.appendChild(btn)
+        tr.appendChild(div);
 
         tbody.appendChild(tr);
         rows.push(tr);
