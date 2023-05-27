@@ -18,17 +18,32 @@ function escapeKeyword (k) {
 
 // fetches users from database
 async function getUsers (keyword = "") {
-    return fetch(encodeURI(`/users/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`)).then(d => d.json()).then(j => j["users"]);
+    return fetch(encodeURI(`/users/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`))
+    .then(d => {
+        if(d.status == 200){
+            return d.json().then(j => j["users"]);
+        }
+        else{
+            return -1;
+        }
+    });
 }
 
 // populates user table with users from getUsers()
 async function populateUsers (tbody, keyword = "") {
-    while (tbody.childElementCount > 2) tbody.removeChild(tbody.lastChild);
+    while (tbody.childElementCount > 3) tbody.removeChild(tbody.lastChild);
 
     tbody.querySelector(".table-loading").classList.remove("hide");
     tbody.querySelector(".table-empty").classList.add("hide");
 
     let users = await getUsers(keyword);
+
+    if(users == -1){
+        tbody.querySelector(".table-error").classList.remove("hide");
+        tbody.querySelector(".table-loading").classList.add("hide");
+        return;
+    }
+
     let rows = [];
 
     for (let user of users) {

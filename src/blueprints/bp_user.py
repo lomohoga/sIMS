@@ -79,7 +79,6 @@ bp_user = Blueprint("bp_user", __name__, url_prefix = "/users")
 @bp_user.route('/')
 @login_required
 def show_users ():
-    update_session();
     if session['user']['RoleID'] != 0: 
         return render_template("error.html", errcode = 403, errmsg = "You do not have permission to see the users in the database."), 403
     else: 
@@ -229,7 +228,7 @@ def search_users ():
         conditions.append(f"(Username LIKE '%{x}%' OR FirstName LIKE '%{x}%' OR LastName LIKE '%{x}%')")
 
     query = f"SELECT Username, FirstName, LastName, Email, RoleName as Role FROM user LEFT JOIN role USING (RoleID) {'' if len(conditions) == 0 else 'WHERE (' + ' AND '.join(conditions) + ')'} ORDER BY Username;"
-    
+    cxn = 0
     try:
         cxn = connect_db()
         db = cxn.cursor()
@@ -238,7 +237,8 @@ def search_users ():
     except Exception as e:
         return Response(status = 500)
     finally:
-        cxn.close()
+        if(cxn != 0):
+            cxn.close()
 
     return { "users": [{
         "Username": x[0],
