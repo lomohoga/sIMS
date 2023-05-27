@@ -50,10 +50,13 @@ input[type=text], input[type=password], input[type=search], input[type=number], 
 }
 
 input[type=number]:invalid, input[type=email]:invalid {
-    background: var(--light-red);
     border-bottom: 0.05rem solid var(--light-red-2);
     color: var(--red);
     font-weight: bold;
+}
+
+input[type=number]:invalid {
+    background: var(--light-red);
 }
 
 input[type=number]:invalid:focus, input[type=email]:invalid:focus {
