@@ -71,3 +71,25 @@
 #login-username, #login-password {
     width: clamp(25%, 15rem, 50%);
 }
+
+#forgot-password{
+    width: fit-content;
+    margin: 0px;
+    margin-bottom: 15px;
+    
+    font-size: small;
+    font-style: italic;
+    color: var(--status-yellow-dark);
+}
+
+#forgot-password:hover{
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+#login-form > div{
+    display: flex;
+    flex-direction: row;
+    column-gap: 10px;
+    align-items: center;
+}

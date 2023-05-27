@@ -87,12 +87,16 @@
                 <form id="login-form" method="post">
                     <input id="login-username" type="text" class="field" placeholder="Username or email" name="uname" required autofocus>
                     <input id="login-password" type="password" class="field" placeholder="Password" name="pword" required>
-                    <input type="submit" id="login-submit" value="Log in">
-                    {% if msg|length != 0 %}
-                        <span id="login-error">{{ msg }}</span>
-                    {% endif %}
+                    <p id="forgot-password">Forgot password?</p>
+
+                    <div>
+                        <input type="submit" id="login-submit" value="Log in">
+                        {% if msg|length != 0 %}
+                            <span id="login-error">{{ msg }}</span>
+                        {% endif %}
+                    </div>
                 </form>
-                <button type="button" role="button" id="forgot-password" class="btn">Forgot password?</button>
+                <!-- <button type="button" role="button" id="forgot-password" class="btn">Forgot password?</button> -->
             </div>
         </main>
     </body>
