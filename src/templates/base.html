@@ -15,11 +15,11 @@
             <div id="modal-change-password-1">
                 <form id="form-change-password">
                     <span class="form-grid">
-                        <label for="old-password">Enter old password:</label>
+                        <label for="old-password" id="old-password-label">Enter old password:</label>
                         <input id="old-password" type="password" minlength="8" maxlength="12" required autofocus>
-                        <label for="new-password">Enter new password:</label>
+                        <label for="new-password" id="new-password-label">Enter new password:</label>
                         <input id="new-password" type="password" minlength="8" maxlength="12" required>
-                        <label for="confirm-password">Re-enter new password:</label>
+                        <label for="confirm-password" id="confirm-password-label">Re-enter new password:</label>
                         <input id="confirm-password" type="password" minlength="8" maxlength="12" required>
                     </span>
                     <span id="password-note">
@@ -125,8 +125,33 @@
 
     function changePasswordValidity () {
         let t = document.querySelector("#form-change-password");
-        t.querySelector("input[type=submit]").disabled = !(t.checkValidity() && Array.prototype.map.call(document.querySelectorAll("#new-password, #confirm-password"), x => [/[A-Za-z0-9]+/].map(y => x.value.match(y) !== null).every(y => y)).every(x => x)
-        && document.querySelector("#new-password").value == document.querySelector("#confirm-password").value);
+        
+        let oldPasswordValid = t.querySelector("#old-password").checkValidity();
+        if(oldPasswordValid){
+            t.querySelector("#old-password-label").classList.add("valid");
+        }
+        else{
+            t.querySelector("#old-password-label").classList.remove("valid");
+        }
+
+        let newPassword = t.querySelector("#new-password");
+        let validPassword = newPassword.checkValidity() && newPassword.value.match(/[A-Za-z0-9]+/);
+        if(validPassword){
+            t.querySelector("#new-password-label").classList.add("valid");
+        }
+        else{
+            t.querySelector("#new-password-label").classList.remove("valid");
+        }
+
+        let equalPassword = newPassword.checkValidity() && newPassword.value == t.querySelector("#confirm-password").value;
+        if(equalPassword){
+            t.querySelector("#confirm-password-label").classList.add("valid");
+        }
+        else{
+            t.querySelector("#confirm-password-label").classList.remove("valid");
+        }
+
+        t.querySelector("input[type=submit]").disabled = !(oldPasswordValid && validPassword && equalPassword);
     }
 
     // modal open & close event listeners
