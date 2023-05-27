@@ -50,13 +50,7 @@
                         <input id="confirm-password" type="password" minlength="8" maxlength="12" required>
                     </span>
                     <span id="password-note">
-                        <p><b>NOTE:</b> Your new password must contain the following:</p>
-                        <ul>
-                            <li>8 to 12 characters</li>
-                            <li>at least one capital letter</li>
-                            <li>at least one small letter</li>
-                            <li>at least one digit</li>
-                        </ul>
+                        <p><b>NOTE:</b> Your new password must contain 8 to 12 alphanumeric characters.</p>
                     </span>
                     <span>
                         <p class="form-msg"></p>
@@ -105,7 +99,8 @@
 <script>
     function newPasswordValidity () {
         let t = document.querySelector("#modal-forgot-password-3 form");
-        t.querySelector("input[type=submit]").disabled = !(t.checkValidity() && Array.prototype.map.call(document.querySelectorAll("#new-password, #confirm-password"), x => [/[A-Z]+/, /[a-z]+/, /[0-9]+/].map(y => x.value.match(y) !== null).every(y => y)).every(x => x));
+        t.querySelector("input[type=submit]").disabled = !(t.checkValidity() && Array.prototype.map.call(document.querySelectorAll("#new-password, #confirm-password"), x => [/[A-Za-z0-9]+/].map(y => x.value.match(y) !== null).every(y => y)).every(x => x)
+        && document.querySelector("#new-password").value == document.querySelector("#confirm-password").value);
     }
 
     // modal steps
