@@ -176,17 +176,31 @@ async function populateUsers (tbody, keyword = "", type="users") {
 
 // fetches items from database
 async function getItems (keyword = "") {
-    return fetch(encodeURI(`/inventory/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`)).then(d => d.json()).then(j => j["items"]);
+    return fetch(encodeURI(`/inventory/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`))
+    .then(d => {
+        if(d.status == 200){
+            return d.json().then(j => j["items"]);
+        }
+        else{
+            return -1;
+        }
+    });
 }
 
 // populates item table with items from getItems()
 async function populateItems (tbody, keyword = "", { stock = true, buttons = false, requesting = false } = {}) {
-    while (tbody.childElementCount > 2) tbody.removeChild(tbody.lastChild);
+    while (tbody.childElementCount > 3) tbody.removeChild(tbody.lastChild);
 
     tbody.querySelector(".table-loading").classList.remove("hide");
     tbody.querySelector(".table-empty").classList.add("hide");
 
     let items = await getItems(keyword);
+    if(items == -1){
+        tbody.querySelector(".table-error").classList.remove("hide");
+        tbody.querySelector(".table-loading").classList.add("hide");
+        return;
+    }
+
     let rows = [];
 
     for (let x of items) {

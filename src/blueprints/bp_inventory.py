@@ -25,11 +25,19 @@ def search_items ():
 
     query = f"SELECT * from stock {'' if len(conditions) == 0 else 'WHERE (' + ' AND '.join(conditions) + ')'} ORDER BY ItemID"
 
-    cxn = connect_db()
-    db = cxn.cursor()
-    db.execute(query)
-    items = db.fetchall()
-    cxn.close()
+    try:
+        cxn = connect_db()
+        db = cxn.cursor()
+
+        try:
+            db.execute(query)
+            items = db.fetchall()
+        except Exception as e:
+            return { "error": e.args[0], "msg": e.args[1] }, 500
+        finally:
+            cxn.close()
+    except Exception as e:
+        return { "error": e.args[0], "msg": e.args[1] }, 500
 
     return { "items": format_items(items) }
 
