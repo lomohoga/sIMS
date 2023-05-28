@@ -141,7 +141,7 @@ main h1 {
     display: none;
 }
 
-#add-bottom, #delete-bottom {
+#add-bottom, #delete-bottom, #update-bottom {
     width: 100%;
     display: flex;
     gap: 1rem;

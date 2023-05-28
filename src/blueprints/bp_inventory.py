@@ -108,26 +108,29 @@ def update_items ():
             return render_template("inventory/update.html")
 
     if request.method == "POST":
-        if session['user']['RoleID'] != 1:
-            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to update items in the database."), 403
-        
         values = request.get_json()["values"]
 
         try:
             cxn = connect_db()
             db = cxn.cursor()
 
-            for v in values:
-                print(v)
-                db.execute(f"UPDATE item SET ItemID = '{values[v]['ItemID']}', ItemName = '{escape(values[v]['ItemName'])}', ItemDescription = '{escape(values[v]['ItemDescription'])}', ShelfLife = {'NULL' if values[v]['ShelfLife'] is None else values[v]['ShelfLife']}, Price = {values[v]['Price']}, Unit = '{values[v]['Unit']}' WHERE ItemID = '{v}'")
+            try:
+                for v in values:
+                    db.execute(f"UPDATE item SET ItemID = '{values[v]['ItemID']}', ItemName = '{escape(values[v]['ItemName'])}', ItemDescription = '{escape(values[v]['ItemDescription'])}', ShelfLife = {'NULL' if values[v]['ShelfLife'] is None else values[v]['ShelfLife']}, Price = {values[v]['Price']}, Unit = '{values[v]['Unit']}' WHERE ItemID = '{v}'")
 
-            cxn.commit()
+                cxn.commit()
+            except Exception as e:
+                # original error message as fallback
+                msg = e.args[1]
+                # MYSQL Error 1062: duplicate value for primary key
+                if e.args[0] == 1062: 
+                    msg = f'Item ID {values[v]["ItemID"]} has already been taken.'
+                return {"error": e.args[0], "msg": msg}, 500
+            finally:
+                cxn.close()
         except Exception as e:
-            print(e.args[1])
-            return Response(status = 500)
-        finally:
-            cxn.close()
-
+            return {"error": e.args[0]}, 500
+        
         return Response(status = 200)
 
 # route for item request
