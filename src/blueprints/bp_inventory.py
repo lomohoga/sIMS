@@ -78,21 +78,22 @@ def remove_items ():
             return render_template("inventory/remove.html")
 
     if request.method == "POST":
-        if (session['user'])['RoleID'] != 1:
-            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to remove items from the database."), 403
-
         items = request.get_json()["items"]
 
         try:
             cxn = connect_db()
             db = cxn.cursor()
-            for x in items:
-                db.execute(f"DELETE FROM item WHERE ItemID = '{x}'")
-            cxn.commit()
+
+            try:
+                for x in items:
+                    db.execute(f"DELETE FROM item WHERE ItemID = '{x}'")
+                cxn.commit()
+            except Exception as e:
+                return { "error": e.args[0] }, 500
+            finally:
+                cxn.close()
         except Exception as e:
-            return Response(status = 500)
-        finally:
-            cxn.close()
+            return { "error": e.args[0] }, 500
 
         return Response(status = 200)
 
