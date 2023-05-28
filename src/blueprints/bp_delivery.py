@@ -29,11 +29,19 @@ def search_deliveries ():
 
     query = f"SELECT DeliveryID, ItemID, ItemName, ItemDescription, DeliveryQuantity, Unit, ShelfLife, DATE_FORMAT(delivery.DeliveryDate, '%d %b %Y') as DeliveryDate, ReceivedBy, IsExpired FROM delivery INNER JOIN item USING (ItemID) INNER JOIN expiration USING (DeliveryID) {'' if len(conditions) == 0 else 'WHERE (' + ' AND '.join(conditions) + ')'} ORDER BY DeliveryID"
 
-    cxn = connect_db()
-    db = cxn.cursor()
-    db.execute(query)
-    deliveries = db.fetchall()
-    cxn.close()
+    try:
+        cxn = connect_db()
+        db = cxn.cursor()
+
+        try:
+            db.execute(query)
+            deliveries = db.fetchall()
+        except Exception as e:
+            return { "error": e.args[0], "msg": e.args[1] }, 500
+        finally:
+            cxn.close()
+    except Exception as e:
+        return { "error": e.args[0], "msg": e.args[1] }, 500
 
     return { "deliveries": format_deliveries(deliveries) }
 

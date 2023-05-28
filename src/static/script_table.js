@@ -640,17 +640,30 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
 
 // fetches deliveries from database
 async function getDeliveries (keyword = "") {
-    return fetch(encodeURI(`/deliveries/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`)).then(d => d.json()).then(j => j["deliveries"]);
+    return fetch(encodeURI(`/deliveries/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`))
+    .then(d => {
+        if(d.status == 200){
+            return d.json().then(j => j["deliveries"]);
+        }
+        else{
+            return -1;
+        }
+    });
 }
 
 // populates delivery table with deliveries from getDeliveries()
 async function populateDeliveries (tbody, keyword = "") {
-    while (tbody.childElementCount > 2) tbody.removeChild(tbody.lastChild);
+    while (tbody.childElementCount > 3) tbody.removeChild(tbody.lastChild);
 
     tbody.querySelector(".table-loading").classList.remove("hide");
     tbody.querySelector(".table-empty").classList.add("hide");
 
     let items = await getDeliveries(keyword);
+    if(items == -1){
+        tbody.querySelector(".table-error").classList.remove("hide");
+        tbody.querySelector(".table-loading").classList.add("hide");
+        return;
+    }
 
     for (let x of items) {
         let tr = document.createElement("div");
