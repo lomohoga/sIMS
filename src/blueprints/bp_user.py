@@ -400,26 +400,26 @@ def change_email ():
     password = request.get_json()["password"]
     
     if session['user']['Password'] != generateHash(password):
-        return { "error": "The password you have entered is incorrect. Please make sure you have entered your password correctly." }, 500
+        return { "error": -1, "msg": "The password you have entered is incorrect. Please make sure you have entered your password correctly." }, 500
     else:
         email = request.get_json()["email"]
 
         try:
             cxn = connect_db()
             db = cxn.cursor()
-
-            db.execute(f"UPDATE user SET Email = '{email}' WHERE Username = '{session['user']['Username']}';")
-            cxn.commit()
-
-            session['user']['Email'] = email
-
             mail_session = start_email_session()
-            send_email(mail_session, "email", email)
-            mail_session.quit()
+
+            try:
+                db.execute(f"UPDATE user SET Email = '{email}' WHERE Username = '{session['user']['Username']}';")
+                cxn.commit()
+
+                send_email(mail_session, "email", email)
+            except Exception as e:
+                return { "error": e.args[0], "msg": email }, 500
+            finally:
+                cxn.close()
+                mail_session.quit()
         except Exception as e:
-            # TODO: Fix this
-            return { "error": e.args[1] }, 500
-        finally:
-            cxn.close()
+            return { "error": e.args[0] }, 500
 
         return Response(status = 200)
