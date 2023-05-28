@@ -151,19 +151,21 @@ def remove_users ():
             cxn = connect_db()
             db = cxn.cursor()
 
-            db.executemany("DELETE FROM user WHERE Username = %s;", choices)
-            cxn.commit()
+            try:
+                db.executemany("DELETE FROM user WHERE Username = %s;", choices)
+                cxn.commit()
 
-            mail_session = start_email_session()
-            for p in emails:
-                if p != '-':
-                    send_email(mail_session, "delete", p)
+                mail_session = start_email_session()
+                for p in emails:
+                    send_email(mail_session, "delete", p)   
+            except Exception as e:
+                return { "error": e.args[0] }, 500
+            finally:
+                cxn.close()
+                mail_session.quit()
 
         except Exception as e:
-            return Response(status = 500)
-        finally:
-            cxn.close()
-            mail_session.quit()
+            return { "error": e.args[0] }, 500
 
         return Response(status = 200)
 

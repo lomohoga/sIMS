@@ -31,7 +31,7 @@
                 <div>No users found.</div>
             </div>
             <div class="table-error table-row hide">
-                <div>Error loading users.</div>
+                <div>An error occurred in the database. Please try again later.</div>
             </div>
         </div>
     </div>
@@ -53,9 +53,12 @@
     </div>
 </div>
 
-<form id="submit-form">
-    <input type="submit" id="delete-btn" class="btn-red" value="Delete selected users" name="delete-btn" disabled>
-</form>
+<div id="delete-user-form">
+    <p class="message"></p>
+    <form id="submit-form">
+        <input type="submit" id="delete-btn" class="btn-red" value="Delete selected users" name="delete-btn" disabled>
+    </form>
+</div>
 
 <script>
     function selectItem (row) {
@@ -117,6 +120,28 @@
             "body": JSON.stringify({ "users": Array.from(document.querySelectorAll("#selected-items .table-body .table-row > :first-child")).map(x => x.innerHTML), "emails":  Array.from(document.querySelectorAll("#selected-items .table-body .table-row > :nth-child(4)")).map(x => x.innerHTML)})
         }).then(d => {
             if (d.status === 200) window.location = "{{ url_for('bp_user.show_users') }}";
+
+            if (d.status === 500){
+                d.json().then(a => {
+                    let p = document.querySelector('#delete-user-form p')
+                    p.style.display = 'block'
+                    
+                    if(a["error"] == 2003){
+                        p.innerHTML = "Database error. Please try again later."
+                    }
+                    else{
+                        p.innerHTML = "Internal server error. Please try again later."
+                    }
+                });
+            }
+
+            document.querySelector('#delete-btn').disabled = 0;
+            document.querySelector('#delete-btn').value = 'Delete selected users'
+        })
+        .catch(() => {
+            let p = document.querySelector('#delete-user-form p')
+            p.innerHTML = 'Server unavailable. Please try again later'
+            p.style.display = 'block'
 
             document.querySelector('#delete-btn').disabled = 0;
             document.querySelector('#delete-btn').value = 'Delete selected users'

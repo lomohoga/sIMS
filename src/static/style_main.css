@@ -205,9 +205,17 @@ main {
     background: var(--light-gray);
 }
 
-#add-user-form {
+#add-user-form, #delete-user-form {
     display: flex;
     flex-direction: row;
     gap: 10px;
     justify-content: flex-end;
+    align-items: center;
+}
+
+.message{
+    margin: 0;
+    display:none; 
+    font-style: italic; 
+    color: var(--red);
 }
