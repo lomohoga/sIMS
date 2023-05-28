@@ -230,36 +230,45 @@
     document.querySelector("#form-change-password").addEventListener("submit", e => {
         e.preventDefault();
 
-        if (document.querySelector("#new-password").value !== document.querySelector("#confirm-password").value) {
-            document.querySelector("#form-change-password").reset();
-            document.querySelector("#form-change-password .form-msg").innerText = "Your new password does not match the confirmation. Please make sure you have entered your new password correctly.";
-            document.querySelector("#form-change-password .form-msg").classList.add("error");
-        } else {
-            document.querySelector("#modal-change-password .form-msg").innerText = "Please wait\u2026";
+        document.querySelector("#modal-change-password .form-msg").innerText = "Please wait\u2026";
 
-            fetch("{{ url_for('bp_user.change_password') }}", {
-                "method": "POST",
-                "headers": {
-                    "Content-Type": "application/json"
-                },
-                "body": JSON.stringify({
-                    "old-password": document.querySelector('#old-password').value,
-                    "new-password": document.querySelector('#new-password').value
-                })
-            }).then(async d => {
-                if (d.status === 200) {
-                    document.querySelector("#modal-change-password-1").classList.add("hidden");
-                    document.querySelector("#modal-change-password-2").classList.remove("hidden");
-                    window.setTimeout(() => window.location = "{{ url_for('bp_auth.logout') }}", 3000);
-                } else {
-                    document.querySelector("#form-change-password").reset();
-                    document.querySelector('#form-change-password .form-msg').classList.add("error");
-                    document.querySelector("#form-change-password .form-msg").innerText = (await d.json())['error'];
+        fetch("{{ url_for('bp_user.change_password') }}", {
+            "method": "POST",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": JSON.stringify({
+                "old-password": document.querySelector('#old-password').value,
+                "new-password": document.querySelector('#new-password').value
+            })
+        }).then(async d => {
+            if (d.status === 200) {
+                document.querySelector("#modal-change-password-1").classList.add("hidden");
+                document.querySelector("#modal-change-password-2").classList.remove("hidden");
+                window.setTimeout(() => window.location = "{{ url_for('bp_auth.logout') }}", 3000);
+            } else {
+                document.querySelector("#form-change-password").reset();
+                document.querySelector('#form-change-password .form-msg').classList.add("error");
+
+                let errorCode = (await d.json())['error'];
+                if(errorCode == 2003){
+                    document.querySelector("#form-change-password .form-msg").innerText = "Database error. Please try again later."
                 }
-            });
-        }
+                else{
+                    document.querySelector("#form-change-password .form-msg").innerText = "Internal server error. Please try again later."
+                }
+            }
+        })
+        .catch(() => {
+            document.querySelector('#form-change-password .form-msg').classList.add("error");
+            document.querySelector("#form-change-password .form-msg").innerText = "Server unavailable. Please try again later."; 
+        });
 
         changePasswordValidity();
+
+        document.querySelector("#old-password-label").classList.remove("valid");
+        document.querySelector("#new-password-label").classList.remove("valid");
+        document.querySelector("#confirm-password-label").classList.remove("valid");
     });
 
     // profile dropdown event listeners

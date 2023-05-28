@@ -370,23 +370,26 @@ def forgot_password ():
 def change_password ():
     req = request.get_json()
 
-    if generateHash(req['old-password']) != session['user']['Password']: return { "error": "The old password you entered does not match your current password. Please try again." }, 500
+    if generateHash(req['old-password']) != session['user']['Password']: 
+        return { "error": "The old password you entered does not match your current password. Please try again." }, 500
 
     try:
         cxn = connect_db()
         db = cxn.cursor()
 
-        db.execute(f"UPDATE user SET Password = '{generateHash(req['new-password'])}' WHERE Username = '{session['user']['Username']}';")
-        cxn.commit()
+        try:
+            db.execute(f"UPDATE user SET Password = '{generateHash(req['new-password'])}' WHERE Username = '{session['user']['Username']}';")
+            cxn.commit()
 
-        mail_session = start_email_session()
-        send_email(mail_session, "password", session['user']['Email'])
-        mail_session.quit()
+            mail_session = start_email_session()
+            send_email(mail_session, "password", session['user']['Email'])
+        except Exception as e:
+            return { "error": e.args[0] }, 500
+        finally:
+            cxn.close()
+            mail_session.quit()
     except Exception as e:
-        # TODO: Fix this
-        return { "error": e.args[1] }, 500
-    finally:
-        cxn.close()
+        return { "error": e.args[0] }, 500
 
     return Response(status = 200)
 
