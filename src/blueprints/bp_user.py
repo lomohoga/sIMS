@@ -371,7 +371,7 @@ def change_password ():
     req = request.get_json()
 
     if generateHash(req['old-password']) != session['user']['Password']: 
-        return { "error": "The old password you entered does not match your current password. Please try again." }, 500
+        return { "error": -1, "msg": "The old password you entered does not match your current password. Please try again." }, 500
 
     try:
         cxn = connect_db()

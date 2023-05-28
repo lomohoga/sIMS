@@ -268,9 +268,13 @@
                 document.querySelector("#form-change-password").reset();
                 document.querySelector('#form-change-password .form-msg').classList.add("error");
 
-                let errorCode = (await d.json())['error'];
+                let response = await d.json();
+                let errorCode = response['error']
                 if(errorCode == 2003){
                     document.querySelector("#form-change-password .form-msg").innerText = "Database error. Please try again later."
+                }
+                else if(errorCode == -1){
+                    document.querySelector("#form-change-password .form-msg").innerText = response['msg'];
                 }
                 else{
                     document.querySelector("#form-change-password .form-msg").innerText = "Internal server error. Please try again later."
