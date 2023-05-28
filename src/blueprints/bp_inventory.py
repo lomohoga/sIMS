@@ -63,7 +63,7 @@ def add_items ():
             finally:
                 cxn.close()
         except Exception as e:
-            return {"error": e.args[0]}, 500
+            return {"error": e.args[0], "msg": e.args[1]}, 500
         
         return Response(status = 200)
 
@@ -89,11 +89,11 @@ def remove_items ():
                     db.execute(f"DELETE FROM item WHERE ItemID = '{x}'")
                 cxn.commit()
             except Exception as e:
-                return { "error": e.args[0] }, 500
+                return {"error": e.args[0], "msg": e.args[1]}, 500
             finally:
                 cxn.close()
         except Exception as e:
-            return { "error": e.args[0] }, 500
+            return {"error": e.args[0], "msg": e.args[1]}, 500
 
         return Response(status = 200)
 
@@ -129,7 +129,7 @@ def update_items ():
             finally:
                 cxn.close()
         except Exception as e:
-            return {"error": e.args[0]}, 500
+            return {"error": e.args[0], "msg": e.args[1]}, 500
         
         return Response(status = 200)
 
@@ -141,25 +141,25 @@ def request_items ():
         return render_template("inventory/request.html")
 
     if (request.method == "POST"):
-        if session['user']['RoleID'] == 1: 
-            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to request items from the database."), 403
-        
         req = request.get_json()["items"]
 
         try:
             cxn = connect_db()
             db = cxn.cursor()
 
-            db.execute(f"INSERT INTO request (RequestedBy) VALUES ('{session['user']['Username']}')")
-            db.execute("SELECT LAST_INSERT_ID()")
-            requestID = int(db.fetchone()[0])
+            try:
+                db.execute(f"INSERT INTO request (RequestedBy) VALUES ('{session['user']['Username']}')")
+                db.execute("SELECT LAST_INSERT_ID()")
+                requestID = int(db.fetchone()[0])
 
-            for x in req:
-                db.execute(f"INSERT INTO request_item (RequestID, ItemID, RequestQuantity) VALUES ({requestID}, '{x['ItemID']}', {x['RequestQuantity']})")
-            cxn.commit()
+                for x in req:
+                    db.execute(f"INSERT INTO request_item (RequestID, ItemID, RequestQuantity) VALUES ({requestID}, '{x['ItemID']}', {x['RequestQuantity']})")
+                cxn.commit()
+            except Exception as e:
+                return { "error": e.args[0], "msg": e.args[1] }, 500
+            finally:
+                cxn.close()
         except Exception as e:
-            return { "error": e.args[1] }, 500
-        finally:
-            cxn.close()
+            return { "error": e.args[0], "msg": e.args[1] }, 500
 
         return Response(status = 200)

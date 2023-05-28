@@ -102,9 +102,12 @@
     </div>
 </div>
 
-<form id="submit-form">
-    <input type="submit" value="Request selected items" name="request-btn" disabled>
-</form>
+<div id="request-bottom">
+    <span id="errmsg"></span>
+    <form id="submit-form">
+        <input type="submit" value="Request selected items" name="request-btn" disabled>
+    </form>
+</div>
 
 <script>
     let currentSortSearch = [0, true];
@@ -202,8 +205,22 @@
                     }
                 })
             })
-        }).then(d => {
+        }).then(async d => {
             if (d.status === 200) window.location = "{{ url_for('bp_inventory.inventory') }}";
+            if (d.status === 500){
+                let response = await d.json();
+                let errorCode = response["error"];
+                
+                if(errorCode == 2003){
+                    document.querySelector("#errmsg").innerHTML = "Database error. Please try again later.";
+                }
+                else{
+                    document.querySelector("#errmsg").innerHTML = "Internal server error. Please try again later.";
+                }
+            }
+        })
+        .catch(() => {
+            document.querySelector("#errmsg").innerHTML = "Server unavailable. Please try again later.";
         });
     });
     

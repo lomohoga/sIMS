@@ -123,12 +123,12 @@ def add_users ():
                 if(e.args[0] == 1062):
                     return {"error": e.args[0], "msg": values[i][2]}, 500
                 else:
-                    return { "error": e.args[0] }, 500
+                    return { "error": e.args[0], "msg": e.args[1] }, 500
             finally:
                 cxn.close()
                 mail_session.quit()
         except Exception as e:
-            return { "error": e.args[0] }, 500
+            return { "error": e.args[0], "msg": e.args[1] }, 500
         
         return Response(status = 200)
 
@@ -159,13 +159,13 @@ def remove_users ():
                 for p in emails:
                     send_email(mail_session, "delete", p)   
             except Exception as e:
-                return { "error": e.args[0] }, 500
+                return { "error": e.args[0], "msg": e.args[1] }, 500
             finally:
                 cxn.close()
                 mail_session.quit()
 
         except Exception as e:
-            return { "error": e.args[0] }, 500
+            return { "error": e.args[0], "msg": e.args[1] }, 500
 
         return Response(status = 200)
 
@@ -279,11 +279,11 @@ def check_email ():
         
             generate_code(email)
         except:
-            return { "error": e.args[0] }, 500
+            return { "error": e.args[0], "msg": e.args[1] }, 500
         finally:
             cxn.close()
     except Exception as e:
-        return { "error": e.args[0] }, 500
+        return { "error": e.args[0], "msg": e.args[1] }, 500
 
     return Response(status = 200)
 
@@ -310,7 +310,7 @@ def generate_code (email = ''):
         send_email(mail_session, "code", email, code_key)
         mail_session.quit()
     except Exception as e:
-        return { "error": e.args[0] }, 500
+        return { "error": e.args[0], "msg": e.args[1] }, 500
     finally:
         cxn.close()
 
@@ -338,11 +338,11 @@ def check_code ():
             else:
                 return { "error": -1, "msg": "Your code has expired. Please generate a new code by clicking the \"Resend code\" button above." }, 500
         except Exception as e:
-            return { "error": e.args[0] }, 500
+            return { "error": e.args[0], "msg": e.args[1] }, 500
         finally:
             cxn.close()
     except Exception as e:
-        return { "error": e.args[0] }, 500
+        return { "error": e.args[0], "msg": e.args[1] }, 500
 
 # route for changing password (forgot password)
 @bp_user.route('/forgot_password', methods = ["POST"])
@@ -360,12 +360,12 @@ def forgot_password ():
 
             send_email(mail_session, "password", email)
         except Exception as e:
-            return { "error": e.args[0] }, 500
+            return { "error": e.args[0], "msg": e.args[1] }, 500
         finally:
             mail_session.quit()
             cxn.close()
     except Exception as e:
-        return { "error": e.args[0] }, 500
+        return { "error": e.args[0], "msg": e.args[1] }, 500
 
     return Response(status = 200)
 
@@ -389,12 +389,12 @@ def change_password ():
 
             send_email(mail_session, "password", session['user']['Email'])
         except Exception as e:
-            return { "error": e.args[0] }, 500
+            return { "error": e.args[0], "msg": e.args[1] }, 500
         finally:
             cxn.close()
             mail_session.quit()
     except Exception as e:
-        return { "error": e.args[0] }, 500
+        return { "error": e.args[0], "msg": e.args[1] }, 500
 
     return Response(status = 200)
 
@@ -425,6 +425,6 @@ def change_email ():
                 cxn.close()
                 mail_session.quit()
         except Exception as e:
-            return { "error": e.args[0] }, 500
+            return { "error": e.args[0], "msg": e.args[1] }, 500
 
         return Response(status = 200)
