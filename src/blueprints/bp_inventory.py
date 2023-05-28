@@ -43,27 +43,27 @@ def add_items ():
         else:
             return render_template("inventory/add.html")
 
-    if request.method == 'POST':
-        if session['user']['RoleID'] != 1:
-            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to add items to the database."), 403
-        
+    if request.method == 'POST':        
         values = request.get_json()
 
-        cxn = connect_db()
-        db = cxn.cursor()
         try:
-            for v in values['values']:
-                db.execute(f"INSERT INTO item VALUES ('{v['ItemID']}', '{escape(v['ItemName'])}', '{escape(v['ItemDescription'])}', {'NULL' if v['ShelfLife'] is None else v['ShelfLife']}, {v['Price']}, '{v['Unit']}')")
-            cxn.commit()
+            cxn = connect_db()
+            db = cxn.cursor()
+            try:
+                for v in values['values']:
+                    db.execute(f"INSERT INTO item VALUES ('{v['ItemID']}', '{escape(v['ItemName'])}', '{escape(v['ItemDescription'])}', {'NULL' if v['ShelfLife'] is None else v['ShelfLife']}, {v['Price']}, '{v['Unit']}')")
+                cxn.commit()
+            except Exception as e:
+                # original error message as fallback
+                msg = e.args[1]
+                # MYSQL Error 1062: duplicate value for primary key
+                if e.args[0] == 1062: 
+                    msg = f'Item ID {v["ItemID"]} has already been taken.'
+                return {"error": e.args[0], "msg": msg}, 500
+            finally:
+                cxn.close()
         except Exception as e:
-            # original error message as fallback
-            msg = e.args[1]
-            # MYSQL Error 1062: duplicate value for primary key
-            if e.args[0] == 1062: 
-                msg = f'Item ID {v["ItemID"]} has already been taken.'
-            return msg, 500
-        finally:
-            cxn.close()
+            return {"error": e.args[0]}, 500
         
         return Response(status = 200)
 
