@@ -52,23 +52,21 @@ def send_email (session, type, recipient, username = "", password = ""):
     session.sendmail(sender_address, recipient, text)
 
 # generate username for new users
-def generate_userID (first, last):
+def generate_userID (first, last, cxn):
     userID = first[0].lower() + last.lower()
     userID_length = len(userID)
     items = 1
     counter = 0
 
-    cxn = connect_db()
     db = cxn.cursor()
     while(items):
         db.execute(f"SELECT * FROM user WHERE Username LIKE '{userID}';")
         items = len(db.fetchall())
 
         if(items):
-            counter = counter + 1;
-            userID = userID[:userID_length] + str(counter);
+            counter = counter + 1
+            userID = userID[:userID_length] + str(counter)
 
-    cxn.close()
     return userID
 
 ### ROUTES ###
@@ -104,28 +102,33 @@ def add_users ():
 
         try:
             cxn = connect_db()
-            db = cxn.cursor()
 
             mail_session = start_email_session()
 
             #Add users in database
             default = generateHash('ilovesims')
+            i = 0
             try:
                 for v in values:
-                    userID = generate_userID(v[0], v[1])
+                    userID = generate_userID(v[0], v[1], cxn)
+                    db = cxn.cursor()
                     db.execute(f"INSERT INTO user VALUES ('{userID}', '{default}', '{v[0]}', '{v[1]}', '{v[2]}', {v[3]}, 0, 0);")
+                    i = i + 1
                 cxn.commit()
 
                 #Email here
                 for v in values:
                     send_email(mail_session, "add", v[2], userID, 'ilovesims')
             except Exception as e:
-                return { "error": e.args[1] }, 500
+                if(e.args[0] == 1062):
+                    return {"error": e.args[0], "msg": values[i][2]}, 500
+                else:
+                    return { "error": e.args[0] }, 500
             finally:
                 cxn.close()
                 mail_session.quit()
         except Exception as e:
-            return { "error": e.args[1] }, 500
+            return { "error": e.args[0] }, 500
         
         return Response(status = 200)
 
