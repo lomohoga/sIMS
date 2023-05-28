@@ -259,17 +259,30 @@ async function populateItems (tbody, keyword = "", { stock = true, buttons = fal
 
 // fetches requests from database
 async function getRequests (keyword = "", filter = []) {
-    return fetch(encodeURI(`/requests/search${keyword === "" ? "" : "&keywords=" + escapeKeyword(keyword) + ""}${filter.length === 0 ? "" : "&filter=" + filter.join(",")}`.replace("&", "?"))).then(d => d.json()).then(j => j["requests"]);
+    return fetch(encodeURI(`/requests/search${keyword === "" ? "" : "&keywords=" + escapeKeyword(keyword) + ""}${filter.length === 0 ? "" : "&filter=" + filter.join(",")}`.replace("&", "?")))
+    .then(d => {
+        if(d.status == 200){
+            return d.json().then(j => j["requests"]);
+        }
+        else{
+            return -1;
+        }
+    });
 }
 
 // populates request table with requests from getRequests()
 async function populateRequests (tbody, keyword = "", privileges = "user", filter = undefined) {
-    while (tbody.childElementCount > 2) tbody.removeChild(tbody.lastChild);
+    while (tbody.childElementCount > 3) tbody.removeChild(tbody.lastChild);
 
     tbody.querySelector(".table-loading").classList.remove("hide");
     tbody.querySelector(".table-empty").classList.add("hide");
 
     let requests = await getRequests(keyword, filter);
+    if(requests == -1){
+        tbody.querySelector(".table-error").classList.remove("hide");
+        tbody.querySelector(".table-loading").classList.add("hide");
+        return;
+    }
     
     for (let req of requests) {
         let tr = document.createElement("div");

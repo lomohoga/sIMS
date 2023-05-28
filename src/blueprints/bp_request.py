@@ -31,12 +31,19 @@ def search_requests ():
 
     w = f"({' AND '.join(conditions)})" if len(conditions) > 0 else ""
 
-    cxn = connect_db()
-    db = cxn.cursor()
+    try:
+        cxn = connect_db()
+        db = cxn.cursor()
 
-    db.execute(f"SELECT RequestID, RequestedBy, DATE_FORMAT(RequestDate, '%d %b %Y') AS RequestDate, StatusName as Status, ItemID, ItemName, ItemDescription, RequestQuantity, QuantityIssued, AvailableStock, Unit FROM request INNER JOIN request_status USING (StatusID) INNER JOIN request_item USING (RequestID) INNER JOIN stock USING (ItemID){' WHERE RequestID IN (SELECT DISTINCT RequestID FROM request INNER JOIN request_item USING (RequestID) INNER JOIN item USING (ItemID) WHERE ' + w + ')' if w != '' else ''} ORDER BY RequestID, ItemID")
-    requests = db.fetchall()
-    cxn.close()
+        try:
+            db.execute(f"SELECT RequestID, RequestedBy, DATE_FORMAT(RequestDate, '%d %b %Y') AS RequestDate, StatusName as Status, ItemID, ItemName, ItemDescription, RequestQuantity, QuantityIssued, AvailableStock, Unit FROM request INNER JOIN request_status USING (StatusID) INNER JOIN request_item USING (RequestID) INNER JOIN stock USING (ItemID){' WHERE RequestID IN (SELECT DISTINCT RequestID FROM request INNER JOIN request_item USING (RequestID) INNER JOIN item USING (ItemID) WHERE ' + w + ')' if w != '' else ''} ORDER BY RequestID, ItemID")
+            requests = db.fetchall()
+        except Exception as e:
+            return {"error": e.args[0], "msg": e.args[1]}, 500
+        finally:
+            cxn.close()
+    except Exception as e:
+        return {"error": e.args[0], "msg": e.args[1]}, 500
 
     return { "requests": format_requests(requests, session['user']['RoleID'] == 1) }
 
