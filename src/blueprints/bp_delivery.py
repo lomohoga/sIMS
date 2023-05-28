@@ -52,15 +52,18 @@ def add_deliveries ():
         
         values = request.get_json()
 
-        cxn = connect_db()
-        db = cxn.cursor()
         try:
-            for v in values['values']:
-                db.execute(f"INSERT INTO delivery (ItemID, DeliveryQuantity, DeliveryDate, ReceivedBy) VALUES ('{v['ItemID']}', {v['DeliveryQuantity']}, '{v['DeliveryDate']}', '{session['user']['Username']}')")
-            cxn.commit()
+            cxn = connect_db()
+            db = cxn.cursor()
+            try:
+                for v in values['values']:
+                    db.execute(f"INSERT INTO delivery (ItemID, DeliveryQuantity, DeliveryDate, ReceivedBy) VALUES ('{v['ItemID']}', {v['DeliveryQuantity']}, '{v['DeliveryDate']}', '{session['user']['Username']}')")
+                cxn.commit()
+            except Exception as e:
+                return { "error": e.args[0], "msg": e.args[1] }, 500
+            finally:
+                cxn.close()
         except Exception as e:
-            return Response(status = 500)
-        finally:
-            cxn.close()
+            return { "error": e.args[0], "msg": e.args[1] }, 500
         
         return Response(status = 200)

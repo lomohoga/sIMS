@@ -141,7 +141,8 @@ main h1 {
     display: none;
 }
 
-#add-bottom, #delete-bottom, #update-bottom, #request-bottom {
+#add-bottom, #delete-bottom, #update-bottom, 
+#request-bottom, #deliveries-bottom {
     width: 100%;
     display: flex;
     gap: 1rem;
