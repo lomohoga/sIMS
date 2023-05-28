@@ -271,17 +271,19 @@ def check_email ():
         cxn = connect_db()
         db = cxn.cursor()
 
-        db.execute(f"SELECT COUNT(*) FROM user WHERE Email = '{email}';")
-        count = db.fetchone()
-
-        if (count[0] == 0): return { "error": "There are no accounts associated with this email address in the database." }, 500
+        try:
+            db.execute(f"SELECT COUNT(*) FROM user WHERE Email = '{email}';")
+            count = db.fetchone()
+            if (count[0] == 0): 
+                return { "error": -1, "msg": "There are no accounts associated with this email address in the database." }, 500
         
-        generate_code(email)
+            generate_code(email)
+        except:
+            return { "error": e.args[0] }, 500
+        finally:
+            cxn.close()
     except Exception as e:
-        # TODO: Fix this
-        return { "error": e.args[1] }, 500
-    finally:
-        cxn.close()
+        return { "error": e.args[0] }, 500
 
     return Response(status = 200)
 
@@ -308,8 +310,7 @@ def generate_code (email = ''):
         send_email(mail_session, "code", email, code_key)
         mail_session.quit()
     except Exception as e:
-        # TODO: Fix this
-        return { "error": e.args[1] }, 500
+        return { "error": e.args[0] }, 500
     finally:
         cxn.close()
 
@@ -326,20 +327,22 @@ def check_code ():
         cxn = connect_db()
         db = cxn.cursor()
 
-        db.execute(f"SELECT Code, CodeIssueDate FROM user WHERE Email = '{email}';")
-        count = db.fetchone()
-    except Exception as e:
-        # TODO: Fix this
-        return { "error": e.args[1] }, 500
-    finally:
-        cxn.close()
+        try:
+            db.execute(f"SELECT Code, CodeIssueDate FROM user WHERE Email = '{email}';")
+            count = db.fetchone()
 
-    if (int(count[0]) != code):
-        return { "error": "The code you entered is incorrect. Please try again. "}, 500
-    elif (int(count[0]) == code and time.time() - count[1] <= 180):
-        return Response(status = 200)
-    else:
-        return { "error": "Your code has expired. Please generate a new code by clicking the \"Resend code\" button above." }, 500
+            if (int(count[0]) != code):
+                return { "error": -1, "msg": "The code you entered is incorrect. Please try again. "}, 500
+            elif (int(count[0]) == code and time.time() - count[1] <= 180):
+                return Response(status = 200)
+            else:
+                return { "error": -1, "msg": "Your code has expired. Please generate a new code by clicking the \"Resend code\" button above." }, 500
+        except Exception as e:
+            return { "error": e.args[0] }, 500
+        finally:
+            cxn.close()
+    except Exception as e:
+        return { "error": e.args[0] }, 500
 
 # route for changing password (forgot password)
 @bp_user.route('/forgot_password', methods = ["POST"])
@@ -349,18 +352,20 @@ def forgot_password ():
     try:
         cxn = connect_db()
         db = cxn.cursor()
-
-        db.execute(f"UPDATE user SET Password = '{generateHash(password)}' WHERE Email = '{email}';")
-        cxn.commit()
-
         mail_session = start_email_session()
-        send_email(mail_session, "password", email)
-        mail_session.quit()
+
+        try:
+            db.execute(f"UPDATE user SET Password = '{generateHash(password)}' WHERE Email = '{email}';")
+            cxn.commit()
+
+            send_email(mail_session, "password", email)
+        except Exception as e:
+            return { "error": e.args[0] }, 500
+        finally:
+            mail_session.quit()
+            cxn.close()
     except Exception as e:
-        # TODO: Fix this
-        return { "error": e.args[1] }, 500
-    finally:
-        cxn.close()
+        return { "error": e.args[0] }, 500
 
     return Response(status = 200)
 
@@ -376,12 +381,12 @@ def change_password ():
     try:
         cxn = connect_db()
         db = cxn.cursor()
+        mail_session = start_email_session()
 
         try:
             db.execute(f"UPDATE user SET Password = '{generateHash(req['new-password'])}' WHERE Username = '{session['user']['Username']}';")
             cxn.commit()
 
-            mail_session = start_email_session()
             send_email(mail_session, "password", session['user']['Email'])
         except Exception as e:
             return { "error": e.args[0] }, 500
