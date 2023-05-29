@@ -102,6 +102,25 @@ async function populateUsers (tbody, keyword = "", type="users") {
                                 modal.close();
                                 populateUsers(tbody, keyword);
                             }
+
+                            if (d.status === 500){
+                                d.json().then(a => {
+                                    let p = modal.querySelector('.message')
+                                    p.style.display = 'block'
+                                    
+                                    if(a["error"] == 2003){
+                                        p.innerHTML = "Database error. Please try again later."
+                                    }
+                                    else{
+                                        p.innerHTML = "Internal server error. Please try again later."
+                                    }
+                                });
+                            }
+                        })
+                        .catch(() => {
+                            let p = modal.querySelector('.message')
+                            p.innerHTML = 'Server unavailable. Please try again later'
+                            p.style.display = 'block'
                         });
                     });
                 });
@@ -140,6 +159,25 @@ async function populateUsers (tbody, keyword = "", type="users") {
                                 modal.close();
                                 populateUsers(tbody, keyword);
                             }
+
+                            if (d.status === 500){
+                                d.json().then(a => {
+                                    let p = modal.querySelector('.message')
+                                    p.style.display = 'block'
+                                    
+                                    if(a["error"] == 2003){
+                                        p.innerHTML = "Database error. Please try again later."
+                                    }
+                                    else{
+                                        p.innerHTML = "Internal server error. Please try again later."
+                                    }
+                                });
+                            }
+                        })
+                        .catch(() => {
+                            let p = modal.querySelector('.message')
+                            p.innerHTML = 'Server unavailable. Please try again later'
+                            p.style.display = 'block'
                         });
                     });
                 });

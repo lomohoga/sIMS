@@ -9,6 +9,7 @@
         <p></p>
         <form>
             <span>
+                <p class="message"></p>
                 <input type="button" class="cancel" value="Cancel">
                 <input type="submit">
             </span>
@@ -109,6 +110,9 @@
     document.querySelector("#modal-users").addEventListener("close", () => {
         document.querySelector("#modal-users input[type=submit]").classList.remove("btn-red", "btn-green");
         document.querySelector("#modal-users input[type=submit]").replaceWith(document.querySelector("#modal-users input[type=submit]").cloneNode());
+
+        document.querySelector("#modal-users .message").style.display = "none";
+        document.querySelector("#modal-users .message").style.display = "";
     });
 
     document.querySelector("#modal-users .modal-back").addEventListener("click", () => document.querySelector("#modal-users").close());

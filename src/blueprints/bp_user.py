@@ -179,18 +179,21 @@ def promote_user ():
         cxn = connect_db()
         db = cxn.cursor()
 
-        db.execute(f"UPDATE user SET RoleID = 1 WHERE Username = '{username}';")
-        db.execute(f"SELECT Email FROM user WHERE Username = '{username}';")
-        email = db.fetchone()[0]
-        cxn.commit()
-
         mail_session = start_email_session()
-        send_email(mail_session, "promote", email)
-        mail_session.quit()
+        try:
+            db.execute(f"UPDATE user SET RoleID = 1 WHERE Username = '{username}';")
+            db.execute(f"SELECT Email FROM user WHERE Username = '{username}';")
+            email = db.fetchone()[0]
+            cxn.commit()
+
+            send_email(mail_session, "promote", email)
+        except Exception as e:
+            return {"error": e.args[0], "msg": e.args[1]}, 500
+        finally:
+            cxn.close()
+            mail_session.quit()
     except Exception as e:
-        return Response(status = 500)
-    finally:
-        cxn.close()
+        return {"error": e.args[0], "msg": e.args[1]}, 500
     
     return Response(status = 200)
 
@@ -204,18 +207,21 @@ def demote_user ():
         cxn = connect_db()
         db = cxn.cursor()
 
-        db.execute(f"UPDATE user SET RoleID = 2 WHERE Username = '{username}';")
-        db.execute(f"SELECT Email FROM user WHERE Username = '{username}';")
-        email = db.fetchone()[0]
-        cxn.commit()
-
         mail_session = start_email_session()
-        send_email(mail_session, "demote", email)
-        mail_session.quit()
+        try:
+            db.execute(f"UPDATE user SET RoleID = 2 WHERE Username = '{username}';")
+            db.execute(f"SELECT Email FROM user WHERE Username = '{username}';")
+            email = db.fetchone()[0]
+            cxn.commit()
+
+            send_email(mail_session, "demote", email)
+        except Exception as e:
+            return {"error": e.args[0], "msg": e.args[1]}, 500
+        finally:
+            cxn.close()
+            mail_session.quit()
     except Exception as e:
-        return Response(status = 500)
-    finally:
-        cxn.close()
+        return {"error": e.args[0], "msg": e.args[1]}, 500
     
     return Response(status = 200)
 
