@@ -50,36 +50,41 @@ def search_requests ():
 # route for request approval
 @bp_request.route('/approve', methods = ["POST"])
 def approve_request ():
-    if (request.method == "POST"):
-        id = request.get_json()['RequestID']
+    id = request.get_json()['RequestID']
+    try:
+        cxn = connect_db()
+        db = cxn.cursor()
 
         try:
-            cxn = connect_db()
-            db = cxn.cursor()
             db.execute(f"UPDATE request SET StatusID = 2, ActingAdmin = '{session['user']['Username']}' WHERE RequestID = {id}")
             cxn.commit()
         except Exception as e:
-            return { "error": e.args[1] }, 500
+            return {"error": e.args[0], "msg": e.args[1]}, 500
         finally:
             cxn.close()
-    
+    except Exception as e:
+        return {"error": e.args[0], "msg": e.args[1]}, 500
+        
     return Response(status = 200)
 
 # route for request denial
 @bp_request.route('/deny', methods = ["POST"])
 def deny_request ():
-    if (request.method == "POST"):
-        id = request.get_json()['RequestID']
+    id = request.get_json()['RequestID']
+
+    try:
+        cxn = connect_db()
+        db = cxn.cursor()
 
         try:
-            cxn = connect_db()
-            db = cxn.cursor()
             db.execute(f"UPDATE request SET StatusID = 5, ActingAdmin = '{session['user']['Username']}' WHERE RequestID = {id}")
             cxn.commit()
         except Exception as e:
-            return { "error": e.args[1] }, 500
+            return {"error": e.args[0], "msg": e.args[1]}, 500
         finally:
             cxn.close()
+    except Exception as e:
+        return {"error": e.args[0], "msg": e.args[1]}, 500
     
     return Response(status = 200)
 
@@ -87,18 +92,21 @@ def deny_request ():
 @bp_request.route('/cancel', methods = ["POST"])
 @login_required
 def cancel_request ():
-    if (request.method == "POST"):
-        body = request.get_json()
+    body = request.get_json()
+
+    try:
+        cxn = connect_db()
+        db = cxn.cursor()
 
         try:
-            cxn = connect_db()
-            db = cxn.cursor()
             db.execute(f"UPDATE request SET StatusID = 6 WHERE RequestID = {body['RequestID']}")
             cxn.commit()
         except Exception as e:
-            return { "error": e.args[1] }, 500
+            return {"error": e.args[0], "msg": e.args[1]}, 500
         finally:
             cxn.close()
+    except Exception as e:
+        return {"error": e.args[0], "msg": e.args[1]}, 500
     
     return Response(status = 200)
 
@@ -111,12 +119,16 @@ def receive_request ():
     try:
         cxn = connect_db()
         db = cxn.cursor()
-        db.execute(f"UPDATE request SET StatusID = 4, ReceivedBy = '{session['user']['Username']}' WHERE RequestID = {id}")
-        cxn.commit()
+        
+        try:
+            db.execute(f"UPDATE request SET StatusID = 4, ReceivedBy = '{session['user']['Username']}' WHERE RequestID = {id}")
+            cxn.commit()
+        except Exception as e:
+            return {"error": e.args[0], "msg": e.args[1]}, 500
+        finally:
+            cxn.close()
     except Exception as e:
-        return { "error": e.args[1] }, 500
-    finally:
-        cxn.close()
+        return {"error": e.args[0], "msg": e.args[1]}, 500
 
     return Response(status = 200)
 
@@ -129,12 +141,16 @@ def issue_item ():
     try:
         cxn = connect_db()
         db = cxn.cursor()
-        db.execute(f"UPDATE request_item SET QuantityIssued = {body['QuantityIssued']} WHERE RequestID = {body['RequestID']} AND ItemID = '{body['ItemID']}';")
-        cxn.commit()
+        
+        try:
+            db.execute(f"UPDATE request_item SET QuantityIssued = {body['QuantityIssued']} WHERE RequestID = {body['RequestID']} AND ItemID = '{body['ItemID']}';")
+            cxn.commit()
+        except Exception as e:
+            return { "error": e.args[0], "msg": e.args[1] }, 500
+        finally:
+            cxn.close()
     except Exception as e:
-        return { "error": e.args[1] }, 500
-    finally:
-        cxn.close()
+        return { "error": e.args[0], "msg": e.args[1] }, 500
     
     return Response(status = 200)
 
@@ -147,11 +163,15 @@ def issue_request ():
     try:
         cxn = connect_db()
         db = cxn.cursor()
-        db.execute(f"UPDATE request SET StatusID = 3, IssuedBy = '{session['user']['Username']}' WHERE RequestID = {id}")
-        cxn.commit()
+
+        try:
+            db.execute(f"UPDATE request SET StatusID = 3, IssuedBy = '{session['user']['Username']}' WHERE RequestID = {id}")
+            cxn.commit()
+        except Exception as e:
+            return { "error": e.args[0], "msg": e.args[1] }, 500
+        finally:
+            cxn.close()
     except Exception as e:
-        return { "error": e.args[1] }, 500
-    finally:
-        cxn.close()
+        return { "error": e.args[0], "msg": e.args[1] }, 500
 
     return Response(status = 200)

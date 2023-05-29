@@ -112,7 +112,7 @@
         document.querySelector("#modal-users input[type=submit]").replaceWith(document.querySelector("#modal-users input[type=submit]").cloneNode());
 
         document.querySelector("#modal-users .message").style.display = "none";
-        document.querySelector("#modal-users .message").style.display = "";
+        document.querySelector("#modal-users .message").innerHTML = "";
     });
 
     document.querySelector("#modal-users .modal-back").addEventListener("click", () => document.querySelector("#modal-users").close());
