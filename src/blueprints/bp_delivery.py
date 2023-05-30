@@ -1,4 +1,4 @@
-from flask import Blueprint, Response, render_template, request, session
+from flask import Blueprint, Response, render_template, request, session, current_app
 
 from src.blueprints.auth import login_required
 from src.blueprints.database import connect_db
@@ -37,10 +37,12 @@ def search_deliveries ():
             db.execute(query)
             deliveries = db.fetchall()
         except Exception as e:
+            current_app.logger.error(e.args[1])
             return { "error": e.args[0], "msg": e.args[1] }, 500
         finally:
             cxn.close()
     except Exception as e:
+        current_app.logger.error(e.args[1])
         return { "error": e.args[0], "msg": e.args[1] }, 500
 
     return { "deliveries": format_deliveries(deliveries) }
@@ -68,10 +70,12 @@ def add_deliveries ():
                     db.execute(f"INSERT INTO delivery (ItemID, DeliveryQuantity, DeliveryDate, ReceivedBy) VALUES ('{v['ItemID']}', {v['DeliveryQuantity']}, '{v['DeliveryDate']}', '{session['user']['Username']}')")
                 cxn.commit()
             except Exception as e:
+                current_app.logger.error(e.args[1])
                 return { "error": e.args[0], "msg": e.args[1] }, 500
             finally:
                 cxn.close()
         except Exception as e:
+            current_app.logger.error(e.args[1])
             return { "error": e.args[0], "msg": e.args[1] }, 500
         
         return Response(status = 200)

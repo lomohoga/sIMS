@@ -3,7 +3,7 @@ import time
 from secrets import randbelow
 from email.message import EmailMessage
 
-from flask import Blueprint, Response, render_template, request, session
+from flask import Blueprint, Response, render_template, request, session, current_app
 
 from src.blueprints.decode_keyword import decode_keyword
 from src.blueprints.database import connect_db
@@ -120,6 +120,7 @@ def add_users ():
                 for v in values:
                     send_email(mail_session, "add", v[2], userID, 'ilovesims')
             except Exception as e:
+                current_app.logger.error(e.args[1])
                 if(e.args[0] == 1062):
                     return {"error": e.args[0], "msg": values[i][2]}, 500
                 else:
@@ -128,6 +129,7 @@ def add_users ():
                 cxn.close()
                 mail_session.quit()
         except Exception as e:
+            current_app.logger.error(e.args[1])
             return { "error": e.args[0], "msg": e.args[1] }, 500
         
         return Response(status = 200)
@@ -159,12 +161,14 @@ def remove_users ():
                 for p in emails:
                     send_email(mail_session, "delete", p)   
             except Exception as e:
+                current_app.logger.error(e.args[1])
                 return { "error": e.args[0], "msg": e.args[1] }, 500
             finally:
                 cxn.close()
                 mail_session.quit()
 
         except Exception as e:
+            current_app.logger.error(e.args[1])
             return { "error": e.args[0], "msg": e.args[1] }, 500
 
         return Response(status = 200)
@@ -188,11 +192,13 @@ def promote_user ():
 
             send_email(mail_session, "promote", email)
         except Exception as e:
+            current_app.logger.error(e.args[1])
             return {"error": e.args[0], "msg": e.args[1]}, 500
         finally:
             cxn.close()
             mail_session.quit()
     except Exception as e:
+        current_app.logger.error(e.args[1])
         return {"error": e.args[0], "msg": e.args[1]}, 500
     
     return Response(status = 200)
@@ -216,11 +222,13 @@ def demote_user ():
 
             send_email(mail_session, "demote", email)
         except Exception as e:
+            current_app.logger.error(e.args[1])
             return {"error": e.args[0], "msg": e.args[1]}, 500
         finally:
             cxn.close()
             mail_session.quit()
     except Exception as e:
+        current_app.logger.error(e.args[1])
         return {"error": e.args[0], "msg": e.args[1]}, 500
     
     return Response(status = 200)
@@ -246,6 +254,7 @@ def search_users ():
         db.execute(query)
         users = db.fetchall()
     except Exception as e:
+        current_app.logger.error(e.args[1])
         return Response(status = 500)
     finally:
         if(cxn != 0):
@@ -285,10 +294,12 @@ def check_email ():
         
             generate_code(email)
         except:
+            current_app.logger.error(e.args[1])
             return { "error": e.args[0], "msg": e.args[1] }, 500
         finally:
             cxn.close()
     except Exception as e:
+        current_app.logger.error(e.args[1])
         return { "error": e.args[0], "msg": e.args[1] }, 500
 
     return Response(status = 200)
@@ -316,6 +327,7 @@ def generate_code (email = ''):
         send_email(mail_session, "code", email, code_key)
         mail_session.quit()
     except Exception as e:
+        current_app.logger.error(e.args[1])
         return { "error": e.args[0], "msg": e.args[1] }, 500
     finally:
         cxn.close()
@@ -344,10 +356,12 @@ def check_code ():
             else:
                 return { "error": -1, "msg": "Your code has expired. Please generate a new code by clicking the \"Resend code\" button above." }, 500
         except Exception as e:
+            current_app.logger.error(e.args[1])
             return { "error": e.args[0], "msg": e.args[1] }, 500
         finally:
             cxn.close()
     except Exception as e:
+        current_app.logger.error(e.args[1])
         return { "error": e.args[0], "msg": e.args[1] }, 500
 
 # route for changing password (forgot password)
@@ -366,11 +380,13 @@ def forgot_password ():
 
             send_email(mail_session, "password", email)
         except Exception as e:
+            current_app.logger.error(e.args[1])
             return { "error": e.args[0], "msg": e.args[1] }, 500
         finally:
             mail_session.quit()
             cxn.close()
     except Exception as e:
+        current_app.logger.error(e.args[1])
         return { "error": e.args[0], "msg": e.args[1] }, 500
 
     return Response(status = 200)
@@ -395,11 +411,13 @@ def change_password ():
 
             send_email(mail_session, "password", session['user']['Email'])
         except Exception as e:
+            current_app.logger.error(e.args[1])
             return { "error": e.args[0], "msg": e.args[1] }, 500
         finally:
             cxn.close()
             mail_session.quit()
     except Exception as e:
+        current_app.logger.error(e.args[1])
         return { "error": e.args[0], "msg": e.args[1] }, 500
 
     return Response(status = 200)
@@ -426,11 +444,13 @@ def change_email ():
 
                 send_email(mail_session, "email", email)
             except Exception as e:
+                current_app.logger.error(e.args[1])
                 return { "error": e.args[0], "msg": email }, 500
             finally:
                 cxn.close()
                 mail_session.quit()
         except Exception as e:
+            current_app.logger.error(e.args[1])
             return { "error": e.args[0], "msg": e.args[1] }, 500
 
         return Response(status = 200)

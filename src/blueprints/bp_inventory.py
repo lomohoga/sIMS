@@ -1,4 +1,4 @@
-from flask import Blueprint, Response, render_template, request, session
+from flask import Blueprint, Response, render_template, request, session, current_app
 
 from src.blueprints.format_data import format_items
 from src.blueprints.auth import login_required
@@ -33,10 +33,12 @@ def search_items ():
             db.execute(query)
             items = db.fetchall()
         except Exception as e:
+            current_app.logger.error(e.args[1])
             return { "error": e.args[0], "msg": e.args[1] }, 500
         finally:
             cxn.close()
     except Exception as e:
+        current_app.logger.error(e.args[1])
         return { "error": e.args[0], "msg": e.args[1] }, 500
 
     return { "items": format_items(items) }
@@ -62,6 +64,7 @@ def add_items ():
                     db.execute(f"INSERT INTO item VALUES ('{v['ItemID']}', '{escape(v['ItemName'])}', '{escape(v['ItemDescription'])}', {'NULL' if v['ShelfLife'] is None else v['ShelfLife']}, {v['Price']}, '{v['Unit']}')")
                 cxn.commit()
             except Exception as e:
+                current_app.logger.error(e.args[1])
                 # original error message as fallback
                 msg = e.args[1]
                 # MYSQL Error 1062: duplicate value for primary key
@@ -71,6 +74,7 @@ def add_items ():
             finally:
                 cxn.close()
         except Exception as e:
+            current_app.logger.error(e.args[1])
             return {"error": e.args[0], "msg": e.args[1]}, 500
         
         return Response(status = 200)
@@ -97,10 +101,12 @@ def remove_items ():
                     db.execute(f"DELETE FROM item WHERE ItemID = '{x}'")
                 cxn.commit()
             except Exception as e:
+                current_app.logger.error(e.args[1])
                 return {"error": e.args[0], "msg": e.args[1]}, 500
             finally:
                 cxn.close()
         except Exception as e:
+            current_app.logger.error(e.args[1])
             return {"error": e.args[0], "msg": e.args[1]}, 500
 
         return Response(status = 200)
@@ -128,6 +134,7 @@ def update_items ():
 
                 cxn.commit()
             except Exception as e:
+                current_app.logger.error(e.args[1])
                 # original error message as fallback
                 msg = e.args[1]
                 # MYSQL Error 1062: duplicate value for primary key
@@ -137,6 +144,7 @@ def update_items ():
             finally:
                 cxn.close()
         except Exception as e:
+            current_app.logger.error(e.args[1])
             return {"error": e.args[0], "msg": e.args[1]}, 500
         
         return Response(status = 200)
@@ -164,10 +172,12 @@ def request_items ():
                     db.execute(f"INSERT INTO request_item (RequestID, ItemID, RequestQuantity) VALUES ({requestID}, '{x['ItemID']}', {x['RequestQuantity']})")
                 cxn.commit()
             except Exception as e:
+                current_app.logger.error(e.args[1])
                 return { "error": e.args[0], "msg": e.args[1] }, 500
             finally:
                 cxn.close()
         except Exception as e:
+            current_app.logger.error(e.args[1])
             return { "error": e.args[0], "msg": e.args[1] }, 500
 
         return Response(status = 200)

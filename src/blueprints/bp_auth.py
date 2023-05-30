@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, request, session
+from flask import Blueprint, render_template, redirect, url_for, request, session, current_app
 
 from src.blueprints.auth import generateHash
 from src.blueprints.database import connect_db
@@ -34,6 +34,7 @@ def login ():
                 session['user'] = user
                 return redirect(url_for('bp_inventory.inventory'))
         except Exception as e:
+            current_app.logger.error(e.args[1])
             error = "Database error, please try again."
         finally:
             if cxn != 0:
