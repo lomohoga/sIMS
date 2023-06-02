@@ -28,7 +28,7 @@
 </div>
 
 <div id="add-user-form">
-    <p class="message" style="display:none"></p>
+    <p class="message"></p>
     <form id="submit-form">
         <input type="submit" id="add-btn" value="Add users" name="add-btn" disabled>
     </form>
@@ -138,11 +138,20 @@
             "body": JSON.stringify({ "values": values })
         }).then(d => {
             if (d.status === 200) window.location = "{{ url_for('bp_user.show_users') }}";
-            if(d.status === 500){
+            if (d.status === 500){
                 d.json().then(a => {
                     let p = document.querySelector('#add-user-form p')
-                    p.innerHTML = a['error']
                     p.style.display = 'block'
+                    
+                    if(a["error"] == 1062){
+                        p.innerHTML = a["msg"] + " is already taken."
+                    }
+                    else if(a["error"] == 2003){
+                        p.innerHTML = "Database error. Please try again later."
+                    }
+                    else{
+                        p.innerHTML = "Internal server error. Please try again later."
+                    }
                 });
 
                 document.querySelector('#submit-form input[type=submit]').value = 'Submit' 

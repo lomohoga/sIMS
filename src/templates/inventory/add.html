@@ -139,7 +139,7 @@
                 "ItemDescription": children[2].firstChild.value,
                 "ShelfLife": children[3].lastChild.value === "-1" ? null : +children[3].firstChild.value * +children[3].lastChild.value,
                 "Price": +children[4].firstChild.value,
-                "Unit": children[5].firstChild.value,
+                "Unit": children[5].firstChild.value.toLowerCase(),
             })
         }
         
@@ -152,10 +152,22 @@
         }).then(async d => {
             if (d.status === 200) window.location = "{{ url_for('bp_inventory.inventory') }}";
             if (d.status === 500) {
-                msg = await d.text();
-                document.querySelector("#errmsg").innerHTML = `<b>ERROR:</b> ${msg}`;
-                alert(`ERROR: ${msg}`);
+                let response = await d.json();
+                let errorCode = response["error"];
+                if(errorCode == 1062){
+                    document.querySelector("#errmsg").innerHTML = `<b>ERROR:</b> ${response["msg"]}`;
+                    alert(`ERROR: ${response["msg"]}`);
+                }
+                else if(errorCode == 2003){
+                    document.querySelector("#errmsg").innerHTML = "Database error. Please try again later.";
+                }
+                else{
+                    document.querySelector("#errmsg").innerHTML = "Internal server error. Please try again later.";
+                }    
             }
+        })
+        .catch(() => {
+            document.querySelector("#errmsg").innerHTML = "Server unavailable. Please try again later.";
         });
     });
 

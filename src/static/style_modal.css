@@ -193,3 +193,10 @@ dialog form .form-msg.error {
     flex-grow: 0;
     flex-shrink: 0;
 }
+
+.valid::after{
+    content: '\2705';
+    opacity: 1;
+    position: absolute;
+    right: 30px;
+}

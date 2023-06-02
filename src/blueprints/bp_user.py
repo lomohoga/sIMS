@@ -3,7 +3,7 @@ import time
 from secrets import randbelow
 from email.message import EmailMessage
 
-from flask import Blueprint, Response, render_template, request, session
+from flask import Blueprint, Response, render_template, request, session, current_app
 
 from src.blueprints.decode_keyword import decode_keyword
 from src.blueprints.database import connect_db
@@ -52,23 +52,21 @@ def send_email (session, type, recipient, username = "", password = ""):
     session.sendmail(sender_address, recipient, text)
 
 # generate username for new users
-def generate_userID (first, last):
+def generate_userID (first, last, cxn):
     userID = first[0].lower() + last.lower()
     userID_length = len(userID)
     items = 1
     counter = 0
 
-    cxn = connect_db()
     db = cxn.cursor()
     while(items):
         db.execute(f"SELECT * FROM user WHERE Username LIKE '{userID}';")
         items = len(db.fetchall())
 
         if(items):
-            counter = counter + 1;
-            userID = userID[:userID_length] + str(counter);
+            counter = counter + 1
+            userID = userID[:userID_length] + str(counter)
 
-    cxn.close()
     return userID
 
 ### ROUTES ###
@@ -79,7 +77,6 @@ bp_user = Blueprint("bp_user", __name__, url_prefix = "/users")
 @bp_user.route('/')
 @login_required
 def show_users ():
-    update_session();
     if session['user']['RoleID'] != 0: 
         return render_template("error.html", errcode = 403, errmsg = "You do not have permission to see the users in the database."), 403
     else: 
@@ -105,28 +102,35 @@ def add_users ():
 
         try:
             cxn = connect_db()
-            db = cxn.cursor()
 
             mail_session = start_email_session()
 
             #Add users in database
             default = generateHash('ilovesims')
+            i = 0
             try:
                 for v in values:
-                    userID = generate_userID(v[0], v[1])
+                    userID = generate_userID(v[0], v[1], cxn)
+                    db = cxn.cursor()
                     db.execute(f"INSERT INTO user VALUES ('{userID}', '{default}', '{v[0]}', '{v[1]}', '{v[2]}', {v[3]}, 0, 0);")
+                    i = i + 1
                 cxn.commit()
 
                 #Email here
                 for v in values:
                     send_email(mail_session, "add", v[2], userID, 'ilovesims')
             except Exception as e:
-                return { "error": e.args[1] }, 500
+                current_app.logger.error(e.args[1])
+                if(e.args[0] == 1062):
+                    return {"error": e.args[0], "msg": values[i][2]}, 500
+                else:
+                    return { "error": e.args[0], "msg": e.args[1] }, 500
             finally:
                 cxn.close()
                 mail_session.quit()
         except Exception as e:
-            return { "error": e.args[1] }, 500
+            current_app.logger.error(e.args[1])
+            return { "error": e.args[0], "msg": e.args[1] }, 500
         
         return Response(status = 200)
 
@@ -149,19 +153,23 @@ def remove_users ():
             cxn = connect_db()
             db = cxn.cursor()
 
-            db.executemany("DELETE FROM user WHERE Username = %s;", choices)
-            cxn.commit()
+            try:
+                db.executemany("DELETE FROM user WHERE Username = %s;", choices)
+                cxn.commit()
 
-            mail_session = start_email_session()
-            for p in emails:
-                if p != '-':
-                    send_email(mail_session, "delete", p)
+                mail_session = start_email_session()
+                for p in emails:
+                    send_email(mail_session, "delete", p)   
+            except Exception as e:
+                current_app.logger.error(e.args[1])
+                return { "error": e.args[0], "msg": e.args[1] }, 500
+            finally:
+                cxn.close()
+                mail_session.quit()
 
         except Exception as e:
-            return Response(status = 500)
-        finally:
-            cxn.close()
-            mail_session.quit()
+            current_app.logger.error(e.args[1])
+            return { "error": e.args[0], "msg": e.args[1] }, 500
 
         return Response(status = 200)
 
@@ -175,18 +183,23 @@ def promote_user ():
         cxn = connect_db()
         db = cxn.cursor()
 
-        db.execute(f"UPDATE user SET RoleID = 1 WHERE Username = '{username}';")
-        db.execute(f"SELECT Email FROM user WHERE Username = '{username}';")
-        email = db.fetchone()[0]
-        cxn.commit()
-
         mail_session = start_email_session()
-        send_email(mail_session, "promote", email)
-        mail_session.quit()
+        try:
+            db.execute(f"UPDATE user SET RoleID = 1 WHERE Username = '{username}';")
+            db.execute(f"SELECT Email FROM user WHERE Username = '{username}';")
+            email = db.fetchone()[0]
+            cxn.commit()
+
+            send_email(mail_session, "promote", email)
+        except Exception as e:
+            current_app.logger.error(e.args[1])
+            return {"error": e.args[0], "msg": e.args[1]}, 500
+        finally:
+            cxn.close()
+            mail_session.quit()
     except Exception as e:
-        return Response(status = 500)
-    finally:
-        cxn.close()
+        current_app.logger.error(e.args[1])
+        return {"error": e.args[0], "msg": e.args[1]}, 500
     
     return Response(status = 200)
 
@@ -200,18 +213,23 @@ def demote_user ():
         cxn = connect_db()
         db = cxn.cursor()
 
-        db.execute(f"UPDATE user SET RoleID = 2 WHERE Username = '{username}';")
-        db.execute(f"SELECT Email FROM user WHERE Username = '{username}';")
-        email = db.fetchone()[0]
-        cxn.commit()
-
         mail_session = start_email_session()
-        send_email(mail_session, "demote", email)
-        mail_session.quit()
+        try:
+            db.execute(f"UPDATE user SET RoleID = 2 WHERE Username = '{username}';")
+            db.execute(f"SELECT Email FROM user WHERE Username = '{username}';")
+            email = db.fetchone()[0]
+            cxn.commit()
+
+            send_email(mail_session, "demote", email)
+        except Exception as e:
+            current_app.logger.error(e.args[1])
+            return {"error": e.args[0], "msg": e.args[1]}, 500
+        finally:
+            cxn.close()
+            mail_session.quit()
     except Exception as e:
-        return Response(status = 500)
-    finally:
-        cxn.close()
+        current_app.logger.error(e.args[1])
+        return {"error": e.args[0], "msg": e.args[1]}, 500
     
     return Response(status = 200)
 
@@ -229,16 +247,18 @@ def search_users ():
         conditions.append(f"(Username LIKE '%{x}%' OR FirstName LIKE '%{x}%' OR LastName LIKE '%{x}%')")
 
     query = f"SELECT Username, FirstName, LastName, Email, RoleName as Role FROM user LEFT JOIN role USING (RoleID) {'' if len(conditions) == 0 else 'WHERE (' + ' AND '.join(conditions) + ')'} ORDER BY Username;"
-    
+    cxn = 0
     try:
         cxn = connect_db()
         db = cxn.cursor()
         db.execute(query)
         users = db.fetchall()
     except Exception as e:
+        current_app.logger.error(e.args[1])
         return Response(status = 500)
     finally:
-        cxn.close()
+        if(cxn != 0):
+            cxn.close()
 
     return { "users": [{
         "Username": x[0],
@@ -266,17 +286,21 @@ def check_email ():
         cxn = connect_db()
         db = cxn.cursor()
 
-        db.execute(f"SELECT COUNT(*) FROM user WHERE Email = '{email}';")
-        count = db.fetchone()
-
-        if (count[0] == 0): return { "error": "There are no accounts associated with this email address in the database." }, 500
+        try:
+            db.execute(f"SELECT COUNT(*) FROM user WHERE Email = '{email}';")
+            count = db.fetchone()
+            if (count[0] == 0): 
+                return { "error": -1, "msg": "There are no accounts associated with this email address in the database." }, 500
         
-        generate_code(email)
+            generate_code(email)
+        except:
+            current_app.logger.error(e.args[1])
+            return { "error": e.args[0], "msg": e.args[1] }, 500
+        finally:
+            cxn.close()
     except Exception as e:
-        # TODO: Fix this
-        return { "error": e.args[1] }, 500
-    finally:
-        cxn.close()
+        current_app.logger.error(e.args[1])
+        return { "error": e.args[0], "msg": e.args[1] }, 500
 
     return Response(status = 200)
 
@@ -302,8 +326,8 @@ def generate_code (email = ''):
         send_email(mail_session, "code", email, code_key)
         mail_session.quit()
     except Exception as e:
-        # TODO: Fix this
-        return { "error": e.args[1] }, 500
+        current_app.logger.error(e.args[1])
+        return { "error": e.args[0], "msg": e.args[1] }, 500
     finally:
         cxn.close()
 
@@ -320,20 +344,24 @@ def check_code ():
         cxn = connect_db()
         db = cxn.cursor()
 
-        db.execute(f"SELECT Code, CodeIssueDate FROM user WHERE Email = '{email}';")
-        count = db.fetchone()
-    except Exception as e:
-        # TODO: Fix this
-        return { "error": e.args[1] }, 500
-    finally:
-        cxn.close()
+        try:
+            db.execute(f"SELECT Code, CodeIssueDate FROM user WHERE Email = '{email}';")
+            count = db.fetchone()
 
-    if (int(count[0]) != code):
-        return { "error": "The code you entered is incorrect. Please try again. "}, 500
-    elif (int(count[0]) == code and time.time() - count[1] <= 180):
-        return Response(status = 200)
-    else:
-        return { "error": "Your code has expired. Please generate a new code by clicking the \"Resend code\" button above." }, 500
+            if (int(count[0]) != code):
+                return { "error": -1, "msg": "The code you entered is incorrect. Please try again. "}, 500
+            elif (int(count[0]) == code and time.time() - count[1] <= 180):
+                return Response(status = 200)
+            else:
+                return { "error": -1, "msg": "Your code has expired. Please generate a new code by clicking the \"Resend code\" button above." }, 500
+        except Exception as e:
+            current_app.logger.error(e.args[1])
+            return { "error": e.args[0], "msg": e.args[1] }, 500
+        finally:
+            cxn.close()
+    except Exception as e:
+        current_app.logger.error(e.args[1])
+        return { "error": e.args[0], "msg": e.args[1] }, 500
 
 # route for changing password (forgot password)
 @bp_user.route('/forgot_password', methods = ["POST"])
@@ -343,18 +371,22 @@ def forgot_password ():
     try:
         cxn = connect_db()
         db = cxn.cursor()
-
-        db.execute(f"UPDATE user SET Password = '{generateHash(password)}' WHERE Email = '{email}';")
-        cxn.commit()
-
         mail_session = start_email_session()
-        send_email(mail_session, "password", email)
-        mail_session.quit()
+
+        try:
+            db.execute(f"UPDATE user SET Password = '{generateHash(password)}' WHERE Email = '{email}';")
+            cxn.commit()
+
+            send_email(mail_session, "password", email)
+        except Exception as e:
+            current_app.logger.error(e.args[1])
+            return { "error": e.args[0], "msg": e.args[1] }, 500
+        finally:
+            mail_session.quit()
+            cxn.close()
     except Exception as e:
-        # TODO: Fix this
-        return { "error": e.args[1] }, 500
-    finally:
-        cxn.close()
+        current_app.logger.error(e.args[1])
+        return { "error": e.args[0], "msg": e.args[1] }, 500
 
     return Response(status = 200)
 
@@ -364,23 +396,28 @@ def forgot_password ():
 def change_password ():
     req = request.get_json()
 
-    if generateHash(req['old-password']) != session['user']['Password']: return { "error": "The old password you entered does not match your current password. Please try again." }, 500
+    if generateHash(req['old-password']) != session['user']['Password']: 
+        return { "error": -1, "msg": "The old password you entered does not match your current password. Please try again." }, 500
 
     try:
         cxn = connect_db()
         db = cxn.cursor()
-
-        db.execute(f"UPDATE user SET Password = '{generateHash(req['new-password'])}' WHERE Username = '{session['user']['Username']}';")
-        cxn.commit()
-
         mail_session = start_email_session()
-        send_email(mail_session, "password", session['user']['Email'])
-        mail_session.quit()
+
+        try:
+            db.execute(f"UPDATE user SET Password = '{generateHash(req['new-password'])}' WHERE Username = '{session['user']['Username']}';")
+            cxn.commit()
+
+            send_email(mail_session, "password", session['user']['Email'])
+        except Exception as e:
+            current_app.logger.error(e.args[1])
+            return { "error": e.args[0], "msg": e.args[1] }, 500
+        finally:
+            cxn.close()
+            mail_session.quit()
     except Exception as e:
-        # TODO: Fix this
-        return { "error": e.args[1] }, 500
-    finally:
-        cxn.close()
+        current_app.logger.error(e.args[1])
+        return { "error": e.args[0], "msg": e.args[1] }, 500
 
     return Response(status = 200)
 
@@ -391,26 +428,28 @@ def change_email ():
     password = request.get_json()["password"]
     
     if session['user']['Password'] != generateHash(password):
-        return { "error": "The password you have entered is incorrect. Please make sure you have entered your password correctly." }, 500
+        return { "error": -1, "msg": "The password you have entered is incorrect. Please make sure you have entered your password correctly." }, 500
     else:
         email = request.get_json()["email"]
 
         try:
             cxn = connect_db()
             db = cxn.cursor()
-
-            db.execute(f"UPDATE user SET Email = '{email}' WHERE Username = '{session['user']['Username']}';")
-            cxn.commit()
-
-            session['user']['Email'] = email
-
             mail_session = start_email_session()
-            send_email(mail_session, "email", email)
-            mail_session.quit()
+
+            try:
+                db.execute(f"UPDATE user SET Email = '{email}' WHERE Username = '{session['user']['Username']}';")
+                cxn.commit()
+
+                send_email(mail_session, "email", email)
+            except Exception as e:
+                current_app.logger.error(e.args[1])
+                return { "error": e.args[0], "msg": email }, 500
+            finally:
+                cxn.close()
+                mail_session.quit()
         except Exception as e:
-            # TODO: Fix this
-            return { "error": e.args[1] }, 500
-        finally:
-            cxn.close()
+            current_app.logger.error(e.args[1])
+            return { "error": e.args[0], "msg": e.args[1] }, 500
 
         return Response(status = 200)

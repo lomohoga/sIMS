@@ -16,6 +16,7 @@
                 </span>
             </span>
             <span>
+                <p class="message"></p>
                 <input type="button" class="cancel" value="Cancel">
                 <input type="submit">
             </span>
@@ -89,6 +90,9 @@
             <div class="table-empty table-row hide">
                 <div>No requests found.</div>
             </div>
+            <div class="table-error table-row hide">
+                <div>An error occurred in the database. Please try again later.</div>
+            </div>
         </div>
     </div>
 </div>
@@ -161,6 +165,9 @@
     document.querySelector("#modal-requests").addEventListener("close", () => {
         document.querySelector("#modal-requests input[type=submit]").classList.remove("btn-red", "btn-green");
         document.querySelector("#modal-requests input[type=submit]").replaceWith(document.querySelector("#modal-requests input[type=submit]").cloneNode());
+
+        document.querySelector("#modal-requests .message").style.display = "none";
+        document.querySelector("#modal-requests .message").innerHTML = "";
     });
 
     document.querySelector("#modal-requests .modal-back").addEventListener("click", () => document.querySelector("#modal-requests").close());

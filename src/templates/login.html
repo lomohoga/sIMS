@@ -44,19 +44,13 @@
                 <h1>Reset password</h1>
                 <form>
                     <span class="form-grid">
-                        <label for="new-password">Enter new password:</label>
+                        <label for="new-password" id="new-password-label">Enter new password:</label>
                         <input id="new-password" type="password" minlength="8" maxlength="12" required>
-                        <label for="confirm-password">Re-enter new password:</label>
+                        <label for="confirm-password" id="confirm-password-label">Re-enter new password:</label>
                         <input id="confirm-password" type="password" minlength="8" maxlength="12" required>
                     </span>
                     <span id="password-note">
-                        <p><b>NOTE:</b> Your new password must contain the following:</p>
-                        <ul>
-                            <li>8 to 12 characters</li>
-                            <li>at least one capital letter</li>
-                            <li>at least one small letter</li>
-                            <li>at least one digit</li>
-                        </ul>
+                        <p><b>NOTE:</b> Your new password must contain 8 to 12 alphanumeric characters.</p>
                     </span>
                     <span>
                         <p class="form-msg"></p>
@@ -87,12 +81,16 @@
                 <form id="login-form" method="post">
                     <input id="login-username" type="text" class="field" placeholder="Username or email" name="uname" required autofocus>
                     <input id="login-password" type="password" class="field" placeholder="Password" name="pword" required>
-                    <input type="submit" id="login-submit" value="Log in">
-                    {% if msg|length != 0 %}
-                        <span id="login-error">{{ msg }}</span>
-                    {% endif %}
+                    <p id="forgot-password">Forgot password?</p>
+
+                    <div>
+                        <input type="submit" id="login-submit" value="Log in">
+                        {% if msg|length != 0 %}
+                            <span id="login-error">{{ msg }}</span>
+                        {% endif %}
+                    </div>
                 </form>
-                <button type="button" role="button" id="forgot-password" class="btn">Forgot password?</button>
+                <!-- <button type="button" role="button" id="forgot-password" class="btn">Forgot password?</button> -->
             </div>
         </main>
     </body>
@@ -101,7 +99,25 @@
 <script>
     function newPasswordValidity () {
         let t = document.querySelector("#modal-forgot-password-3 form");
-        t.querySelector("input[type=submit]").disabled = !(t.checkValidity() && Array.prototype.map.call(document.querySelectorAll("#new-password, #confirm-password"), x => [/[A-Z]+/, /[a-z]+/, /[0-9]+/].map(y => x.value.match(y) !== null).every(y => y)).every(x => x));
+
+        let newPassword = t.querySelector("#new-password");
+        let validPassword = newPassword.checkValidity() && newPassword.value.match(/[A-Za-z0-9]+/);
+        if(validPassword){
+            t.querySelector("#new-password-label").classList.add("valid");
+        }
+        else{
+            t.querySelector("#new-password-label").classList.remove("valid");
+        }
+
+        let equalPassword = newPassword.checkValidity() && newPassword.value == t.querySelector("#confirm-password").value;
+        if(equalPassword){
+            t.querySelector("#confirm-password-label").classList.add("valid");
+        }
+        else{
+            t.querySelector("#confirm-password-label").classList.remove("valid");
+        }
+
+        t.querySelector("input[type=submit]").disabled = !(validPassword && equalPassword);
     }
 
     // modal steps
@@ -139,8 +155,24 @@
             } else {
                 document.querySelector("#modal-forgot-password-1 form").reset();
                 document.querySelector('#modal-forgot-password-1 .form-msg').classList.add("error");
-                document.querySelector('#modal-forgot-password-1 .form-msg').innerText = (await d.json())['error'];
+
+                let response = await d.json();
+                let errorCode = response['error'];
+                if(errorCode == 2003){
+                    document.querySelector('#modal-forgot-password-1 .form-msg').innerText = "Database error. Please try again later."
+                }
+                else if(errorCode == -1){
+                    document.querySelector('#modal-forgot-password-1 .form-msg').innerText = response['msg'];
+                }
+                else{
+                    document.querySelector('#modal-forgot-password-1 .form-msg').innerText = "Internal server error. Please try again later."
+                }
             }
+        })
+        .catch(() => {
+            document.querySelector("#modal-forgot-password-1 form").reset();
+            document.querySelector('#modal-forgot-password-1 .form-msg').classList.add("error");
+            document.querySelector('#modal-forgot-password-1 .form-msg').innerText = "Server unavailable. Please try again later.";
         });
     });
 
@@ -172,8 +204,24 @@
             } else {
                 document.querySelector("#modal-forgot-password-2 form").reset();
                 document.querySelector('#modal-forgot-password-2 .form-msg').classList.add("error");
-                document.querySelector('#modal-forgot-password-2 .form-msg').innerText = (await d.json())['error'];
+
+                let response = await d.json();
+                let errorCode = response['error'];
+                if(errorCode == 2003){
+                    document.querySelector('#modal-forgot-password-2 .form-msg').innerText = "Database error. Please try again later."
+                }
+                else if(errorCode == -1){
+                    document.querySelector('#modal-forgot-password-2 .form-msg').innerText = response['msg'];
+                }
+                else{
+                    document.querySelector('#modal-forgot-password-2 .form-msg').innerText = "Internal server error. Please try again later."
+                }
             }
+        })
+        .catch(() => {
+            document.querySelector("#modal-forgot-password-2 form").reset();
+            document.querySelector('#modal-forgot-password-2 .form-msg').classList.add("error");
+            document.querySelector('#modal-forgot-password-2 .form-msg').innerText = "Server unavailable. Please try again later.";
         });
     });
 
@@ -188,32 +236,42 @@
         document.querySelector("#modal-forgot-password-3 .form-msg").classList.remove("error");
         document.querySelector("#modal-forgot-password-3 .form-msg").innerText = "Please wait\u2026";
 
-        if (document.querySelector("#new-password").value !== document.querySelector("#confirm-password").value) {
-            document.querySelector("#modal-forgot-password-3 form").reset();
-            document.querySelector("#modal-forgot-password-3 .form-msg").innerText = "Your new password does not match the confirmation. Please make sure you have entered your new password correctly.";
-            document.querySelector("#modal-forgot-password-3 .form-msg").classList.add("error");
-        } else {
-            fetch("{{ url_for('bp_user.forgot_password') }}", {
-                "method": "POST",
-                "headers": {
-                    "Content-Type": "application/json"
-                },
-                "body": JSON.stringify({
-                    "email": document.querySelector('#email').value,
-                    "new-password": document.querySelector('#new-password').value
-                })
-            }).then(async d => {
-                if (d.status === 200) {
-                    document.querySelector("#modal-forgot-password-3").classList.add("hidden");
-                    document.querySelector("#modal-forgot-password-4").classList.remove("hidden");
-                    document.querySelector("#modal-forgot-password-4 input").focus();
-                } else {
-                    document.querySelector("#modal-forgot-password-3 form").reset();
-                    document.querySelector('#modal-forgot-password-3 .form-msg').classList.add("error");
-                    document.querySelector('#modal-forgot-password-3 .form-msg').innerText = (await d.json())['error'];
+        fetch("{{ url_for('bp_user.forgot_password') }}", {
+            "method": "POST",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": JSON.stringify({
+                "email": document.querySelector('#email').value,
+                "new-password": document.querySelector('#new-password').value
+            })
+        }).then(async d => {
+            if (d.status === 200) {
+                document.querySelector("#modal-forgot-password-3").classList.add("hidden");
+                document.querySelector("#modal-forgot-password-4").classList.remove("hidden");
+                document.querySelector("#modal-forgot-password-4 input").focus();
+            } else {
+                document.querySelector("#modal-forgot-password-3 form").reset();
+                document.querySelector('#modal-forgot-password-3 .form-msg').classList.add("error");
+                
+                let response = await d.json();
+                let errorCode = response['error'];
+                if(errorCode == 2003){
+                    document.querySelector('#modal-forgot-password-3 .form-msg').innerText = "Database error. Please try again later."
                 }
-            });
-        }
+                else{
+                    document.querySelector('#modal-forgot-password-3 .form-msg').innerText = "Internal server error. Please try again later."
+                }
+            }
+        })
+        .catch(() => {
+            document.querySelector("#modal-forgot-password-3 form").reset();
+            document.querySelector('#modal-forgot-password-3 .form-msg').classList.add("error");
+            document.querySelector('#modal-forgot-password-3 .form-msg').innerText = "Server unavailable. Please try again later.";
+        });
+
+        document.querySelector("#new-password-label").classList.remove("valid");
+        document.querySelector("#confirm-password-label").classList.remove("valid");
     });
 
     document.querySelector("#modal-forgot-password-4 form").addEventListener("submit", e => {

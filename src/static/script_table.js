@@ -18,20 +18,39 @@ function escapeKeyword (k) {
 
 // fetches users from database
 async function getUsers (keyword = "") {
-    return fetch(encodeURI(`/users/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`)).then(d => d.json()).then(j => j["users"]);
+    return fetch(encodeURI(`/users/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`))
+    .then(d => {
+        if(d.status == 200){
+            return d.json().then(j => j["users"]);
+        }
+        else{
+            return -1;
+        }
+    });
 }
 
 // populates user table with users from getUsers()
-async function populateUsers (tbody, keyword = "") {
-    while (tbody.childElementCount > 2) tbody.removeChild(tbody.lastChild);
+async function populateUsers (tbody, keyword = "", type="users") {
+    while (tbody.childElementCount > 3) tbody.removeChild(tbody.lastChild);
 
     tbody.querySelector(".table-loading").classList.remove("hide");
     tbody.querySelector(".table-empty").classList.add("hide");
 
     let users = await getUsers(keyword);
+
+    if(users == -1){
+        tbody.querySelector(".table-error").classList.remove("hide");
+        tbody.querySelector(".table-loading").classList.add("hide");
+        return;
+    }
+
     let rows = [];
 
     for (let user of users) {
+        if(user['Role'] === 'Admin'){
+            continue;
+        }
+        
         let tr = document.createElement("div");
         tr.classList.add("table-row");
 
@@ -44,7 +63,7 @@ async function populateUsers (tbody, keyword = "") {
             tr.appendChild(td);
         }
 
-        if (user['Role'] !== 'Admin') {
+        if(type == "users"){
             let div = document.createElement("div");
             let btn = document.createElement("button");
             btn.type = "button";
@@ -83,6 +102,25 @@ async function populateUsers (tbody, keyword = "") {
                                 modal.close();
                                 populateUsers(tbody, keyword);
                             }
+
+                            if (d.status === 500){
+                                d.json().then(a => {
+                                    let p = modal.querySelector('.message')
+                                    p.style.display = 'block'
+                                    
+                                    if(a["error"] == 2003){
+                                        p.innerHTML = "Database error. Please try again later."
+                                    }
+                                    else{
+                                        p.innerHTML = "Internal server error. Please try again later."
+                                    }
+                                });
+                            }
+                        })
+                        .catch(() => {
+                            let p = modal.querySelector('.message')
+                            p.innerHTML = 'Server unavailable. Please try again later'
+                            p.style.display = 'block'
                         });
                     });
                 });
@@ -121,6 +159,25 @@ async function populateUsers (tbody, keyword = "") {
                                 modal.close();
                                 populateUsers(tbody, keyword);
                             }
+
+                            if (d.status === 500){
+                                d.json().then(a => {
+                                    let p = modal.querySelector('.message')
+                                    p.style.display = 'block'
+                                    
+                                    if(a["error"] == 2003){
+                                        p.innerHTML = "Database error. Please try again later."
+                                    }
+                                    else{
+                                        p.innerHTML = "Internal server error. Please try again later."
+                                    }
+                                });
+                            }
+                        })
+                        .catch(() => {
+                            let p = modal.querySelector('.message')
+                            p.innerHTML = 'Server unavailable. Please try again later'
+                            p.style.display = 'block'
                         });
                     });
                 });
@@ -128,10 +185,22 @@ async function populateUsers (tbody, keyword = "") {
 
             div.appendChild(btn)
             tr.appendChild(div);
+
+            tbody.appendChild(tr);
+            rows.push(tr);
         }
 
-        tbody.appendChild(tr);
-        rows.push(tr);
+        if(type == "user-search"){
+            let e = document.createElement("div");
+            let b = document.createElement("button");
+            b.type = "button";
+            b.role = "button";
+            b.innerHTML = "<i class='bi bi-plus-circle'></i><i class='bi bi-plus-circle-fill'></i>";
+            b.classList.add("select-row");
+            e.appendChild(b);
+            tr.appendChild(e);
+            tbody.appendChild(tr);
+        }
     }
 
     tbody.querySelector(".table-loading").classList.add("hide");
@@ -145,17 +214,31 @@ async function populateUsers (tbody, keyword = "") {
 
 // fetches items from database
 async function getItems (keyword = "") {
-    return fetch(encodeURI(`/inventory/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`)).then(d => d.json()).then(j => j["items"]);
+    return fetch(encodeURI(`/inventory/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`))
+    .then(d => {
+        if(d.status == 200){
+            return d.json().then(j => j["items"]);
+        }
+        else{
+            return -1;
+        }
+    });
 }
 
 // populates item table with items from getItems()
 async function populateItems (tbody, keyword = "", { stock = true, buttons = false, requesting = false } = {}) {
-    while (tbody.childElementCount > 2) tbody.removeChild(tbody.lastChild);
+    while (tbody.childElementCount > 3) tbody.removeChild(tbody.lastChild);
 
     tbody.querySelector(".table-loading").classList.remove("hide");
     tbody.querySelector(".table-empty").classList.add("hide");
 
     let items = await getItems(keyword);
+    if(items == -1){
+        tbody.querySelector(".table-error").classList.remove("hide");
+        tbody.querySelector(".table-loading").classList.add("hide");
+        return;
+    }
+
     let rows = [];
 
     for (let x of items) {
@@ -214,18 +297,31 @@ async function populateItems (tbody, keyword = "", { stock = true, buttons = fal
 
 // fetches requests from database
 async function getRequests (keyword = "", filter = []) {
-    return fetch(encodeURI(`/requests/search${keyword === "" ? "" : "&keywords=" + escapeKeyword(keyword) + ""}${filter.length === 0 ? "" : "&filter=" + filter.join(",")}`.replace("&", "?"))).then(d => d.json()).then(j => j["requests"]);
+    return fetch(encodeURI(`/requests/search${keyword === "" ? "" : "&keywords=" + escapeKeyword(keyword) + ""}${filter.length === 0 ? "" : "&filter=" + filter.join(",")}`.replace("&", "?")))
+    .then(d => {
+        if(d.status == 200){
+            return d.json().then(j => j["requests"]);
+        }
+        else{
+            return -1;
+        }
+    });
 }
 
 // populates request table with requests from getRequests()
 async function populateRequests (tbody, keyword = "", privileges = "user", filter = undefined) {
-    while (tbody.childElementCount > 2) tbody.removeChild(tbody.lastChild);
+    while (tbody.childElementCount > 3) tbody.removeChild(tbody.lastChild);
 
     tbody.querySelector(".table-loading").classList.remove("hide");
     tbody.querySelector(".table-empty").classList.add("hide");
 
     let requests = await getRequests(keyword, filter);
     let rows = [];
+    if(requests == -1){
+        tbody.querySelector(".table-error").classList.remove("hide");
+        tbody.querySelector(".table-loading").classList.add("hide");
+        return;
+    }
     
     for (let req of requests) {
         let tr = document.createElement("div");
@@ -305,6 +401,25 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                                     modal.close();
                                     populateRequests(tbody, keyword, privileges, filter);
                                 }
+
+                                if (d.status === 500){
+                                    d.json().then(a => {
+                                        let p = modal.querySelector('.message')
+                                        p.style.display = 'block'
+                                        
+                                        if(a["error"] == 2003){
+                                            p.innerHTML = "Database error. Please try again later."
+                                        }
+                                        else{
+                                            p.innerHTML = "Internal server error. Please try again later."
+                                        }
+                                    });
+                                }
+                            })
+                            .catch(() => {
+                                let p = modal.querySelector('.message')
+                                p.innerHTML = 'Server unavailable. Please try again later'
+                                p.style.display = 'block'
                             });
                         });
                     });
@@ -360,6 +475,25 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                                 modal.close();
                                 populateRequests(tbody, keyword, privileges, filter);
                             }
+
+                            if (d.status === 500){
+                                d.json().then(a => {
+                                    let p = modal.querySelector('.message')
+                                    p.style.display = 'block'
+                                    
+                                    if(a["error"] == 2003){
+                                        p.innerHTML = "Database error. Please try again later."
+                                    }
+                                    else{
+                                        p.innerHTML = "Internal server error. Please try again later."
+                                    }
+                                });
+                            }
+                        })
+                        .catch(() => {
+                            let p = modal.querySelector('.message')
+                            p.innerHTML = 'Server unavailable. Please try again later'
+                            p.style.display = 'block'
                         });
                     });
                 });
@@ -402,6 +536,25 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                             modal.close();
                             populateRequests(tbody, keyword, privileges, filter);
                         }
+
+                        if (d.status === 500){
+                            d.json().then(a => {
+                                let p = modal.querySelector('.message')
+                                p.style.display = 'block'
+                                
+                                if(a["error"] == 2003){
+                                    p.innerHTML = "Database error. Please try again later."
+                                }
+                                else{
+                                    p.innerHTML = "Internal server error. Please try again later."
+                                }
+                            });
+                        }
+                    })
+                    .catch(() => {
+                        let p = modal.querySelector('.message')
+                        p.innerHTML = 'Server unavailable. Please try again later'
+                        p.style.display = 'block'
                     });
                 });
             });
@@ -446,6 +599,25 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                             modal.close();
                             populateRequests(tbody, keyword, privileges, filter);
                         }
+
+                        if (d.status === 500){
+                            d.json().then(a => {
+                                let p = modal.querySelector('.message')
+                                p.style.display = 'block'
+                                
+                                if(a["error"] == 2003){
+                                    p.innerHTML = "Database error. Please try again later."
+                                }
+                                else{
+                                    p.innerHTML = "Internal server error. Please try again later."
+                                }
+                            });
+                        }
+                    })
+                    .catch(() => {
+                        let p = modal.querySelector('.message')
+                        p.innerHTML = 'Server unavailable. Please try again later'
+                        p.style.display = 'block'
                     });
                 });
             });
@@ -486,6 +658,25 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                             modal.close();
                             populateRequests(tbody, keyword, privileges, filter);
                         }
+
+                        if (d.status === 500){
+                            d.json().then(a => {
+                                let p = modal.querySelector('.message')
+                                p.style.display = 'block'
+                                
+                                if(a["error"] == 2003){
+                                    p.innerHTML = "Database error. Please try again later."
+                                }
+                                else{
+                                    p.innerHTML = "Internal server error. Please try again later."
+                                }
+                            });
+                        }
+                    })
+                    .catch(() => {
+                        let p = modal.querySelector('.message')
+                        p.innerHTML = 'Server unavailable. Please try again later'
+                        p.style.display = 'block'
                     });
                 });
             });
@@ -532,6 +723,25 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                                 modal.close();
                                 populateRequests(tbody, keyword, privileges, filter);
                             }
+
+                            if (d.status === 500){
+                                d.json().then(a => {
+                                    let p = modal.querySelector('.message')
+                                    p.style.display = 'block'
+                                    
+                                    if(a["error"] == 2003){
+                                        p.innerHTML = "Database error. Please try again later."
+                                    }
+                                    else{
+                                        p.innerHTML = "Internal server error. Please try again later."
+                                    }
+                                });
+                            }
+                        })
+                        .catch(() => {
+                            let p = modal.querySelector('.message')
+                            p.innerHTML = 'Server unavailable. Please try again later'
+                            p.style.display = 'block'
                         });
                     });
                 });
@@ -575,6 +785,25 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                             modal.close();
                             populateRequests(tbody, keyword, privileges, filter);
                         }
+
+                        if (d.status === 500){
+                            d.json().then(a => {
+                                let p = modal.querySelector('.message')
+                                p.style.display = 'block'
+                                
+                                if(a["error"] == 2003){
+                                    p.innerHTML = "Database error. Please try again later."
+                                }
+                                else{
+                                    p.innerHTML = "Internal server error. Please try again later."
+                                }
+                            });
+                        }
+                    })
+                    .catch(() => {
+                        let p = modal.querySelector('.message')
+                        p.innerHTML = 'Server unavailable. Please try again later'
+                        p.style.display = 'block'
                     });
                 });
             });
@@ -598,17 +827,30 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
 
 // fetches deliveries from database
 async function getDeliveries (keyword = "") {
-    return fetch(encodeURI(`/deliveries/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`)).then(d => d.json()).then(j => j["deliveries"]);
+    return fetch(encodeURI(`/deliveries/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`))
+    .then(d => {
+        if(d.status == 200){
+            return d.json().then(j => j["deliveries"]);
+        }
+        else{
+            return -1;
+        }
+    });
 }
 
 // populates delivery table with deliveries from getDeliveries()
 async function populateDeliveries (tbody, keyword = "") {
-    while (tbody.childElementCount > 2) tbody.removeChild(tbody.lastChild);
+    while (tbody.childElementCount > 3) tbody.removeChild(tbody.lastChild);
 
     tbody.querySelector(".table-loading").classList.remove("hide");
     tbody.querySelector(".table-empty").classList.add("hide");
 
     let items = await getDeliveries(keyword);
+    if(items == -1){
+        tbody.querySelector(".table-error").classList.remove("hide");
+        tbody.querySelector(".table-loading").classList.add("hide");
+        return;
+    }
 
     for (let x of items) {
         let tr = document.createElement("div");

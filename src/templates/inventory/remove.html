@@ -56,6 +56,9 @@
             <div class="table-row table-empty hide">
                 <div>No items found.</div>
             </div>
+            <div class="table-error table-row hide">
+                <div>An error occurred in the database. Please try again later.</div>
+            </div>
         </div>
     </div>
 </div>
@@ -102,9 +105,12 @@
     </div>
 </div>
 
-<form id="submit-form">
-    <input type="submit" class="btn-red" value="Remove selected items" name="remove-btn" disabled>
-</form>
+<div id="delete-bottom">
+    <span id="errmsg"></span>
+    <form id="submit-form">
+        <input type="submit" class="btn-red" value="Remove selected items" name="remove-btn" disabled>
+    </form>
+</div>
 
 <script>
     let currentSortSearch = [0, true];
@@ -187,8 +193,22 @@
                 "Content-Type": "application/json"
             },
             "body": JSON.stringify({ "items": Array.from(document.querySelectorAll(".selection-table .table-body .table-row > :first-child")).map(x => x.innerHTML) })
-        }).then(d => {
+        }).then(async d => {
             if (d.status === 200) window.location = "{{ url_for('bp_inventory.inventory') }}";
+            if (d.status === 500){
+                let response = await d.json();
+                let errorCode = response["error"];
+                
+                if(errorCode == 2003){
+                    document.querySelector("#errmsg").innerHTML = "Database error. Please try again later.";
+                }
+                else{
+                    document.querySelector("#errmsg").innerHTML = "Internal server error. Please try again later.";
+                }
+            }
+        })
+        .catch(() => {
+            document.querySelector("#errmsg").innerHTML = "Server unavailable. Please try again later.";
         });
     })
 </script>

@@ -1,6 +1,7 @@
 import os
 
 from flask import Flask, Response, redirect, render_template, url_for, request, session
+from logging.config import dictConfig
 
 from src.blueprints.auth import login_required
 from src.blueprints.bp_auth import bp_auth
@@ -9,6 +10,29 @@ from src.blueprints.bp_request import bp_request
 from src.blueprints.bp_user import bp_user
 from src.blueprints.bp_delivery import bp_delivery
 from src.blueprints.bp_form import bp_form
+
+#configure logger
+dictConfig({
+    "version": 1,
+    "formatters": {
+        "default": {
+            "format": "[%(asctime)s] %(levelname)s in %(module)s, %(funcName)s: %(message)s",
+        }
+    },
+
+    "handlers": {
+        "file": {
+            'level': 'ERROR',
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": "flask.log", #Change this for Windows
+            "maxBytes": 3000000,
+            "backupCount": 2,
+            "formatter": "default",
+        },
+    },
+
+    "root": {"handlers": ["file"]},
+})
 
 def create_app (test_config = None):
     # create and configure the app

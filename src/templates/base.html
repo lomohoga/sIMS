@@ -15,21 +15,15 @@
             <div id="modal-change-password-1">
                 <form id="form-change-password">
                     <span class="form-grid">
-                        <label for="old-password">Enter old password:</label>
+                        <label for="old-password" id="old-password-label">Enter old password:</label>
                         <input id="old-password" type="password" minlength="8" maxlength="12" required autofocus>
-                        <label for="new-password">Enter new password:</label>
+                        <label for="new-password" id="new-password-label">Enter new password:</label>
                         <input id="new-password" type="password" minlength="8" maxlength="12" required>
-                        <label for="confirm-password">Re-enter new password:</label>
+                        <label for="confirm-password" id="confirm-password-label">Re-enter new password:</label>
                         <input id="confirm-password" type="password" minlength="8" maxlength="12" required>
                     </span>
                     <span id="password-note">
-                        <p><b>NOTE:</b> Your new password must contain the following:</p>
-                        <ul>
-                            <li>8 to 12 characters</li>
-                            <li>at least one capital letter</li>
-                            <li>at least one small letter</li>
-                            <li>at least one digit</li>
-                        </ul>
+                        <p><b>NOTE:</b> Your new password must contain 8 to 12 alphanumeric characters.</p>
                     </span>
                     <span>
                         <p class="form-msg"></p>
@@ -131,12 +125,38 @@
         let t = document.querySelector("#form-change-email");
         t.querySelector("input[type=submit]").disabled = !(t.checkValidity()
                                                            && Array.prototype.every.call(t.querySelectorAll("input"), x => x.value !== '')
-                                                           && [/[A-Z]+/, /[a-z]+/, /[0-9]+/].map(x => t.querySelector("input[type=password]").value.match(x) !== null).every(x => x));
+                                                           && [/[A-Za-z0-9]+/].map(x => t.querySelector("input[type=password]").value.match(x) !== null).every(x => x));
     }
 
     function changePasswordValidity () {
         let t = document.querySelector("#form-change-password");
-        t.querySelector("input[type=submit]").disabled = !(t.checkValidity() && Array.prototype.map.call(document.querySelectorAll("#new-password, #confirm-password"), x => [/[A-Z]+/, /[a-z]+/, /[0-9]+/].map(y => x.value.match(y) !== null).every(y => y)).every(x => x));
+        
+        let oldPasswordValid = t.querySelector("#old-password").checkValidity();
+        if(oldPasswordValid){
+            t.querySelector("#old-password-label").classList.add("valid");
+        }
+        else{
+            t.querySelector("#old-password-label").classList.remove("valid");
+        }
+
+        let newPassword = t.querySelector("#new-password");
+        let validPassword = newPassword.checkValidity() && newPassword.value.match(/[A-Za-z0-9]+/);
+        if(validPassword){
+            t.querySelector("#new-password-label").classList.add("valid");
+        }
+        else{
+            t.querySelector("#new-password-label").classList.remove("valid");
+        }
+
+        let equalPassword = newPassword.checkValidity() && newPassword.value == t.querySelector("#confirm-password").value;
+        if(equalPassword){
+            t.querySelector("#confirm-password-label").classList.add("valid");
+        }
+        else{
+            t.querySelector("#confirm-password-label").classList.remove("valid");
+        }
+
+        t.querySelector("input[type=submit]").disabled = !(oldPasswordValid && validPassword && equalPassword);
     }
 
     // modal open & close event listeners
@@ -199,8 +219,26 @@
             } else {
                 document.querySelector("#form-change-email").reset();
                 document.querySelector('#form-change-email .form-msg').classList.add("error");
-                document.querySelector('#form-change-email .form-msg').innerText = (await d.json())['error'];
+
+                let response = await d.json()
+                let errorCode = response['error'];
+                if(errorCode == 2003){
+                    document.querySelector("#form-change-email .form-msg").innerText = "Database error. Please try again later."
+                }
+                else if(errorCode == -1){
+                    document.querySelector("#form-change-email .form-msg").innerText = response['msg'];
+                }
+                else if(errorCode == 1062){
+                    document.querySelector("#form-change-email .form-msg").innerText = response['msg'] + " is already taken.";
+                }
+                else{
+                    document.querySelector("#form-change-email .form-msg").innerText = "Internal server error. Please try again later."
+                }
             }
+        })
+        .catch(() => {
+            document.querySelector('#form-change-email .form-msg').classList.add("error");
+            document.querySelector("#form-change-email .form-msg").innerText = "Server unavailable. Please try again later."; 
         });
 
         changeEmailValidity();
@@ -215,36 +253,49 @@
     document.querySelector("#form-change-password").addEventListener("submit", e => {
         e.preventDefault();
 
-        if (document.querySelector("#new-password").value !== document.querySelector("#confirm-password").value) {
-            document.querySelector("#form-change-password").reset();
-            document.querySelector("#form-change-password .form-msg").innerText = "Your new password does not match the confirmation. Please make sure you have entered your new password correctly.";
-            document.querySelector("#form-change-password .form-msg").classList.add("error");
-        } else {
-            document.querySelector("#modal-change-password .form-msg").innerText = "Please wait\u2026";
+        document.querySelector("#modal-change-password .form-msg").innerText = "Please wait\u2026";
 
-            fetch("{{ url_for('bp_user.change_password') }}", {
-                "method": "POST",
-                "headers": {
-                    "Content-Type": "application/json"
-                },
-                "body": JSON.stringify({
-                    "old-password": document.querySelector('#old-password').value,
-                    "new-password": document.querySelector('#new-password').value
-                })
-            }).then(async d => {
-                if (d.status === 200) {
-                    document.querySelector("#modal-change-password-1").classList.add("hidden");
-                    document.querySelector("#modal-change-password-2").classList.remove("hidden");
-                    window.setTimeout(() => window.location = "{{ url_for('bp_auth.logout') }}", 3000);
-                } else {
-                    document.querySelector("#form-change-password").reset();
-                    document.querySelector('#form-change-password .form-msg').classList.add("error");
-                    document.querySelector("#form-change-password .form-msg").innerText = (await d.json())['error'];
+        fetch("{{ url_for('bp_user.change_password') }}", {
+            "method": "POST",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": JSON.stringify({
+                "old-password": document.querySelector('#old-password').value,
+                "new-password": document.querySelector('#new-password').value
+            })
+        }).then(async d => {
+            if (d.status === 200) {
+                document.querySelector("#modal-change-password-1").classList.add("hidden");
+                document.querySelector("#modal-change-password-2").classList.remove("hidden");
+                window.setTimeout(() => window.location = "{{ url_for('bp_auth.logout') }}", 3000);
+            } else {
+                document.querySelector("#form-change-password").reset();
+                document.querySelector('#form-change-password .form-msg').classList.add("error");
+
+                let response = await d.json();
+                let errorCode = response['error']
+                if(errorCode == 2003){
+                    document.querySelector("#form-change-password .form-msg").innerText = "Database error. Please try again later."
                 }
-            });
-        }
+                else if(errorCode == -1){
+                    document.querySelector("#form-change-password .form-msg").innerText = response['msg'];
+                }
+                else{
+                    document.querySelector("#form-change-password .form-msg").innerText = "Internal server error. Please try again later."
+                }
+            }
+        })
+        .catch(() => {
+            document.querySelector('#form-change-password .form-msg').classList.add("error");
+            document.querySelector("#form-change-password .form-msg").innerText = "Server unavailable. Please try again later."; 
+        });
 
         changePasswordValidity();
+
+        document.querySelector("#old-password-label").classList.remove("valid");
+        document.querySelector("#new-password-label").classList.remove("valid");
+        document.querySelector("#confirm-password-label").classList.remove("valid");
     });
 
     // profile dropdown event listeners
