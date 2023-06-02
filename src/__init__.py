@@ -8,6 +8,7 @@ from src.blueprints.bp_inventory import bp_inventory
 from src.blueprints.bp_request import bp_request
 from src.blueprints.bp_user import bp_user
 from src.blueprints.bp_delivery import bp_delivery
+from src.blueprints.bp_form import bp_form
 
 def create_app (test_config = None):
     # create and configure the app
@@ -20,6 +21,7 @@ def create_app (test_config = None):
     app.register_blueprint(bp_request)
     app.register_blueprint(bp_user)
     app.register_blueprint(bp_delivery)
+    app.register_blueprint(bp_form)
 
     # ensure the instance folder exists
     try:

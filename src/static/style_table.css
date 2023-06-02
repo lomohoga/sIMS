@@ -64,6 +64,10 @@
     grid-template-columns: 0.625fr 0.75fr 2fr 0.5fr 0.75fr 0.5fr 0.5fr;
 }
 
+.inventory-table.forms .table-row {
+    grid-template-columns: 0.625fr 0.75fr 2fr 0.5fr 0.75fr 0.5fr 0.5fr 0.5fr;
+}
+
 .add-table .table-row {
     grid-template-columns: 0.625fr 0.75fr 2fr 1fr 0.75fr 0.5fr 3rem;
 }
@@ -102,6 +106,10 @@
 
 .request-table.user .table-row {
     grid-template-columns: 0.375fr 0.75fr 0.5fr 0.625fr 0.75fr 2fr 0.5fr 0.5fr 0.5fr 0.5fr 0.75fr;
+}
+
+.request-table.forms .table-row {
+    grid-template-columns: 0.375fr 0.5fr 0.75fr 0.5fr 0.625fr 0.75fr 2fr 0.5fr 0.5fr 0.5fr 0.5fr 0.75fr;
 }
 
 .user-table .table-row {

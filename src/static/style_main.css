@@ -94,9 +94,6 @@ input[type=text]:disabled, input[type=search]:disabled, input[type=number]:disab
 input[type=submit] {
     color: white;
     font-weight: bold;
-}
-
-input[type=submit] {
     background: var(--blue);
     box-shadow: 0rem 0.2rem 0.4rem var(--blue-shadow);
 }

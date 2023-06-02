@@ -4,6 +4,7 @@
 
 /* these can go in any order */
 @import url("style_base.css");
+@import url("style_forms.css");
 @import url("style_inventory.css");
 @import url("style_login.css");
 @import url("style_main.css");

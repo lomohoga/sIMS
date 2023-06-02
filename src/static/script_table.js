@@ -225,6 +225,7 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
     tbody.querySelector(".table-empty").classList.add("hide");
 
     let requests = await getRequests(keyword, filter);
+    let rows = [];
     
     for (let req of requests) {
         let tr = document.createElement("div");
@@ -582,8 +583,8 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
         }
         
         tr.appendChild(actions);
-        
         tbody.appendChild(tr);
+        rows.push(tr);
     }
 
     tbody.querySelector(".table-loading").classList.add("hide");
@@ -591,6 +592,8 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
     else tbody.querySelector(".table-empty").classList.remove("hide");
 
     document.dispatchEvent(new Event("tablerefresh"));
+
+    return rows;
 }
 
 // fetches deliveries from database

@@ -288,7 +288,6 @@ def generate_code (email = ''):
     
     # Generate code
     code_key = randbelow(9000) + 1000
-    print(code_key)
 
     # Update code in database
     try:
