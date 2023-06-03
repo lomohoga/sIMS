@@ -72,22 +72,22 @@
     width: clamp(25%, 15rem, 50%);
 }
 
-#forgot-password{
+#forgot-password {
     width: fit-content;
     margin: 0px;
     margin-bottom: 15px;
-    
-    font-size: small;
+    font-size: smaller;
     font-style: italic;
-    color: var(--status-yellow-dark);
+    color: var(--blue);
 }
 
-#forgot-password:hover{
+#forgot-password:hover {
     cursor: pointer;
     text-decoration: underline;
+    color: var(--dark-blue);
 }
 
-#login-form > div{
+#login-form > div {
     display: flex;
     flex-direction: row;
     column-gap: 10px;

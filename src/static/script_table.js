@@ -119,7 +119,7 @@ async function populateUsers (tbody, keyword = "", type="users") {
                         })
                         .catch(() => {
                             let p = modal.querySelector('.message')
-                            p.innerHTML = 'Server unavailable. Please try again later'
+                            p.innerHTML = 'Server unavailable. Please try again later.'
                             p.style.display = 'block'
                         });
                     });
@@ -176,7 +176,7 @@ async function populateUsers (tbody, keyword = "", type="users") {
                         })
                         .catch(() => {
                             let p = modal.querySelector('.message')
-                            p.innerHTML = 'Server unavailable. Please try again later'
+                            p.innerHTML = 'Server unavailable. Please try again later.'
                             p.style.display = 'block'
                         });
                     });
@@ -299,29 +299,30 @@ async function populateItems (tbody, keyword = "", { stock = true, buttons = fal
 async function getRequests (keyword = "", filter = []) {
     return fetch(encodeURI(`/requests/search${keyword === "" ? "" : "&keywords=" + escapeKeyword(keyword) + ""}${filter.length === 0 ? "" : "&filter=" + filter.join(",")}`.replace("&", "?")))
     .then(d => {
-        if(d.status == 200){
+        if (d.status == 200) {
             return d.json().then(j => j["requests"]);
         }
-        else{
+        else {
             return -1;
         }
     });
 }
 
 // populates request table with requests from getRequests()
-async function populateRequests (tbody, keyword = "", privileges = "user", filter = undefined) {
+async function populateRequests (tbody, keyword = "", privileges = 2, filter = undefined) {
     while (tbody.childElementCount > 3) tbody.removeChild(tbody.lastChild);
 
     tbody.querySelector(".table-loading").classList.remove("hide");
     tbody.querySelector(".table-empty").classList.add("hide");
 
     let requests = await getRequests(keyword, filter);
-    let rows = [];
-    if(requests == -1){
+    if (requests == -1) {
         tbody.querySelector(".table-error").classList.remove("hide");
         tbody.querySelector(".table-loading").classList.add("hide");
         return;
     }
+
+    let rows = [];
     
     for (let req of requests) {
         let tr = document.createElement("div");
@@ -357,74 +358,74 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                 tr.appendChild(td)
             }
             
-            if (privileges === 1 && req["Items"].map(x => x['QuantityIssued']).some(x => x === '\u2014')) {
+            if (privileges === 1 && req['Status'] === 'Approved' && req['Items'].map(x => x['QuantityIssued']).some(x => x === '\u2014')) {
                 let div = document.createElement("div");
 
-                if (req['Status'] === 'Approved' && j['QuantityIssued'] === '\u2014') {
-                    let btn = document.createElement("button");
-                    btn.classList.add("issue");
-                    btn.type = "button";
-                    btn.role = "button";
-                    btn.title = "Issue item";
-                    btn.innerHTML = "<i class='bi bi-box-seam'></i>";
+                if (j['QuantityIssued'] === '\u2014') {
+                        let btn = document.createElement("button");
+                        btn.classList.add("issue");
+                        btn.type = "button";
+                        btn.role = "button";
+                        btn.title = "Issue item";
+                        btn.innerHTML = "<i class='bi bi-box-seam'></i>";
 
-                    btn.addEventListener("click", () => {
-                        let modal = document.querySelector("#modal-requests");
+                        btn.addEventListener("click", () => {
+                            let modal = document.querySelector("#modal-requests");
 
-                        modal.showModal();
-                        modal.querySelector("h1").innerText = "Issue item";
-                        modal.querySelector("p").style.display = "none";
-                        modal.querySelector("#quantity-span").style.display = "";
-                        modal.querySelector("input[type=number]").focus();
-                        modal.querySelector("input[type=number]").min = 0;
-                        modal.querySelector("input[type=number]").max = Math.min(+j['AvailableStock'].replace(",", ""), +j['RequestQuantity'].replace(",", ""));
-                        modal.querySelector("input[type=number]").step = 1;
-                        modal.querySelector("input[type=number]").value = Math.min(+j['AvailableStock'].replace(",", ""), +j['RequestQuantity'].replace(",", ""));
-                        modal.querySelector("input[type=number] ~ span").innerText = j['Unit'];
-                        modal.querySelector("input[type=submit]").value = "Issue item";
+                            modal.showModal();
+                            modal.querySelector("h1").innerText = "Issue item";
+                            modal.querySelector("p").style.display = "none";
+                            modal.querySelector("#quantity-span").style.display = "";
+                            modal.querySelector("input[type=number]").focus();
+                            modal.querySelector("input[type=number]").min = 0;
+                            modal.querySelector("input[type=number]").max = Math.min(+j['AvailableStock'].replace(",", ""), +j['RequestQuantity'].replace(",", ""));
+                            modal.querySelector("input[type=number]").step = 1;
+                            modal.querySelector("input[type=number]").value = Math.min(+j['AvailableStock'].replace(",", ""), +j['RequestQuantity'].replace(",", ""));
+                            modal.querySelector("input[type=number] ~ span").innerText = j['Unit'];
+                            modal.querySelector("input[type=submit]").value = "Issue item";
 
-                        modal.querySelector("input[type=submit]").addEventListener("click", e => {
-                            e.preventDefault();
-                            
-                            fetch("./issue/item", {
-                                "method": "POST",
-                                "headers": {
-                                    "Content-Type": "application/json"
-                                },
-                                "body": JSON.stringify({
-                                    "RequestID": req['RequestID'],
-                                    "ItemID": j['ItemID'],
-                                    "QuantityIssued": +modal.querySelector("input[type=number]").value
+                            modal.querySelector("input[type=submit]").addEventListener("click", e => {
+                                e.preventDefault();
+                                
+                                fetch("./issue/item", {
+                                    "method": "POST",
+                                    "headers": {
+                                        "Content-Type": "application/json"
+                                    },
+                                    "body": JSON.stringify({
+                                        "RequestID": req['RequestID'],
+                                        "ItemID": j['ItemID'],
+                                        "QuantityIssued": +modal.querySelector("input[type=number]").value
+                                    })
+                                }).then(d => {
+                                    if (d.status === 200) {
+                                        modal.close();
+                                        populateRequests(tbody, keyword, privileges, filter);
+                                    }
+
+                                    if (d.status === 500){
+                                        d.json().then(a => {
+                                            let p = modal.querySelector('.message')
+                                            p.style.display = 'block'
+                                            
+                                            if (a["error"] == 2003) {
+                                                p.innerHTML = "Database error. Please try again later."
+                                            }
+                                            else {
+                                                p.innerHTML = "Internal server error. Please try again later."
+                                            }
+                                        });
+                                    }
                                 })
-                            }).then(d => {
-                                if (d.status === 200) {
-                                    modal.close();
-                                    populateRequests(tbody, keyword, privileges, filter);
-                                }
-
-                                if (d.status === 500){
-                                    d.json().then(a => {
-                                        let p = modal.querySelector('.message')
-                                        p.style.display = 'block'
-                                        
-                                        if(a["error"] == 2003){
-                                            p.innerHTML = "Database error. Please try again later."
-                                        }
-                                        else{
-                                            p.innerHTML = "Internal server error. Please try again later."
-                                        }
-                                    });
-                                }
-                            })
-                            .catch(() => {
-                                let p = modal.querySelector('.message')
-                                p.innerHTML = 'Server unavailable. Please try again later'
-                                p.style.display = 'block'
+                                .catch(() => {
+                                    let p = modal.querySelector('.message')
+                                    p.innerHTML = 'Server unavailable. Please try again later.'
+                                    p.style.display = 'block'
+                                });
                             });
                         });
-                    });
 
-                    div.appendChild(btn);
+                        div.appendChild(btn);
                 }
 
                 tr.appendChild(div);
@@ -433,13 +434,11 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
         
         let actions = document.createElement("div");
         actions.classList.add("actions");
-        actions.style.gridColumn = '-1 / -2';
         actions.style.gridRow = `1 / ${req["Items"].length + 1}`;
+        actions.style.gridColumn = `-1 / ${(privileges !== 1 || (req['Status'] === 'Approved' && req['Items'].map(x => x['QuantityIssued']).some(x => x === '\u2014'))) ? '-2' : '-3'}`;
         
         if (req['Status'] === 'Approved' && privileges === 1) {
             if (req["Items"].map(x => x['QuantityIssued']).every(x => x !== '\u2014')) {
-                actions.style.gridColumn = '-1 / -3';
-
                 let issueBtn = document.createElement("button");
                 issueBtn.type = "button";
                 issueBtn.role = "button";
@@ -451,6 +450,8 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                     let modal = document.querySelector("#modal-requests");
 
                     modal.showModal();
+                    modal.querySelector("p").style.display = "";
+                    modal.querySelector("#quantity-span").style.display = "none";
                     modal.querySelector("h1").innerText = "Issue request";
                     modal.querySelector("p").innerHTML = "<span>Are you sure you want to issue <b>all</b> items in this request?</span>";
                     modal.querySelector("input[type=submit]").value = "Issue request";
@@ -481,10 +482,9 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                                     let p = modal.querySelector('.message')
                                     p.style.display = 'block'
                                     
-                                    if(a["error"] == 2003){
+                                    if (a["error"] === 2003) {
                                         p.innerHTML = "Database error. Please try again later."
-                                    }
-                                    else{
+                                    } else {
                                         p.innerHTML = "Internal server error. Please try again later."
                                     }
                                 });
@@ -492,7 +492,7 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                         })
                         .catch(() => {
                             let p = modal.querySelector('.message')
-                            p.innerHTML = 'Server unavailable. Please try again later'
+                            p.innerHTML = 'Server unavailable. Please try again later.'
                             p.style.display = 'block'
                         });
                     });
@@ -512,6 +512,8 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                 let modal = document.querySelector("#modal-requests");
 
                 modal.showModal();
+                modal.querySelector("p").style.display = "";
+                modal.querySelector("#quantity-span").style.display = "none";
                 modal.querySelector("h1").innerText = "Cancel request";
                 modal.querySelector("p").innerHTML = "Are you sure you want to cancel this request?<br><i><b style='color: var(--red);'>WARNING:</b> This will forfeit <b>all</b> items in this request!</i>";
                 modal.querySelector("input[type=submit]").value = "Cancel request";
@@ -542,10 +544,9 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                                 let p = modal.querySelector('.message')
                                 p.style.display = 'block'
                                 
-                                if(a["error"] == 2003){
+                                if (a["error"] === 2003) {
                                     p.innerHTML = "Database error. Please try again later."
-                                }
-                                else{
+                                } else {
                                     p.innerHTML = "Internal server error. Please try again later."
                                 }
                             });
@@ -553,7 +554,7 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                     })
                     .catch(() => {
                         let p = modal.querySelector('.message')
-                        p.innerHTML = 'Server unavailable. Please try again later'
+                        p.innerHTML = 'Server unavailable. Please try again later.'
                         p.style.display = 'block'
                     });
                 });
@@ -575,6 +576,8 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                 let modal = document.querySelector("#modal-requests");
 
                 modal.showModal();
+                modal.querySelector("p").style.display = "";
+                modal.querySelector("#quantity-span").style.display = "none";
                 modal.querySelector("h1").innerText = "Approve request";
                 modal.querySelector("p").innerHTML = "Are you sure you want to approve this request?";
                 modal.querySelector("input[type=submit]").value = "Approve request";
@@ -616,7 +619,7 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                     })
                     .catch(() => {
                         let p = modal.querySelector('.message')
-                        p.innerHTML = 'Server unavailable. Please try again later'
+                        p.innerHTML = 'Server unavailable. Please try again later.'
                         p.style.display = 'block'
                     });
                 });
@@ -634,6 +637,8 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                 let modal = document.querySelector("#modal-requests");
 
                 modal.showModal();
+                modal.querySelector("p").style.display = "";
+                modal.querySelector("#quantity-span").style.display = "none";
                 modal.querySelector("h1").innerText = "Deny request";
                 modal.querySelector("p").innerHTML = "Are you sure you want to deny this request?";
                 modal.querySelector("input[type=submit]").value = "Deny request";
@@ -675,7 +680,7 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                     })
                     .catch(() => {
                         let p = modal.querySelector('.message')
-                        p.innerHTML = 'Server unavailable. Please try again later'
+                        p.innerHTML = 'Server unavailable. Please try again later.'
                         p.style.display = 'block'
                     });
                 });
@@ -699,6 +704,8 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                     let modal = document.querySelector("#modal-requests");
 
                     modal.showModal();
+                    modal.querySelector("p").style.display = "";
+                    modal.querySelector("#quantity-span").style.display = "none";
                     modal.querySelector("h1").innerText = "Receive request";
                     modal.querySelector("p").innerHTML = "Are you sure you want to receive this request?";
                     modal.querySelector("input[type=submit]").value = "Receive request";
@@ -740,7 +747,7 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                         })
                         .catch(() => {
                             let p = modal.querySelector('.message')
-                            p.innerHTML = 'Server unavailable. Please try again later'
+                            p.innerHTML = 'Server unavailable. Please try again later.'
                             p.style.display = 'block'
                         });
                     });
@@ -761,6 +768,8 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                 let modal = document.querySelector("#modal-requests");
 
                 modal.showModal();
+                modal.querySelector("p").style.display = "";
+                modal.querySelector("#quantity-span").style.display = "none";
                 modal.querySelector("h1").innerText = "Cancel request";
                 modal.querySelector("p").innerHTML = "Are you sure you want to cancel this request?<br><i><b style='color: var(--red);'>WARNING:</b> This will forfeit <b>all</b> items in this request!</i>";
                 modal.querySelector("input[type=submit]").value = "Cancel request";
@@ -802,7 +811,7 @@ async function populateRequests (tbody, keyword = "", privileges = "user", filte
                     })
                     .catch(() => {
                         let p = modal.querySelector('.message')
-                        p.innerHTML = 'Server unavailable. Please try again later'
+                        p.innerHTML = 'Server unavailable. Please try again later.'
                         p.style.display = 'block'
                     });
                 });

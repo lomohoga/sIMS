@@ -370,7 +370,7 @@ main h1 {
 }
 
 .select-row:not(:disabled):hover, .delete-row:not(:disabled):hover,
-.select-row:not(:disabled):focus, .delete-row:not(:disabled):focus {
+.select-row:focus, .delete-row:focus {
     background: none;
     box-shadow: none;
 }
@@ -380,7 +380,8 @@ main h1 {
 }
 
 .select-row:disabled {
-    background: none;
+    background: unset;
+    box-shadow: unset;
     color: var(--gray);
     cursor: unset;
 }
@@ -389,13 +390,13 @@ main h1 {
     color: var(--red);
 }
 
-.select-row :last-child, .select-row:not(:disabled):hover :first-child, .select-row:not(:disabled):focus :first-child,
-.delete-row :last-child, .delete-row:not(:disabled):hover :first-child, .delete-row:not(:disabled):focus :first-child {
+.select-row :last-child, .select-row:not(:disabled):hover :first-child, .select-row:focus :first-child,
+.delete-row :last-child, .delete-row:not(:disabled):hover :first-child, .delete-row:focus :first-child {
     display: none;
 }
 
-.select-row:not(:disabled):hover :last-child, .select-row:not(:disabled):focus :last-child,
-.delete-row:not(:disabled):hover :last-child, .delete-row:not(:disabled):focus :last-child {
+.select-row:not(:disabled):hover :last-child, .select-row:focus :last-child,
+.delete-row:not(:disabled):hover :last-child, .delete-row:focus :last-child {
     display: unset;
 }
 
@@ -410,9 +411,9 @@ main h1 {
     border-radius: 0.025rem;
 }
 
-.table-sortable > button:not(:disabled),
-.table-sortable > button:not(:disabled):hover,
-.table-sortable > button:not(:disabled):focus {
+.table-sortable > button,
+.table-sortable > button:hover,
+.table-sortable > button:focus {
     background: none;
     box-shadow: none;
 }

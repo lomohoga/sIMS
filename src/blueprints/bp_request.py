@@ -129,7 +129,7 @@ def receive_request ():
         db = cxn.cursor()
         
         try:
-            db.execute(f"UPDATE request SET StatusID = 4, ReceivedBy = '{session['user']['Username']}' WHERE RequestID = {id}")
+            db.execute(f"UPDATE request SET StatusID = 4, ReceivedBy = '{session['user']['Username']}', DateReceived = CURDATE() WHERE RequestID = {id}")
             cxn.commit()
         except Exception as e:
             current_app.logger.error(e.args[1])
@@ -177,7 +177,7 @@ def issue_request ():
         db = cxn.cursor()
 
         try:
-            db.execute(f"UPDATE request SET StatusID = 3, IssuedBy = '{session['user']['Username']}' WHERE RequestID = {id}")
+            db.execute(f"UPDATE request SET StatusID = 3, IssuedBy = '{session['user']['Username']}', DateIssued = CURDATE() WHERE RequestID = {id}")
             cxn.commit()
         except Exception as e:
             current_app.logger.error(e.args[1])
