@@ -1,11 +1,21 @@
 from flask import Blueprint, Response, render_template, request, session, current_app
 
+from mysql.connector import Error as MySQLError
+
 from src.blueprints.format_data import format_items
 from src.blueprints.auth import login_required
 from src.blueprints.database import connect_db
 from src.blueprints.decode_keyword import decode_keyword, escape
 
 bp_inventory = Blueprint('bp_inventory', __name__, url_prefix = "/inventory")
+
+# exception thrown for operations that refer to non-existent rows in database
+class NoRowsError (Exception):
+    def __init__ (self, message):
+        self.args = (message,)
+
+    def __str__ (self):
+        return self.args[0]
 
 # route for inventory
 @bp_inventory.route('/')
@@ -32,13 +42,10 @@ def search_items ():
         try:
             db.execute(query)
             items = db.fetchall()
-        except Exception as e:
-            current_app.logger.error(e.args[1])
-            return { "error": e.args[0], "msg": e.args[1] }, 500
         finally:
             cxn.close()
     except Exception as e:
-        current_app.logger.error(e.args[1])
+        current_app.logger.error(e)
         return { "error": e.args[0], "msg": e.args[1] }, 500
 
     return { "items": format_items(items) }
@@ -63,19 +70,15 @@ def add_items ():
                 for v in values['values']:
                     db.execute(f"INSERT INTO item VALUES ('{v['ItemID']}', '{escape(v['ItemName'])}', '{escape(v['ItemDescription'])}', {'NULL' if v['ShelfLife'] is None else v['ShelfLife']}, {v['Price']}, '{v['Unit']}')")
                 cxn.commit()
-            except Exception as e:
-                current_app.logger.error(e.args[1])
-                # original error message as fallback
-                msg = e.args[1]
-                # MYSQL Error 1062: duplicate value for primary key
-                if e.args[0] == 1062: 
-                    msg = f'Item ID {v["ItemID"]} has already been taken.'
-                return {"error": e.args[0], "msg": msg}, 500
             finally:
                 cxn.close()
-        except Exception as e:
+        except MySQLError as e:
             current_app.logger.error(e.args[1])
-            return {"error": e.args[0], "msg": e.args[1]}, 500
+            if e.args[0] == 1062: return { "error": f"Item ID {v['ItemID']} is already taken.", "item": v['ItemID'] }, 500
+            return { "error": e.args[1] }, 500
+        except Exception as e:
+            current_app.logger.error(e)
+            return { "error": e }, 500
         
         return Response(status = 200)
 
@@ -99,15 +102,26 @@ def remove_items ():
             try:
                 for x in items:
                     db.execute(f"DELETE FROM item WHERE ItemID = '{x}'")
+                    db.execute(f"SELECT ROW_COUNT()")
+                    if db.fetchone()[0] == 0: raise NoRowsError(f"{'Some items' if len(items) > 1 else 'Item'} not found in database.")
                 cxn.commit()
-            except Exception as e:
-                current_app.logger.error(e.args[1])
-                return {"error": e.args[0], "msg": e.args[1]}, 500
             finally:
                 cxn.close()
-        except Exception as e:
+        except MySQLError as e:
             current_app.logger.error(e.args[1])
-            return {"error": e.args[0], "msg": e.args[1]}, 500
+            if e.args[0] == 1451:
+                cxn = connect_db()
+                db = cxn.cursor()
+                db.execute(f"SELECT COUNT(*) FROM request_item WHERE ItemID = '{x}'")
+                count = db.fetchone()[0]
+                cxn.close()
+
+                if count > 1: return { "error": f"Item {x} is currently in several ongoing requests. Please accept / cancel the requests, then try deleting the item again." }, 500
+                return { "error": f"Item {x} is currently in an ongoing request. Please accept / cancel the request, then try deleting the item again." }, 500
+            return { "error": e.args[1] }, 500
+        except Exception as e:
+            current_app.logger.error(e)
+            return { "error": e }, 500
 
         return Response(status = 200)
 
@@ -131,21 +145,16 @@ def update_items ():
             try:
                 for v in values:
                     db.execute(f"UPDATE item SET ItemID = '{values[v]['ItemID']}', ItemName = '{escape(values[v]['ItemName'])}', ItemDescription = '{escape(values[v]['ItemDescription'])}', ShelfLife = {'NULL' if values[v]['ShelfLife'] is None else values[v]['ShelfLife']}, Price = {values[v]['Price']}, Unit = '{values[v]['Unit']}' WHERE ItemID = '{v}'")
-
                 cxn.commit()
-            except Exception as e:
-                current_app.logger.error(e.args[1])
-                # original error message as fallback
-                msg = e.args[1]
-                # MYSQL Error 1062: duplicate value for primary key
-                if e.args[0] == 1062: 
-                    msg = f'Item ID {values[v]["ItemID"]} has already been taken.'
-                return {"error": e.args[0], "msg": msg}, 500
             finally:
                 cxn.close()
-        except Exception as e:
+        except MySQLError as e:
             current_app.logger.error(e.args[1])
-            return {"error": e.args[0], "msg": e.args[1]}, 500
+            if e.args[0] in [1062, 1761]: return { "error": f"Item ID {values[v]['ItemID']} is already taken.", "item": values[v]['ItemID'] }, 500
+            return { "error": e.args[1] }, 500
+        except Exception as e:
+            current_app.logger.error(e)
+            return { "error": e }, 500
         
         return Response(status = 200)
 
@@ -171,13 +180,14 @@ def request_items ():
                 for x in req:
                     db.execute(f"INSERT INTO request_item (RequestID, ItemID, RequestQuantity) VALUES ({requestID}, '{x['ItemID']}', {x['RequestQuantity']})")
                 cxn.commit()
-            except Exception as e:
-                current_app.logger.error(e.args[1])
-                return { "error": e.args[0], "msg": e.args[1] }, 500
             finally:
                 cxn.close()
-        except Exception as e:
+        except MySQLError as e:
             current_app.logger.error(e.args[1])
-            return { "error": e.args[0], "msg": e.args[1] }, 500
+            if (e.args[0] == 1452): return { "error": f"Item {x['ItemID']} is no longer in the database. Please reload the page to refresh the list of items." }, 500
+            return { "error": e.args[1] }, 500
+        except Exception as e:
+            current_app.logger.error(e)
+            return { "error": e }, 500
 
         return Response(status = 200)

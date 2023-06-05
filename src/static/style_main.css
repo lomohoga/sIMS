@@ -102,7 +102,7 @@ input[type=submit] {
     box-shadow: 0rem 0.2rem 0.4rem var(--blue-shadow);
 }
 
-input[type=submit]:hover,
+input[type=submit]:hover:not(:disabled),
 input[type=submit]:focus {
     background: var(--dark-blue);
     box-shadow: 0rem 0.1rem 0.2rem var(--blue-shadow);
@@ -113,7 +113,7 @@ input[type=submit].btn-red {
     box-shadow: 0rem 0.2rem 0.4rem var(--red-shadow);
 }
 
-input[type=submit].btn-red:hover,
+input[type=submit].btn-red:hover:not(:disabled),
 input[type=submit].btn-red:focus {
     background: var(--dark-red);
     box-shadow: 0rem 0.1rem 0.2rem var(--red-shadow);
@@ -124,7 +124,7 @@ input[type=submit].btn-green {
     box-shadow: 0rem 0.2rem 0.4rem var(--green-shadow);
 }
 
-input[type=submit].btn-green:hover,
+input[type=submit].btn-green:hover:not(:disabled),
 input[type=submit].btn-green:focus {
     background: var(--dark-green);
     box-shadow: 0rem 0.1rem 0.2rem var(--green-shadow);

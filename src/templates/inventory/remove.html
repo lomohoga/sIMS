@@ -105,10 +105,10 @@
     </div>
 </div>
 
-<div id="delete-bottom">
-    <span id="errmsg"></span>
+<div class="form-bottom">
+    <span class="form-msg"></span>
     <form id="submit-form">
-        <input type="submit" class="btn-red" value="Remove selected items" name="remove-btn" disabled>
+        <input type="submit" class="btn-red" value="Remove selected items" disabled>
     </form>
 </div>
 
@@ -162,6 +162,7 @@
 
     document.querySelector("#search").addEventListener("submit", async e => {
         e.preventDefault();
+
         for (let row of await populateItems(document.querySelector(".search-table .table-body"), document.querySelector("#search-box").value, { buttons: true })) {
             row.querySelector(".select-row").addEventListener("click", () => selectItem(row));
         }
@@ -187,6 +188,10 @@
 
     document.querySelector("#submit-form").addEventListener("submit", e => {
         e.preventDefault();
+
+        document.querySelector(".form-bottom .form-msg").innerText = "Please wait\u2026";
+        document.querySelector(".form-bottom .form-msg").classList.remove("error");
+
         fetch("{{ url_for('bp_inventory.remove_items') }}", {
             "method": "POST",
             "headers": {
@@ -195,20 +200,12 @@
             "body": JSON.stringify({ "items": Array.from(document.querySelectorAll(".selection-table .table-body .table-row > :first-child")).map(x => x.innerHTML) })
         }).then(async d => {
             if (d.status === 200) window.location = "{{ url_for('bp_inventory.inventory') }}";
-            if (d.status === 500){
-                let response = await d.json();
-                let errorCode = response["error"];
-                
-                if(errorCode == 2003){
-                    document.querySelector("#errmsg").innerHTML = "Database error. Please try again later.";
-                }
-                else{
-                    document.querySelector("#errmsg").innerHTML = "Internal server error. Please try again later.";
-                }
+            if (d.status === 500) {
+                let res = await d.json();
+
+                document.querySelector(".form-bottom .form-msg").innerHTML = `<b>ERROR:</b> ${res['error']}`;
+                document.querySelector(".form-bottom .form-msg").classList.add("error");
             }
-        })
-        .catch(() => {
-            document.querySelector("#errmsg").innerHTML = "Server unavailable. Please try again later.";
         });
     })
 </script>

@@ -141,28 +141,6 @@ main h1 {
     display: none;
 }
 
-#add-bottom, #delete-bottom, #update-bottom, 
-#request-bottom, #deliveries-bottom {
-    width: 100%;
-    display: flex;
-    gap: 1rem;
-}
-
-#errmsg ~ #submit-form {
-    width: initial;
-    flex-grow: 0;
-    flex-shrink: 1;
-}
-
-#errmsg {
-    font-style: italic;
-    color: var(--red);
-    text-align: right;
-    align-self: center;
-    flex-grow: 1;
-    flex-shrink: 0;
-}
-
 /* special table rows (loading and empty messages) */
 
 .table-loading {
@@ -337,6 +315,16 @@ main h1 {
     display: none;
 }
 
+.add-table .table-row.error,
+.selection-table .table-row.error {
+    background: var(--light-red);
+}
+
+.add-table .table-row.error:hover,
+.selection-table .table-row.error:hover {
+    background: var(--light-red);
+}
+
 /* row addition button (item addition) */
 
 #add-row > div {
@@ -416,4 +404,24 @@ main h1 {
 .table-sortable > button:focus {
     background: none;
     box-shadow: none;
+}
+
+/* error message & submit button (bottom of tabular forms) */
+
+.form-bottom {
+    width: 100%;
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+}
+
+.form-bottom .form-msg {
+    flex-grow: 1;
+    font-style: italic;
+    align-self: baseline;
+    text-align: right;
+}
+
+.form-bottom .form-msg.error {
+    color: var(--red);
 }

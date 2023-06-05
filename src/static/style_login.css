@@ -63,9 +63,14 @@
     margin-top: 0.5rem;
 }
 
-#login-error {
-    color: var(--red);
+#login-message {
     font-style: italic;
+    margin: 0;
+}
+
+#login-message.error {
+    font-weight: bold;
+    color: var(--red);
 }
 
 #login-username, #login-password {
@@ -74,6 +79,9 @@
 
 #forgot-password {
     width: fit-content;
+    background: none;
+    box-shadow: none;
+    padding: 0;
     margin: 0px;
     margin-bottom: 15px;
     font-size: smaller;
@@ -81,10 +89,12 @@
     color: var(--blue);
 }
 
-#forgot-password:hover {
+#forgot-password:hover,
+#forgot-password:focus {
     cursor: pointer;
     text-decoration: underline;
     color: var(--dark-blue);
+    outline: none;
 }
 
 #login-form > div {

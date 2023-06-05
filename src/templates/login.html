@@ -78,19 +78,16 @@
             </div>
 
             <div id="login-right">
-                <form id="login-form" method="post">
-                    <input id="login-username" type="text" class="field" placeholder="Username or email" name="uname" required autofocus>
-                    <input id="login-password" type="password" class="field" placeholder="Password" name="pword" required>
-                    <p id="forgot-password">Forgot password?</p>
+                <form id="login-form">
+                    <input id="login-username" type="text" class="field" placeholder="Username or email" required autofocus>
+                    <input id="login-password" type="password" class="field" placeholder="Password" required>
+                    <button id="forgot-password" type="button" role="button">Forgot password?</button>
 
                     <div>
                         <input type="submit" id="login-submit" value="Log in">
-                        {% if msg|length != 0 %}
-                            <span id="login-error">{{ msg }}</span>
-                        {% endif %}
+                        <p id="login-message"></p>
                     </div>
                 </form>
-                <!-- <button type="button" role="button" id="forgot-password" class="btn">Forgot password?</button> -->
             </div>
         </main>
     </body>
@@ -288,6 +285,33 @@
     });
     
     // other listeners
+
+    document.querySelector("#login-form").addEventListener("input", () => {
+        document.querySelector("#login-message").innerText = "";
+        document.querySelector("#login-message").classList.remove('error');
+    });
+
+    document.querySelector("#login-form").addEventListener("submit", e => {
+        e.preventDefault();
+
+        fetch("{{ url_for('bp_auth.login') }}", {
+            "method": "POST",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": JSON.stringify({
+                "username": document.querySelector("#login-username").value,
+                "password": document.querySelector("#login-password").value
+            })
+        }).then(async res => {
+            if (res.status === 200) window.location = "{{ url_for('bp_inventory.inventory') }}";
+            else {
+                let j = await res.json();
+                document.querySelector("#login-message").classList.add("error");
+                document.querySelector("#login-message").innerText = j['error'];
+            }
+        });
+    });
 
     document.querySelector("#resend-code").addEventListener("click", e => {
         e.preventDefault();
