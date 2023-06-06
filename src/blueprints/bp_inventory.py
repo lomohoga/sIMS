@@ -6,16 +6,9 @@ from src.blueprints.format_data import format_items
 from src.blueprints.auth import login_required
 from src.blueprints.database import connect_db
 from src.blueprints.decode_keyword import decode_keyword, escape
+from src.blueprints.exceptions import NoRowsError
 
 bp_inventory = Blueprint('bp_inventory', __name__, url_prefix = "/inventory")
-
-# exception thrown for operations that refer to non-existent rows in database
-class NoRowsError (Exception):
-    def __init__ (self, message):
-        self.args = (message,)
-
-    def __str__ (self):
-        return self.args[0]
 
 # route for inventory
 @bp_inventory.route('/')
@@ -44,9 +37,13 @@ def search_items ():
             items = db.fetchall()
         finally:
             cxn.close()
+    except MySQLError as e:
+        current_app.logger.error(e.args[1])
+        if e.args[0] == 2003: return { "error": "Could not connect to database. Please try reloading the page. "}, 500
+        return { "error": e.args[1] }, 500
     except Exception as e:
         current_app.logger.error(e)
-        return { "error": e.args[0], "msg": e.args[1] }, 500
+        return { "error": e }, 500
 
     return { "items": format_items(items) }
 
@@ -74,6 +71,7 @@ def add_items ():
                 cxn.close()
         except MySQLError as e:
             current_app.logger.error(e.args[1])
+            if e.args[0] == 2003: return { "error": "Could not connect to database. Please try reloading the page. "}, 500
             if e.args[0] == 1062: return { "error": f"Item ID {v['ItemID']} is already taken.", "item": v['ItemID'] }, 500
             return { "error": e.args[1] }, 500
         except Exception as e:
@@ -105,19 +103,17 @@ def remove_items ():
                     db.execute(f"SELECT ROW_COUNT()")
                     if db.fetchone()[0] == 0: raise NoRowsError(f"{'Some items' if len(items) > 1 else 'Item'} not found in database.")
                 cxn.commit()
+            except MySQLError as e:
+                if e.args[0] == 1451:
+                    db.execute(f"SELECT COUNT(*) FROM request_item WHERE ItemID = '{x}'")
+                    if db.fetchone()[0] > 1: return { "error": f"Item {x} is currently in several ongoing requests. Please accept / cancel the requests, then try deleting the item again." }, 500
+                    return { "error": f"Item {x} is currently in an ongoing request. Please accept / cancel the request, then try deleting the item again." }, 500
+                else: raise e
             finally:
                 cxn.close()
         except MySQLError as e:
             current_app.logger.error(e.args[1])
-            if e.args[0] == 1451:
-                cxn = connect_db()
-                db = cxn.cursor()
-                db.execute(f"SELECT COUNT(*) FROM request_item WHERE ItemID = '{x}'")
-                count = db.fetchone()[0]
-                cxn.close()
-
-                if count > 1: return { "error": f"Item {x} is currently in several ongoing requests. Please accept / cancel the requests, then try deleting the item again." }, 500
-                return { "error": f"Item {x} is currently in an ongoing request. Please accept / cancel the request, then try deleting the item again." }, 500
+            if e.args[0] == 2003: return { "error": "Could not connect to database. Please try reloading the page. "}, 500
             return { "error": e.args[1] }, 500
         except Exception as e:
             current_app.logger.error(e)
@@ -150,6 +146,7 @@ def update_items ():
                 cxn.close()
         except MySQLError as e:
             current_app.logger.error(e.args[1])
+            if e.args[0] == 2003: return { "error": "Could not connect to database. Please try reloading the page. "}, 500
             if e.args[0] in [1062, 1761]: return { "error": f"Item ID {values[v]['ItemID']} is already taken.", "item": values[v]['ItemID'] }, 500
             return { "error": e.args[1] }, 500
         except Exception as e:
@@ -184,7 +181,8 @@ def request_items ():
                 cxn.close()
         except MySQLError as e:
             current_app.logger.error(e.args[1])
-            if (e.args[0] == 1452): return { "error": f"Item {x['ItemID']} is no longer in the database. Please reload the page to refresh the list of items." }, 500
+            if e.args[0] == 2003: return { "error": "Could not connect to database. Please try reloading the page. "}, 500
+            if e.args[0] == 1452: return { "error": f"Item {x['ItemID']} is no longer in the database. Please reload the page to refresh the list of items." }, 500
             return { "error": e.args[1] }, 500
         except Exception as e:
             current_app.logger.error(e)
