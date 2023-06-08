@@ -141,28 +141,6 @@ main h1 {
     display: none;
 }
 
-#add-bottom, #delete-bottom, #update-bottom, 
-#request-bottom, #deliveries-bottom {
-    width: 100%;
-    display: flex;
-    gap: 1rem;
-}
-
-#errmsg ~ #submit-form {
-    width: initial;
-    flex-grow: 0;
-    flex-shrink: 1;
-}
-
-#errmsg {
-    font-style: italic;
-    color: var(--red);
-    text-align: right;
-    align-self: center;
-    flex-grow: 1;
-    flex-shrink: 0;
-}
-
 /* special table rows (loading and empty messages) */
 
 .table-loading {
@@ -286,24 +264,6 @@ main h1 {
     color: var(--status-expired-text);
 }
 
-#add-table .add-user-table{
-    grid-template-columns: 20% 20% 35% 10% 5%;
-}
-
-.add-user-table input[type="email"]{
-    border: none;
-    border-bottom: 1px solid var(--gray);
-    background: none;
-    height: 100%;
-    padding: 0 0.2rem;
-    margin-bottom: 5px;
-}
-
-.add-user-table input[type="email"]:focus{
-    outline: none;
-    border-bottom: 1px solid var(--blue);
-}
-
 /* styling for item addition, item update & delivery addition tables */
 
 .add-table input, .add-table textarea,
@@ -335,6 +295,16 @@ main h1 {
 .add-table .shelf-life .hide,
 .selection-table .shelf-life .hide {
     display: none;
+}
+
+.add-table .table-row.error,
+.selection-table .table-row.error {
+    background: var(--light-red);
+}
+
+.add-table .table-row.error:hover,
+.selection-table .table-row.error:hover {
+    background: var(--light-red);
 }
 
 /* row addition button (item addition) */
@@ -370,7 +340,7 @@ main h1 {
 }
 
 .select-row:not(:disabled):hover, .delete-row:not(:disabled):hover,
-.select-row:not(:disabled):focus, .delete-row:not(:disabled):focus {
+.select-row:focus, .delete-row:focus {
     background: none;
     box-shadow: none;
 }
@@ -380,7 +350,8 @@ main h1 {
 }
 
 .select-row:disabled {
-    background: none;
+    background: unset;
+    box-shadow: unset;
     color: var(--gray);
     cursor: unset;
 }
@@ -389,13 +360,13 @@ main h1 {
     color: var(--red);
 }
 
-.select-row :last-child, .select-row:not(:disabled):hover :first-child, .select-row:not(:disabled):focus :first-child,
-.delete-row :last-child, .delete-row:not(:disabled):hover :first-child, .delete-row:not(:disabled):focus :first-child {
+.select-row :last-child, .select-row:not(:disabled):hover :first-child, .select-row:focus :first-child,
+.delete-row :last-child, .delete-row:not(:disabled):hover :first-child, .delete-row:focus :first-child {
     display: none;
 }
 
-.select-row:not(:disabled):hover :last-child, .select-row:not(:disabled):focus :last-child,
-.delete-row:not(:disabled):hover :last-child, .delete-row:not(:disabled):focus :last-child {
+.select-row:not(:disabled):hover :last-child, .select-row:focus :last-child,
+.delete-row:not(:disabled):hover :last-child, .delete-row:focus :last-child {
     display: unset;
 }
 
@@ -410,9 +381,34 @@ main h1 {
     border-radius: 0.025rem;
 }
 
-.table-sortable > button:not(:disabled),
-.table-sortable > button:not(:disabled):hover,
-.table-sortable > button:not(:disabled):focus {
+.table-sortable > button,
+.table-sortable > button:hover,
+.table-sortable > button:focus {
     background: none;
     box-shadow: none;
+}
+
+/* error message & submit button (bottom of tabular forms) */
+
+.form-bottom {
+    width: 100%;
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+}
+
+.form-bottom .form-msg {
+    margin: 0;
+    flex-grow: 1;
+    font-style: italic;
+    align-self: baseline;
+    text-align: right;
+}
+
+.form-bottom .form-msg.error {
+    color: var(--red);
+}
+
+.form-bottom .form-msg .mono {
+    font-family: 'IBM Plex Mono', monospace;
 }

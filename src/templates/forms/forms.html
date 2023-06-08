@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+
+{% block main %}
+
+<div id="content-top">
+    <h1 class="main-header">Forms</h1>
+
+    <form id="choose-form">
+        <select autofocus>
+            <option hidden disabled selected value>Select a form&hellip;</option>
+            <option value="58">Appendix 58 (Stock Card)</option>
+            <option value="59,71">Appendix 59 & 71 (ICS & PAR)</option>
+            <option value="63">Appendix 63 (Requisition and Issue Slip)</option>
+            <option value="69">Appendix 69 (Property Card)</option>
+        </select>
+    </form>
+
+    <form id="search">
+        <input type="search" id="search-box" name="keyword" disabled>
+        <input type="submit" id="search-btn" value="Search" name="search-btn" disabled>
+    </form>
+</div>
+
+<div class="table-wrapper" style="display: none;">
+    <div class="table-main inventory-table forms">
+        <div class="table-header">
+            <div class="table-row">
+                <div class="table-sortable">
+                    <button role="button" class="sort-btn">
+                        Item ID
+                        <i class="bi bi-chevron-expand"></i>
+                    </button>
+                </div>
+                <div class="table-sortable">
+                    <button role="button" class="sort-btn">
+                        Name
+                        <i class="bi bi-chevron-expand"></i>
+                    </button>
+                </div>
+                <div class="table-sortable">
+                    <button role="button" class="sort-btn">
+                        Description
+                        <i class="bi bi-chevron-expand"></i>
+                    </button>
+                </div>
+                <div class="table-sortable">
+                    <button role="button" class="sort-btn">
+                        <span>
+                            Shelf Life
+                            <br>
+                            <span style="font-weight: initial; font-style: italic; font-size: 80%;">(days)</span>
+                        </span>
+                        <i class="bi bi-chevron-expand"></i>
+                    </button>
+                </div>
+                <div>Unit Price</div>
+                <div>Available Stock</div>
+                <div>Unit</div>
+            </div>
+        </div>
+        <div class="table-body">
+            <div class="table-loading table-row hide">
+                <div>Please wait&hellip;</div>
+            </div>
+            <div class="table-empty table-row hide">
+                <div>No items found.</div>
+            </div>
+            <div class="table-error table-row hide">
+                <div>There was an error in the database. Please try again.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="table-wrapper" style="display: none;">
+    <div class="table-main request-table forms">
+        <div class="table-header">
+            <div class="table-row">
+                <div class="table-sortable">
+                    <button role="button" class="sort-btn">
+                        RID
+                        <i class="bi bi-chevron-expand"></i>
+                    </button>
+                </div>
+                {% if session['user']['RoleID'] == 1 %}
+                    <div class="table-sortable">
+                        <button role="button" class="sort-btn">
+                            Requested By
+                            <i class="bi bi-chevron-expand"></i>
+                        </button>
+                    </div>
+                {% endif %}
+                <div class="table-sortable">
+                    <button role="button" class="sort-btn">
+                        Request Date
+                        <i class="bi bi-chevron-expand"></i>
+                    </button>
+                </div>
+                <div>Status</div>
+                <div>Item ID</div>
+                <div>Item Name</div>
+                <div>Item Description</div>
+                <div>Request Quantity</div>
+                <div>Quantity Issued</div>
+                <div>Available Stock</div>
+                <div>Unit</div>
+                <div></div>
+            </div>
+        </div>
+        <div class="table-body">
+            <div class="table-loading table-row hide">
+                <div>Please wait&hellip;</div>
+            </div>
+            <div class="table-empty table-row hide">
+                <div>No requests found.</div>
+            </div>
+            <div class="table-error table-row hide">
+                <div>There was an error in the database. Please try again.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentSort = [0, true];
+
+    document.querySelector("#choose-form").addEventListener("input", () => {
+        let v = document.querySelector("#choose-form select").value;
+
+        if (v !== '') {
+            document.querySelector("#search-box").removeAttribute("disabled");
+            document.querySelector("#search-btn").removeAttribute("disabled");
+        } else {
+            document.querySelector("#search-box").disabled = true;
+            document.querySelector("#search-btn").disabled = true;
+        }
+
+        if (v === '58' || v === '69') {
+            document.querySelector(".inventory-table").parentElement.style.display = "";
+            document.querySelector(".request-table").parentElement.style.display = "none";
+            document.querySelector("#search-box").placeholder = "Search items\u2026";
+
+            populateItems(document.querySelector(".inventory-table .table-body")).then(rows => {
+                for (let row of rows) {
+                    let div = document.createElement("div");
+                    let btn = document.createElement("button");
+                    btn.role = "button";
+                    btn.innerText = "Generate";
+                    btn.title = `Generate Appendix ${v}`;
+                    btn.classList.add("blue");
+                    div.appendChild(btn);
+                    row.appendChild(div);
+
+                    btn.addEventListener("click", e => {
+                        e.preventDefault();
+                        let filename = `Appendix${v}_${row.firstChild.innerText}`;
+
+                        fetch(`./${v}?item=${row.firstChild.innerText}`)
+                        .then(res => res.body.getReader().read())
+                        .then(data => {
+                            if (!data.value) throw `Item ID ${itemID.value} not found.`;
+                            
+                            let link = window.URL.createObjectURL(new File([data.value], filename, {
+                                "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                            }));
+                            return link;
+                        })
+                        .then(link => {
+                            let a = document.createElement("a");
+                            a.href = link;
+                            a.download = filename;
+                            a.click();
+                        });
+                    });
+                }
+            });
+
+            let oldSym = document.querySelector(`.inventory-table .table-header .table-row > :nth-child(${currentSort[0] + 1}) .bi`);
+            oldSym.classList.remove(`bi-chevron-${currentSort[1] ? "up" : "down"}`);
+            oldSym.classList.add("bi-chevron-expand");
+    
+            currentSort = [0, true];
+    
+            let newSym = document.querySelector(".inventory-table .table-header .table-row > :nth-child(1) .bi");
+            newSym.classList.remove("bi-chevron-expand");
+            newSym.classList.add("bi-chevron-up");
+        } else {
+            document.querySelector(".inventory-table").parentElement.style.display = "none";
+            document.querySelector(".request-table").parentElement.style.display = "";
+            document.querySelector("#search-box").placeholder = "Search requests\u2026";
+
+            populateRequests(document.querySelector(".request-table .table-body")).then(rows => {
+                for (let row of rows) {
+                    row.removeChild(row.querySelector(".actions"));
+                    
+                    let div = document.createElement("div");
+                    div.style.gridArea = `1 / 12 / ${row.querySelectorAll(".mono").length + 1} / 13`;
+                    if (!row.querySelector(".status").classList.contains('completed')) {
+                        tr.appendChild(div);
+                        continue;
+                    }
+
+                    let btn = document.createElement("button");
+                    btn.role = "button";
+                    btn.innerText = "Generate";
+                    btn.title = v === '63' ? `Generate Appendix ${v}` : "Generate Appendices 59 and 71";
+                    btn.classList.add("blue");
+                    div.appendChild(btn);
+                    row.appendChild(div);
+
+                    btn.addEventListener("click", e => {
+                        e.preventDefault();
+
+                        for (let w of v.split(",")) {
+                            let filename = `Appendix${w}_${row.firstChild.innerText}`;
+
+                            fetch(`./${w}?item=${row.firstChild.innerText}`)
+                            .then(d => {
+                                if (d.status === 200) return d;
+                            })
+                            .then(res => res.body.getReader().read())
+                            .then(data => {
+                                if (!data.value) throw `Item ID ${itemID.value} not found.`;
+                                
+                                let link = window.URL.createObjectURL(new File([data.value], filename, {
+                                    "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                }));
+                                return link;
+                            })
+                            .then(link => {
+                                let a = document.createElement("a");
+                                a.href = link;
+                                a.download = filename;
+                                a.click();
+                            });
+                        }
+                    });
+                }
+            });
+
+            let oldSym = document.querySelector(`.request-table .table-header .table-row > :nth-child(${currentSort[0] + 1}) .bi`);
+            oldSym.classList.remove(`bi-chevron-${currentSort[1] ? "up" : "down"}`);
+            oldSym.classList.add("bi-chevron-expand");
+    
+            currentSort = [0, true];
+    
+            let newSym = document.querySelector(".request-table .table-header .table-row > :nth-child(1) .bi");
+            newSym.classList.remove("bi-chevron-expand");
+            newSym.classList.add("bi-chevron-up");
+        }
+
+        document.querySelector("#search").reset();
+    });
+
+    document.querySelector("#search").addEventListener("submit", e => {
+        e.preventDefault();
+
+        if (["58", "69"].includes(document.querySelector("#choose-form select").value)) {
+            populateItems(document.querySelector(".inventory-table .table-body"), document.querySelector("#search-box").value);
+
+            let oldSym = document.querySelector(`.inventory-table .table-header .table-row > :nth-child(${currentSort[0] + 1}) .bi`);
+            oldSym.classList.remove(`bi-chevron-${currentSort[1] ? "up" : "down"}`);
+            oldSym.classList.add("bi-chevron-expand");
+    
+            currentSort = [0, true];
+    
+            let newSym = document.querySelector(".inventory-table .table-header .table-row > :nth-child(1) .bi");
+            newSym.classList.remove("bi-chevron-expand");
+            newSym.classList.add("bi-chevron-up");
+        } else {
+            populateRequests(document.querySelector(".request-table .table-body"), document.querySelector("#search-box").value);
+
+            let oldSym = document.querySelector(`.request-table .table-header .table-row > :nth-child(${currentSort[0] + 1}) .bi`);
+            oldSym.classList.remove(`bi-chevron-${currentSort[1] ? "up" : "down"}`);
+            oldSym.classList.add("bi-chevron-expand");
+    
+            currentSort = [0, true];
+    
+            let newSym = document.querySelector(".request-table .table-header .table-row > :nth-child(1) .bi");
+            newSym.classList.remove("bi-chevron-expand");
+            newSym.classList.add("bi-chevron-up");
+        }
+    });
+</script>
+
+{% endblock %}

@@ -6,19 +6,19 @@
     <h1 class="main-header">User Removal</h1>
 
     <form id="search">
-        <input type="search" id="search-box" placeholder="Search user&hellip;" name="keyword">
+        <input type="search" id="search-box" placeholder="Search user&hellip;" name="keyword" autofocus>
         <input type="submit" id="search-btn" value="Search" name="search-btn">
     </form>
 </div>
 
-<div id="item-search" class="table-wrapper">
-    <div class="table-main inventory-table">
+<div class="table-wrapper">
+    <div class="table-main search-table users">
         <div class="table-header">
-            <div class="table-row delete-user-table">
+            <div class="table-row">
                 <div>Username</div>
                 <div>First Name</div>
                 <div>Last Name</div>
-                <div>Email address</div>
+                <div>Email Address</div>
                 <div>Role</div>
                 <div></div>
             </div>
@@ -37,14 +37,14 @@
     </div>
 </div>
 
-<div id="selected-items" class="table-wrapper">
-    <div class="table-main inventory-table">
+<div class="table-wrapper">
+    <div class="table-main selection-table users">
         <div class="table-header">
-            <div class="table-row delete-user-table">
+            <div class="table-row">
                 <div>Username</div>
                 <div>First Name</div>
                 <div>Last Name</div>
-                <div>Email address</div>
+                <div>Email Address</div>
                 <div>Role</div>
                 <div></div>
             </div>
@@ -53,15 +53,15 @@
     </div>
 </div>
 
-<div id="delete-user-form">
-    <p class="message"></p>
+<div class="form-bottom">
+    <p class="form-msg"></p>
     <form id="submit-form">
         <input type="submit" id="delete-btn" class="btn-red" value="Delete selected users" name="delete-btn" disabled>
     </form>
 </div>
 
 <script>
-    function selectItem (row) {
+    function selectRow (row) {
         let clone = row.cloneNode(true);
         clone.lastChild.innerHTML = clone.lastChild.innerHTML.replaceAll("plus", "dash");
         clone.querySelector(".select-row").classList.add("delete-row");
@@ -69,26 +69,26 @@
         
         clone.lastChild.querySelector("button").addEventListener("click", () => {
             clone.parentElement.removeChild(clone);
-            let r = Array.from(document.querySelectorAll("#item-search .table-body .table-row")).filter(x => x.firstChild.innerHTML === clone.firstChild.innerHTML);
+            let r = Array.from(document.querySelectorAll(".search-table .table-body .table-row")).filter(x => x.firstChild.innerHTML === clone.firstChild.innerHTML);
             if (r.length > 0) r[0].lastChild.querySelector("button").disabled = false;
             toggleDeleteDisabled();
         });
 
-        let b = document.querySelector("#selected-items .table-body");
+        let b = document.querySelector(".selection-table .table-body");
         b.insertBefore(clone, b.firstChild);
         row.lastChild.querySelector("button").disabled = true;
         toggleDeleteDisabled();
     }
 
     function disableButtons () {
-        if (document.querySelector("#selected-items .table-body").childElementCount > 0) {
-            let codes = Array.from(document.querySelectorAll("#selected-items .table-body .table-row > :first-child")).map(x => x.innerHTML);
-            Array.from(document.querySelectorAll("#item-search .table-body .table-row")).filter(x => codes.includes(x.firstChild.innerHTML)).forEach(x => x.lastChild.querySelector("button").disabled = true);
+        if (document.querySelector(".selection-table .table-body").childElementCount > 0) {
+            let codes = Array.prototype.map.call(document.querySelector(".selection-table .table-body .table-row > :first-child"), x => x.innerHTML);
+            Array.prototype.filter.call(document.querySelector(".search-table .table-body .table-row"), x => codes.includes(x.firstChild.innerHTML)).forEach(x => x.lastChild.querySelector("button").disabled = true);
         }
     }
 
     function toggleDeleteDisabled () {
-        document.querySelector("#delete-btn").disabled = document.querySelector("#selected-items .table-body").childElementCount === 0;
+        document.querySelector("#delete-btn").disabled = document.querySelector(".selection-table .table-body").childElementCount === 0;
     }
 
     document.querySelector("#search").addEventListener("submit", e => {
@@ -96,11 +96,9 @@
         populateUsers(document.querySelector("#item-search .table-body"), document.querySelector("#search-box").value, "user-search");
     });
 
-    window.addEventListener("load", () => populateUsers(document.querySelector("#item-search .table-body"), document.querySelector("#search-box").value, "user-search"));
-
     document.addEventListener("tablerefresh", () => {
-        Array.from(document.querySelectorAll("#item-search .table-body .table-row > :last-child button")).forEach(x => {
-            x.addEventListener("click", () => selectItem(x.parentElement.parentElement));
+        Array.from(document.querySelectorAll(".search-table .table-body .table-row > :last-child button")).forEach(x => {
+            x.addEventListener("click", () => selectRow(x.parentElement.parentElement));
         });
         toggleDeleteDisabled();
         disableButtons();
@@ -109,44 +107,26 @@
     document.querySelector("#submit-form").addEventListener("submit", e => {
         e.preventDefault();
 
-        document.querySelector('#delete-btn').disabled = 1;
-        document.querySelector('#delete-btn').value = 'Deleting...'
+        document.querySelector('.form-bottom input[type=submit]').disabled = true;
+        document.querySelector('.form-bottom .form-msg').classList.remove("error");
+        document.querySelector('.form-bottom .form-msg').innerText = 'Please wait\u2026';
 
         fetch("{{ url_for('bp_user.remove_users') }}", {
             "method": "POST",
             "headers": {
                 "Content-Type": "application/json"
             },
-            "body": JSON.stringify({ "users": Array.from(document.querySelectorAll("#selected-items .table-body .table-row > :first-child")).map(x => x.innerHTML), "emails":  Array.from(document.querySelectorAll("#selected-items .table-body .table-row > :nth-child(4)")).map(x => x.innerHTML)})
-        }).then(d => {
+            "body": JSON.stringify({ "users": Array.prototype.map.call(document.querySelectorAll(".selection-table .table-body .table-row"), x => x.firstChild.innerText) })
+        }).then(async d => {
             if (d.status === 200) window.location = "{{ url_for('bp_user.show_users') }}";
-
-            if (d.status === 500){
-                d.json().then(a => {
-                    let p = document.querySelector('#delete-user-form p')
-                    p.style.display = 'block'
-                    
-                    if(a["error"] == 2003){
-                        p.innerHTML = "Database error. Please try again later."
-                    }
-                    else{
-                        p.innerHTML = "Internal server error. Please try again later."
-                    }
-                });
+            if (d.status === 500) {
+                document.querySelector('.form-bottom .form-msg').classList.add("error");
+                document.querySelector('.form-bottom .form-msg').innerHTML = `<b>ERROR:</b> ${(await d.json())['error']}`;
             }
-
-            document.querySelector('#delete-btn').disabled = 0;
-            document.querySelector('#delete-btn').value = 'Delete selected users'
-        })
-        .catch(() => {
-            let p = document.querySelector('#delete-user-form p')
-            p.innerHTML = 'Server unavailable. Please try again later'
-            p.style.display = 'block'
-
-            document.querySelector('#delete-btn').disabled = 0;
-            document.querySelector('#delete-btn').value = 'Delete selected users'
         });
     })
+
+    window.addEventListener("load", () => populateUsers(document.querySelector(".search-table .table-body"), document.querySelector("#search-box").value, { buttons: true }));
 </script>
 
 {% endblock %}

@@ -22,17 +22,17 @@
         <div class="table-body">
             <div class="table-row" id="add-row">
                 <div>
-                    <button role="button"><i class="bi bi-plus-circle"></i>Add item</button>
+                    <button role="button" autofocus><i class="bi bi-plus-circle"></i>Add item</button>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<div id="add-bottom">
-    <span id="errmsg"></span>
+<div class="form-bottom">
+    <span class="form-msg"></span>
     <form id="submit-form">
-        <input type="submit" value="Add items" name="add-btn" disabled>
+        <input type="submit" value="Add items" disabled>
     </form>
 </div>
 
@@ -123,10 +123,16 @@
         disableButton();
     }
 
-    document.querySelector(".add-table").addEventListener("input", () => document.querySelector("#errmsg").innerText = "");
+    document.querySelector(".add-table").addEventListener("input", () => {
+        let x = document.querySelector(".add-table .table-row.error");
+        if (x) x.classList.remove("error");
+    });
 
     document.querySelector("#submit-form").addEventListener("submit", e => {
         e.preventDefault();
+
+        document.querySelector(".form-bottom .form-msg").innerText = "Please wait\u2026";
+        document.querySelector(".form-bottom .form-msg").classList.remove("error");
 
         let values = [];
 
@@ -152,22 +158,13 @@
         }).then(async d => {
             if (d.status === 200) window.location = "{{ url_for('bp_inventory.inventory') }}";
             if (d.status === 500) {
-                let response = await d.json();
-                let errorCode = response["error"];
-                if(errorCode == 1062){
-                    document.querySelector("#errmsg").innerHTML = `<b>ERROR:</b> ${response["msg"]}`;
-                    alert(`ERROR: ${response["msg"]}`);
-                }
-                else if(errorCode == 2003){
-                    document.querySelector("#errmsg").innerHTML = "Database error. Please try again later.";
-                }
-                else{
-                    document.querySelector("#errmsg").innerHTML = "Internal server error. Please try again later.";
-                }    
+                let res = await d.json();
+
+                document.querySelector(".form-bottom .form-msg").innerHTML = `<b>ERROR:</b> ${res['error']}`;
+                document.querySelector(".form-bottom .form-msg").classList.add("error");
+
+                if ('item' in res) Array.prototype.filter.call(document.querySelectorAll(".add-table .table-body .table-row:not(#add-row)"), x => x.firstChild.firstChild.value === res['item'])[0].classList.add("error");
             }
-        })
-        .catch(() => {
-            document.querySelector("#errmsg").innerHTML = "Server unavailable. Please try again later.";
         });
     });
 
