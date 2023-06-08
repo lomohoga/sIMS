@@ -264,24 +264,6 @@ main h1 {
     color: var(--status-expired-text);
 }
 
-#add-table .add-user-table{
-    grid-template-columns: 20% 20% 35% 10% 5%;
-}
-
-.add-user-table input[type="email"]{
-    border: none;
-    border-bottom: 1px solid var(--gray);
-    background: none;
-    height: 100%;
-    padding: 0 0.2rem;
-    margin-bottom: 5px;
-}
-
-.add-user-table input[type="email"]:focus{
-    outline: none;
-    border-bottom: 1px solid var(--blue);
-}
-
 /* styling for item addition, item update & delivery addition tables */
 
 .add-table input, .add-table textarea,
@@ -416,6 +398,7 @@ main h1 {
 }
 
 .form-bottom .form-msg {
+    margin: 0;
     flex-grow: 1;
     font-style: italic;
     align-self: baseline;
@@ -424,4 +407,8 @@ main h1 {
 
 .form-bottom .form-msg.error {
     color: var(--red);
+}
+
+.form-bottom .form-msg .mono {
+    font-family: 'IBM Plex Mono', monospace;
 }

@@ -22,7 +22,7 @@ def form_58 (item):
     db.execute(f"SELECT * FROM item WHERE ItemID = '{item}'")
     data = db.fetchone()
 
-    db.execute(f"SELECT * FROM (SELECT RequestID, RequestDate, AvailableStock, RequestQuantity, UPPER(CONCAT(FirstName, ' ', LastName)) as RequestedBy, ShelfLife from request_item INNER JOIN stock USING (ItemID) INNER JOIN request USING (RequestID) INNER JOIN user ON RequestedBy = Username WHERE ItemID = '{item}' ORDER BY RequestID DESC LIMIT 30) AS x ORDER BY RequestID ASC;")
+    db.execute(f"SELECT * FROM (SELECT RequestID, RequestDate, AvailableStock, RequestQuantity, UPPER(CONCAT(FirstName, ' ', LastName)) as RequestedBy, ShelfLife from request_item INNER JOIN stock USING (ItemID) INNER JOIN request USING (RequestID) INNER JOIN user ON RequestedBy = Username WHERE ItemID = '{item}' ORDER BY RequestID DESC LIMIT 30) AS x ORDER BY RequestID ASC")
     requests = db.fetchall()
 
     cxn.close()
@@ -146,7 +146,7 @@ def form_69 (item):
     db.execute(f"SELECT * FROM item WHERE ItemID = '{item}'")
     data = db.fetchone()
 
-    db.execute(f"SELECT * FROM (SELECT RequestID, RequestDate, AvailableStock, RequestQuantity, UPPER(CONCAT(FirstName, ' ', LastName)) as RequestedBy, Price from request_item INNER JOIN stock USING (ItemID) INNER JOIN request USING (RequestID) INNER JOIN user ON RequestedBy = Username WHERE ItemID = '{item}' ORDER BY RequestID DESC LIMIT 30) AS x ORDER BY RequestID ASC;")
+    db.execute(f"SELECT * FROM (SELECT RequestID, RequestDate, AvailableStock, RequestQuantity, UPPER(CONCAT(FirstName, ' ', LastName)) as RequestedBy, Price from request_item INNER JOIN stock USING (ItemID) INNER JOIN request USING (RequestID) INNER JOIN user ON RequestedBy = Username WHERE ItemID = '{item}' ORDER BY RequestID DESC LIMIT 30) AS x ORDER BY RequestID ASC")
     requests = db.fetchall()
 
     cxn.close()

@@ -131,8 +131,8 @@
             document.querySelector("#search-box").removeAttribute("disabled");
             document.querySelector("#search-btn").removeAttribute("disabled");
         } else {
-            document.querySelector("#search-box").setAttribute("disabled", "");
-            document.querySelector("#search-btn").setAttribute("disabled", "");
+            document.querySelector("#search-box").disabled = true;
+            document.querySelector("#search-btn").disabled = true;
         }
 
         if (v === '58' || v === '69') {

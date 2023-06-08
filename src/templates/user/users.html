@@ -31,8 +31,8 @@
     </form>
 </div>
 
-<div class="table-wrapper user-table">
-    <div class="table-main">
+<div class="table-wrapper">
+    <div class="table-main user-table">
         <div class="table-header">
             <div class="table-row">
                 <div class="table-sortable">
@@ -108,10 +108,11 @@
     // modal events
 
     document.querySelector("#modal-users").addEventListener("close", () => {
+        document.querySelectorAll("#modal-users input").forEach(x => x.removeAttribute("disabled"));
+
         document.querySelector("#modal-users input[type=submit]").classList.remove("btn-red", "btn-green");
         document.querySelector("#modal-users input[type=submit]").replaceWith(document.querySelector("#modal-users input[type=submit]").cloneNode());
 
-        document.querySelector("#modal-users .message").style.display = "none";
         document.querySelector("#modal-users .message").innerHTML = "";
     });
 

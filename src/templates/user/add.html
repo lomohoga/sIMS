@@ -6,13 +6,13 @@
     <h1 class="main-header">User Addition</h1>
 </div>
 
-<div id="add-table" class="table-wrapper">
-    <div class="table-main inventory-table">
+<div class="table-wrapper">
+    <div class="table-main add-table users">
         <div class="table-header">
-            <div class="table-row add-user-table">
+            <div class="table-row">
                 <div>First Name</div>
                 <div>Last Name</div>
-                <div>Email address</div>
+                <div>Email Address</div>
                 <div>Role</div>
                 <div></div>
             </div>
@@ -20,15 +20,15 @@
         <div class="table-body">
             <div class="table-row" id="add-row">
                 <div>
-                    <button role="button"><i class="bi bi-plus-circle"></i>Add user</button>
+                    <button role="button" autofocus><i class="bi bi-plus-circle"></i>Add user</button>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<div id="add-user-form">
-    <p class="message"></p>
+<div class="form-bottom">
+    <p class="form-msg"></p>
     <form id="submit-form">
         <input type="submit" id="add-btn" value="Add users" name="add-btn" disabled>
     </form>
@@ -38,17 +38,16 @@
     function disableButton () {
         document.querySelector("#add-btn").disabled =
             // Disable if there are no rows in table
-            document.querySelector("#add-table .table-body").childElementCount === 1
+            document.querySelector(".add-table .table-body").childElementCount === 1
             // Disable if at least one row has no item code
-            || Array.from(document.querySelectorAll("#add-table .table-body .table-row:not(#add-row) > :not(:nth-child(4)) input")).some(x => x.value === '')
+            || Array.from(document.querySelectorAll(".add-table .table-body .table-row:not(#add-row) > :not(:nth-child(4)) input")).some(x => x.value === '')
             // Disable if at least one input box is invalid
-            || Array.from(document.querySelectorAll("#add-table input")).some(x => !x.checkValidity());
+            || Array.from(document.querySelectorAll(".add-table input")).some(x => !x.checkValidity());
     }
 
     function addRow () {
         let row = document.createElement("div");
         row.classList.add("table-row");
-        row.classList.add("add-user-table");
 
         let roles = {
             "Custodian": 1,
@@ -59,34 +58,33 @@
             let el = document.createElement("input");
             let wrapper = document.createElement("div");
 
-            if(i === 0 || i === 1){
+            if (i < 2) {
                 el.type = "text";
                 el.maxLength = 30;
+                el.pattern = "^[A-Za-z\\s]+$";
                 wrapper.appendChild(el);
                 row.appendChild(wrapper);
                 continue;
             }
 
-            if(i == 2){
+            if (i === 2) {
                 el.type = "email"
                 el.minLength = 1;
                 el.maxLength = 100;
-                el.pattern = "^\\w+([\\.\\-\\+]?\\w+)*@gmail\\.com$"
-                el.title = "Email address must have a gmail.com domain"
+                el.pattern = "^([0-9a-z]|([0-9a-z][\.\-_\+]{1}[0-9a-z]))+@gmail.com$";
+                wrapper.classList.add("mono");
                 wrapper.appendChild(el);
                 row.appendChild(wrapper);
                 continue;
             }
 
             let sel = document.createElement("select");
-            for(let x in roles){
+            for (let x in roles) {
                 let op = document.createElement("option");
                 op.value = roles[x];
                 op.innerHTML = x;
 
-                if(x === 'Personnel'){
-                    op.selected = 1;
-                }
+                if (x === 'Personnel') op.selected = "";
                 sel.appendChild(op);
             }
 
@@ -94,40 +92,36 @@
             row.appendChild(wrapper);
         }
 
-        let e = document.createElement("div");
-        let b = document.createElement("button");
-        b.type = "button";
-        b.role = "button";
-        b.innerHTML = "<i class='bi bi-dash-circle'></i><i class='bi bi-dash-circle-fill'></i>"
-        b.classList.add("delete-row");
-        e.appendChild(b);
-        row.append(e);
+        let div = document.createElement("div");
+        let btn = document.createElement("button");
+        btn.type = "button";
+        btn.role = "button";
+        btn.innerHTML = "<i class='bi bi-dash-circle'></i><i class='bi bi-dash-circle-fill'></i>"
+        btn.classList.add("delete-row");
+        div.appendChild(btn);
+        row.append(div);
 
-        b.addEventListener("click", () => {
-            document.querySelector("#add-table .table-body").removeChild(b.parentElement.parentElement);
+        btn.addEventListener("click", () => {
+            document.querySelector(".add-table .table-body").removeChild(btn.parentElement.parentElement);
             disableButton();
         });
 
-        document.querySelector("#add-table .table-body").insertBefore(row, document.querySelector("#add-row"));
+        document.querySelector(".add-table .table-body").insertBefore(row, document.querySelector("#add-row"));
         disableButton();
+        row.querySelector("input").focus();
     }
 
     document.querySelector("#submit-form").addEventListener("submit", e => {
         e.preventDefault();
 
-        document.querySelector('#submit-form input[type=submit]').disabled = 1;
-        document.querySelector('#submit-form input[type=submit]').value = 'Adding users...'
+        document.querySelector(".form-bottom input[type=submit]").disabled = true;
+        document.querySelector(".form-bottom .form-msg").classList.remove("error");
+        document.querySelector(".form-bottom .form-msg").innerText = "Please wait\u2026";
 
         let values = [];
 
-        for (let row of Array.from(document.querySelectorAll("#add-table .table-body .table-row:not(#add-row)"))) {
-            let v = [];
-            Array.from(row.children).forEach((x, i) => {
-                if(i !== 4){
-                    v.push(x.firstChild.value);
-                }
-            });
-            values.push(v);
+        for (let row of Array.from(document.querySelectorAll(".add-table .table-body .table-row:not(#add-row)"))) {
+            values.push(Array.prototype.slice.call(row.children, 0, 4).map(x => x.firstChild.value));
         }
 
         fetch("{{ url_for('bp_user.add_users') }}", {
@@ -135,37 +129,31 @@
             "headers": {
                 "Content-Type": "application/json"
             },
-            "body": JSON.stringify({ "values": values })
-        }).then(d => {
+            "body": JSON.stringify({ "values": values.map(x => {
+                return {
+                    "firstName": x[0],
+                    "lastName": x[1],
+                    "email": x[2],
+                    "role": x[3]
+                }
+            }) })
+        }).then(async d => {
             if (d.status === 200) window.location = "{{ url_for('bp_user.show_users') }}";
-            if (d.status === 500){
-                d.json().then(a => {
-                    let p = document.querySelector('#add-user-form p')
-                    p.style.display = 'block'
-                    
-                    if(a["error"] == 1062){
-                        p.innerHTML = a["msg"] + " is already taken."
-                    }
-                    else if(a["error"] == 2003){
-                        p.innerHTML = "Database error. Please try again later."
-                    }
-                    else{
-                        p.innerHTML = "Internal server error. Please try again later."
-                    }
-                });
+            if (d.status === 500) {
+                let j = await d.json();
 
-                document.querySelector('#submit-form input[type=submit]').value = 'Submit' 
+                document.querySelector(".form-bottom .form-msg").classList.add("error");
+                document.querySelector(".form-bottom .form-msg").innerHTML = `<b>ERROR:</b> ${j['error']}`;
+                Array.prototype.filter.call(document.querySelectorAll(".add-table .table-body .table-row:not(#add-row)"), x => x.children[2].firstChild.value === j['email'])[0].classList.add("error");
             }
-        }).catch(() => {
-            let p = document.querySelector('#add-user-form p')
-            p.innerHTML = 'Server unavailable. Please try again later.'
-            p.style.display = 'block'
-
-            document.querySelector('#submit-form input[type=submit]').value = 'Submit' 
         });
     });
 
-    document.querySelector("#add-table").addEventListener("input", disableButton);
+    document.querySelector(".add-table").addEventListener("input", e => {
+        let t = e.target.closest(".error")
+        if (t && e.target.getAttribute("type") === "email") t.classList.remove("error");
+        disableButton();
+    });
 
     document.querySelector("#add-row").addEventListener("click", addRow);
 </script>

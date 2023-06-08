@@ -6,7 +6,7 @@ from src.blueprints.format_data import format_items
 from src.blueprints.auth import login_required
 from src.blueprints.database import connect_db
 from src.blueprints.decode_keyword import decode_keyword, escape
-from src.blueprints.exceptions import NoRowsError
+from src.blueprints.exceptions import DatabaseConnectionError, ItemNotFoundError, ExistingItemError, OngoingRequestItemError, UserDeliveryError
 
 bp_inventory = Blueprint('bp_inventory', __name__, url_prefix = "/inventory")
 
@@ -20,27 +20,28 @@ def inventory ():
 @bp_inventory.route('/search')
 @login_required
 def search_items ():
-    keywords = [] if "keywords" not in request.args else [decode_keyword(x).lower() for x in request.args.get("keywords").split(" ")]
-
-    conditions = []
-    for x in keywords:
-        conditions.append(f"(ItemID LIKE '%{x}%' OR ItemName LIKE '%{x}%' OR ItemDescription LIKE '%{x}%')")
-
-    query = f"SELECT * from stock {'' if len(conditions) == 0 else 'WHERE (' + ' AND '.join(conditions) + ')'} ORDER BY ItemID"
-
     try:
-        cxn = connect_db()
-        db = cxn.cursor()
-
         try:
+            keywords = [] if "keywords" not in request.args else [decode_keyword(x).lower() for x in request.args.get("keywords").split(" ")]
+
+            conditions = []
+            for x in keywords:
+                conditions.append(f"(ItemID LIKE '%{x}%' OR ItemName LIKE '%{x}%' OR ItemDescription LIKE '%{x}%')")
+
+            query = f"SELECT * from stock {'' if len(conditions) == 0 else 'WHERE (' + ' AND '.join(conditions) + ')'} ORDER BY ItemID"
+
+            cxn = connect_db()
+            db = cxn.cursor()
+
             db.execute(query)
             items = db.fetchall()
+        except MySQLError as e:
+            if e.args[0] == 2003: raise DatabaseConnectionError
+
+            current_app.logger.error(e.args[1])
+            return { "error": e.args[1] }, 500
         finally:
             cxn.close()
-    except MySQLError as e:
-        current_app.logger.error(e.args[1])
-        if e.args[0] == 2003: return { "error": "Could not connect to database. Please try reloading the page. "}, 500
-        return { "error": e.args[1] }, 500
     except Exception as e:
         current_app.logger.error(e)
         return { "error": e }, 500
@@ -58,25 +59,29 @@ def add_items ():
             return render_template("inventory/add.html")
 
     if request.method == 'POST':        
-        values = request.get_json()
-
         try:
-            cxn = connect_db()
-            db = cxn.cursor()
             try:
+                values = request.get_json()
+
+                cxn = connect_db()
+                db = cxn.cursor()
+
                 for v in values['values']:
+                    db.execute(f"SELECT * FROM item WHERE ItemID = '{v['ItemID']}'")
+                    if db.fetchone() is not None: raise ExistingItemError(item = v['ItemID'])
+
                     db.execute(f"INSERT INTO item VALUES ('{v['ItemID']}', '{escape(v['ItemName'])}', '{escape(v['ItemDescription'])}', {'NULL' if v['ShelfLife'] is None else v['ShelfLife']}, {v['Price']}, '{v['Unit']}')")
                 cxn.commit()
+            except MySQLError as e:
+                if e.args[0] == 2003: raise DatabaseConnectionError
+
+                current_app.logger.error(e.args[1])
+                return { "error": e.args[1] }, 500
             finally:
                 cxn.close()
-        except MySQLError as e:
-            current_app.logger.error(e.args[1])
-            if e.args[0] == 2003: return { "error": "Could not connect to database. Please try reloading the page. "}, 500
-            if e.args[0] == 1062: return { "error": f"Item ID {v['ItemID']} is already taken.", "item": v['ItemID'] }, 500
-            return { "error": e.args[1] }, 500
         except Exception as e:
             current_app.logger.error(e)
-            return { "error": e }, 500
+            return { "error": str(e) }, 500
         
         return Response(status = 200)
 
@@ -91,33 +96,32 @@ def remove_items ():
             return render_template("inventory/remove.html")
 
     if request.method == "POST":
-        items = request.get_json()["items"]
-
         try:
-            cxn = connect_db()
-            db = cxn.cursor()
-
             try:
+                items = request.get_json()["items"]
+
+                cxn = connect_db()
+                db = cxn.cursor()
+
                 for x in items:
+                    db.execute(f"SELECT * FROM item WHERE ItemID = '{x}'")
+                    if db.fetchone() is None: raise ItemNotFoundError(item = x)
+
                     db.execute(f"DELETE FROM item WHERE ItemID = '{x}'")
-                    db.execute(f"SELECT ROW_COUNT()")
-                    if db.fetchone()[0] == 0: raise NoRowsError(f"{'Some items' if len(items) > 1 else 'Item'} not found in database.")
                 cxn.commit()
             except MySQLError as e:
+                if e.args[0] == 2003: raise DatabaseConnectionError
                 if e.args[0] == 1451:
                     db.execute(f"SELECT COUNT(*) FROM request_item WHERE ItemID = '{x}'")
-                    if db.fetchone()[0] > 1: return { "error": f"Item {x} is currently in several ongoing requests. Please accept / cancel the requests, then try deleting the item again." }, 500
-                    return { "error": f"Item {x} is currently in an ongoing request. Please accept / cancel the request, then try deleting the item again." }, 500
-                else: raise e
+                    raise OngoingRequestItemError(item = x, requests = db.fetchone()[0])
+                
+                current_app.logger.error(e.args[1])
+                return { "error": e.args[1] }, 500
             finally:
                 cxn.close()
-        except MySQLError as e:
-            current_app.logger.error(e.args[1])
-            if e.args[0] == 2003: return { "error": "Could not connect to database. Please try reloading the page. "}, 500
-            return { "error": e.args[1] }, 500
         except Exception as e:
             current_app.logger.error(e)
-            return { "error": e }, 500
+            return { "error": str(e) }, 500
 
         return Response(status = 200)
 
@@ -132,26 +136,32 @@ def update_items ():
             return render_template("inventory/update.html")
 
     if request.method == "POST":
-        values = request.get_json()["values"]
-
         try:
-            cxn = connect_db()
-            db = cxn.cursor()
-
             try:
+                values = request.get_json()["values"]
+
+                cxn = connect_db()
+                db = cxn.cursor()
+
                 for v in values:
+                    db.execute(f"SELECT * FROM item WHERE ItemID = '{v}'")
+                    if db.fetchone() is None: raise ItemNotFoundError(item = values[v]['ItemID'])
+
+                    db.execute(f"SELECT * FROM item WHERE ItemID = '{values[v]['ItemID']}'")
+                    if db.fetchone() is not None: raise ExistingItemError(item = v)
+
                     db.execute(f"UPDATE item SET ItemID = '{values[v]['ItemID']}', ItemName = '{escape(values[v]['ItemName'])}', ItemDescription = '{escape(values[v]['ItemDescription'])}', ShelfLife = {'NULL' if values[v]['ShelfLife'] is None else values[v]['ShelfLife']}, Price = {values[v]['Price']}, Unit = '{values[v]['Unit']}' WHERE ItemID = '{v}'")
                 cxn.commit()
+            except MySQLError as e:
+                if e.args[0] == 2003: raise DatabaseConnectionError
+
+                current_app.logger.error(e.args[1])
+                return { "error": e.args[1] }, 500
             finally:
                 cxn.close()
-        except MySQLError as e:
-            current_app.logger.error(e.args[1])
-            if e.args[0] == 2003: return { "error": "Could not connect to database. Please try reloading the page. "}, 500
-            if e.args[0] in [1062, 1761]: return { "error": f"Item ID {values[v]['ItemID']} is already taken.", "item": values[v]['ItemID'] }, 500
-            return { "error": e.args[1] }, 500
         except Exception as e:
             current_app.logger.error(e)
-            return { "error": e }, 500
+            return { "error": str(e) }, 500
         
         return Response(status = 200)
 
@@ -163,29 +173,32 @@ def request_items ():
         return render_template("inventory/request.html")
 
     if (request.method == "POST"):
-        req = request.get_json()["items"]
-
         try:
-            cxn = connect_db()
-            db = cxn.cursor()
-
             try:
+                req = request.get_json()["items"]
+
+                cxn = connect_db()
+                db = cxn.cursor()
+
                 db.execute(f"INSERT INTO request (RequestedBy) VALUES ('{session['user']['Username']}')")
                 db.execute("SELECT LAST_INSERT_ID()")
-                requestID = int(db.fetchone()[0])
+                requestID = db.fetchone()[0]
 
                 for x in req:
+                    db.execute(f"SELECT * FROM item WHERE ItemID = '{x['ItemID']}'")
+                    if db.fetchone() is None: raise ItemNotFoundError(item = x['ItemID'])
+
                     db.execute(f"INSERT INTO request_item (RequestID, ItemID, RequestQuantity) VALUES ({requestID}, '{x['ItemID']}', {x['RequestQuantity']})")
                 cxn.commit()
+            except MySQLError as e:
+                if e.args[0] == 2003: raise DatabaseConnectionError
+
+                current_app.logger.error(e.args[1])
+                return { "error": e.args[1] }, 500
             finally:
                 cxn.close()
-        except MySQLError as e:
-            current_app.logger.error(e.args[1])
-            if e.args[0] == 2003: return { "error": "Could not connect to database. Please try reloading the page. "}, 500
-            if e.args[0] == 1452: return { "error": f"Item {x['ItemID']} is no longer in the database. Please reload the page to refresh the list of items." }, 500
-            return { "error": e.args[1] }, 500
         except Exception as e:
             current_app.logger.error(e)
-            return { "error": e }, 500
+            return { "error": str(e) }, 500
 
         return Response(status = 200)

@@ -16,202 +16,6 @@ function escapeKeyword (k) {
     return k.replaceAll(/[\u2018\u2019\u201c\u201d]/gu, x => (x === '\u2018' || x === '\u2019') ? '"' : "'").replaceAll(/[:/?#\[\]@!$&'()*+,;=%]/g, x => "%" + x.charCodeAt(0).toString(16).toUpperCase());
 }
 
-// fetches users from database
-async function getUsers (keyword = "") {
-    return fetch(encodeURI(`/users/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`))
-    .then(d => {
-        if(d.status == 200){
-            return d.json().then(j => j["users"]);
-        }
-        else{
-            return -1;
-        }
-    });
-}
-
-// populates user table with users from getUsers()
-async function populateUsers (tbody, keyword = "", type="users") {
-    while (tbody.childElementCount > 3) tbody.removeChild(tbody.lastChild);
-
-    tbody.querySelector(".table-loading").classList.remove("hide");
-    tbody.querySelector(".table-empty").classList.add("hide");
-
-    let users = await getUsers(keyword);
-
-    if(users == -1){
-        tbody.querySelector(".table-error").classList.remove("hide");
-        tbody.querySelector(".table-loading").classList.add("hide");
-        return;
-    }
-
-    let rows = [];
-
-    for (let user of users) {
-        if(user['Role'] === 'Admin'){
-            continue;
-        }
-        
-        let tr = document.createElement("div");
-        tr.classList.add("table-row");
-
-        for (let i of userColumns) {
-            let y = user[i];
-            let td = document.createElement("div");
-            
-            td.innerHTML = y;
-
-            tr.appendChild(td);
-        }
-
-        if(type == "users"){
-            let div = document.createElement("div");
-            let btn = document.createElement("button");
-            btn.type = "button";
-            btn.role = "button";
-
-            if (user['Role'] === 'Custodian') {
-                btn.title = "Demote user";
-                btn.innerText = "Demote";
-                btn.classList.add("red");
-
-                btn.addEventListener("click", () => {
-                    let modal = document.querySelector("#modal-users");
-
-                    modal.showModal();
-                    modal.querySelector("h1").innerText = "Demote user";
-                    modal.querySelector("p").innerHTML = `<span>Are you sure you want to demote user <b>${user['Username']}</b> to Personnel?</span>`;
-                    modal.querySelector("input[type=submit]").value = "Demote user";
-                    modal.querySelector("input[type=submit]").classList.add("btn-red");
-                    modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
-                    modal.querySelector("input[type=submit]").offsetHeight;
-                    modal.querySelector("input[type=submit]").style.transitionDuration = '';
-
-                    modal.querySelector("input[type=submit]").addEventListener("click", e => {
-                        e.preventDefault();
-                        
-                        fetch("./demote", {
-                            "method": "POST",
-                            "headers": {
-                                "Content-Type": "application/json"
-                            },
-                            "body": JSON.stringify({
-                                "Username": user['Username']
-                            })
-                        }).then(d => {
-                            if (d.status === 200) {
-                                modal.close();
-                                populateUsers(tbody, keyword);
-                            }
-
-                            if (d.status === 500){
-                                d.json().then(a => {
-                                    let p = modal.querySelector('.message')
-                                    p.style.display = 'block'
-                                    
-                                    if(a["error"] == 2003){
-                                        p.innerHTML = "Database error. Please try again later."
-                                    }
-                                    else{
-                                        p.innerHTML = "Internal server error. Please try again later."
-                                    }
-                                });
-                            }
-                        })
-                        .catch(() => {
-                            let p = modal.querySelector('.message')
-                            p.innerHTML = 'Server unavailable. Please try again later.'
-                            p.style.display = 'block'
-                        });
-                    });
-                });
-            }
-
-            if (user['Role'] === 'Personnel') {
-                btn.title = "Promote user";
-                btn.innerText = "Promote";
-                btn.classList.add("green");
-
-                btn.addEventListener("click", () => {
-                    let modal = document.querySelector("#modal-users");
-
-                    modal.showModal();
-                    modal.querySelector("h1").innerText = "Promote user";
-                    modal.querySelector("p").innerHTML = `<span>Are you sure you want to promote user <b>${user['Username']}</b> to Custodian?</span>`;
-                    modal.querySelector("input[type=submit]").value = "Promote user";
-                    modal.querySelector("input[type=submit]").classList.add("btn-green");
-                    modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
-                    modal.querySelector("input[type=submit]").offsetHeight;
-                    modal.querySelector("input[type=submit]").style.transitionDuration = '';
-
-                    modal.querySelector("input[type=submit]").addEventListener("click", e => {
-                        e.preventDefault();
-                        
-                        fetch("./promote", {
-                            "method": "POST",
-                            "headers": {
-                                "Content-Type": "application/json"
-                            },
-                            "body": JSON.stringify({
-                                "Username": user['Username']
-                            })
-                        }).then(d => {
-                            if (d.status === 200) {
-                                modal.close();
-                                populateUsers(tbody, keyword);
-                            }
-
-                            if (d.status === 500){
-                                d.json().then(a => {
-                                    let p = modal.querySelector('.message')
-                                    p.style.display = 'block'
-                                    
-                                    if(a["error"] == 2003){
-                                        p.innerHTML = "Database error. Please try again later."
-                                    }
-                                    else{
-                                        p.innerHTML = "Internal server error. Please try again later."
-                                    }
-                                });
-                            }
-                        })
-                        .catch(() => {
-                            let p = modal.querySelector('.message')
-                            p.innerHTML = 'Server unavailable. Please try again later.'
-                            p.style.display = 'block'
-                        });
-                    });
-                });
-            }
-
-            div.appendChild(btn)
-            tr.appendChild(div);
-
-            tbody.appendChild(tr);
-            rows.push(tr);
-        }
-
-        if(type == "user-search"){
-            let e = document.createElement("div");
-            let b = document.createElement("button");
-            b.type = "button";
-            b.role = "button";
-            b.innerHTML = "<i class='bi bi-plus-circle'></i><i class='bi bi-plus-circle-fill'></i>";
-            b.classList.add("select-row");
-            e.appendChild(b);
-            tr.appendChild(e);
-            tbody.appendChild(tr);
-        }
-    }
-
-    tbody.querySelector(".table-loading").classList.add("hide");
-    if (users.length > 0) tbody.querySelector(".table-empty").classList.add("hide");
-    else tbody.querySelector(".table-empty").classList.remove("hide");
-
-    document.dispatchEvent(new Event("tablerefresh"));
-
-    return rows;
-}
-
 // fetches items from database
 async function getItems (keyword = "") {
     return fetch(encodeURI(`/inventory/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`))
@@ -893,6 +697,162 @@ async function populateDeliveries (tbody, keyword = "") {
     else tbody.querySelector(".table-empty").classList.remove("hide");
 
     document.dispatchEvent(new Event("tablerefresh"));
+}
+
+// fetches users from database
+async function getUsers (keyword = "") {
+    return fetch(encodeURI(`/users/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`)).then(x => x.json());
+}
+
+// populates user table with users from getUsers()
+async function populateUsers (tbody, keyword = "", { buttons = false } = {}) {
+    while (tbody.childElementCount > 3) tbody.removeChild(tbody.lastChild);
+
+    tbody.querySelector(".table-loading").classList.remove("hide");
+    tbody.querySelector(".table-empty").classList.add("hide");
+
+    let response = await getUsers(keyword);
+
+    if ("error" in response) {
+        tbody.querySelector(".table-error").classList.remove("hide");
+        tbody.querySelector(".table-loading").classList.add("hide");
+        return;
+    }
+
+    let users = response['users']
+    let rows = [];
+
+    for (let user of users) {
+        if (user['Role'] === 'Admin') continue;
+        
+        let tr = document.createElement("div");
+        tr.classList.add("table-row");
+
+        for (let i of userColumns) {
+            let y = user[i];
+            let td = document.createElement("div");
+            
+            td.innerHTML = y;
+
+            tr.appendChild(td);
+        }
+
+        let div = document.createElement("div");
+        let btn = document.createElement("button");
+        btn.role = "button";
+        btn.type = "button";
+
+        if (buttons) {
+            let div = document.createElement("div");
+            let btn = document.createElement("button");
+            btn.type = "button";
+            btn.role = "button";
+            btn.innerHTML = "<i class='bi bi-plus-circle'></i><i class='bi bi-plus-circle-fill'></i>";
+            btn.classList.add("select-row");
+            div.appendChild(btn);
+            tr.appendChild(div);
+        } else {
+            if (user['Role'] === 'Custodian') {
+                btn.innerText = "Demote";
+                btn.classList.add("btn-red");
+                btn.addEventListener("click", e => {
+                    e.preventDefault();
+
+                    let modal = document.querySelector("#modal-users");
+                    modal.showModal();
+                    modal.querySelector("h1").innerText = "Demote user";
+                    modal.querySelector("p").innerHTML = `Are you sure you want to demote user <b>${user['Username']}</b> to personnel?`;
+                    modal.querySelector("input[type=submit]").value = "Demote user";
+                    modal.querySelector("input[type=submit]").classList.add("btn-red");
+                    modal.querySelector("input[type=submit]").style.transitionDuration = "0s";
+                    modal.querySelector("input[type=submit]").clientHeight;
+                    modal.querySelector("input[type=submit]").style.transitionDuration = "";
+
+                    modal.querySelector("input[type=submit").addEventListener("click", f => {
+                        f.preventDefault();
+
+                        modal.querySelectorAll("form input").forEach(x => x.disabled = true);
+                        modal.querySelector(".message").classList.remove("error");
+                        modal.querySelector(".message").innerHTML = "Please wait\u2026";
+
+                        fetch("./demote", {
+                            "method": "POST",
+                            "headers": {
+                                "Content-Type": "application/json"
+                            },
+                            "body": JSON.stringify({ "username": user['Username'] })
+                        })
+                        .then(async res => {
+                            if (res.status === 200) {
+                                modal.close();
+                                populateUsers(tbody);
+                                document.querySelector("#search").reset();
+                            } else if (res.status === 500) {
+                                modal.querySelector(".message").classList.add("error");
+                                modal.querySelector(".message").innerHTML = `<b>ERROR:</b> ${(await res.json())['error']}`;
+                            }
+                        });
+                    });
+                });
+            } else {
+                btn.innerText = "Promote";
+                btn.classList.add("btn-green");
+                btn.addEventListener("click", e => {
+                    e.preventDefault();
+
+                    let modal = document.querySelector("#modal-users");
+                    modal.showModal();
+                    modal.querySelector("h1").innerText = "Promote user";
+                    modal.querySelector("p").innerHTML = `Are you sure you want to promote user <b>${user['Username']}</b> to custodian?`;
+                    modal.querySelector("input[type=submit]").value = "Promote user";
+                    modal.querySelector("input[type=submit]").classList.add("btn-green");
+                    modal.querySelector("input[type=submit]").style.transitionDuration = "0s";
+                    modal.querySelector("input[type=submit]").clientHeight;
+                    modal.querySelector("input[type=submit]").style.transitionDuration = "";
+
+                    modal.querySelector("input[type=submit").addEventListener("click", f => {
+                        f.preventDefault();
+
+                        modal.querySelectorAll("form input").forEach(x => x.disabled = true);
+                        modal.querySelector(".message").classList.remove("error");
+                        modal.querySelector(".message").innerHTML = "Please wait\u2026";
+
+                        fetch("./promote", {
+                            "method": "POST",
+                            "headers": {
+                                "Content-Type": "application/json"
+                            },
+                            "body": JSON.stringify({ "username": user['Username'] })
+                        })
+                        .then(async res => {
+                            if (res.status === 200) {
+                                modal.close();
+                                populateUsers(tbody);
+                                document.querySelector("#search").reset();
+                            } else if (res.status === 500) {
+                                modal.querySelector(".message").classList.add("error");
+                                modal.querySelector(".message").innerHTML = `<b>ERROR:</b> ${(await res.json())['error']}`;
+                            }
+                        });
+                    });
+                });
+            }
+
+            div.appendChild(btn)        
+            tr.appendChild(div);
+        }
+
+        tbody.appendChild(tr);
+        rows.push(tr);
+    }
+
+    tbody.querySelector(".table-loading").classList.add("hide");
+    if (users.length > 0) tbody.querySelector(".table-empty").classList.add("hide");
+    else tbody.querySelector(".table-empty").classList.remove("hide");
+
+    document.dispatchEvent(new Event("tablerefresh"));
+
+    return rows;
 }
 
 // sorts table based on column

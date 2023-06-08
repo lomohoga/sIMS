@@ -72,12 +72,20 @@
     grid-template-columns: 0.625fr 0.75fr 2fr 1fr 0.75fr 0.5fr 3rem;
 }
 
+.add-table.users .table-row {
+    grid-template-columns: 0.5fr 0.5fr 1fr 0.5fr 3rem;
+}
+
 .search-table .table-row {
     grid-template-columns: 0.625fr 0.75fr 2fr 0.5fr 0.75fr 0.5fr 0.5fr 3rem;
 }
 
 .search-table.update .table-row {
     grid-template-columns: 0.625fr 0.75fr 2fr 0.5fr 0.75fr 0.5fr 3rem;
+}
+
+.search-table.users .table-row {
+    grid-template-columns: 0.5fr 0.5fr 0.5fr 0.75fr 0.25fr 3rem;
 }
 
 .selection-table.remove .table-row {
@@ -94,6 +102,10 @@
 
 .selection-table.delivery .table-row {
     grid-template-columns: 0.625fr 0.75fr 2fr 0.5fr 0.75fr 0.5fr 0.75fr 0.5fr 3rem;
+}
+
+.selection-table.users .table-row {
+    grid-template-columns: 0.5fr 0.5fr 0.5fr 0.75fr 0.25fr 3rem;
 }
 
 .delivery-table .table-row {
@@ -113,5 +125,5 @@
 }
 
 .user-table .table-row {
-    grid-template-columns: 0.5fr 0.75fr 0.75fr 0.75fr 0.5fr 0.25fr;
+    grid-template-columns: 0.5fr 0.5fr 0.5fr 0.75fr 0.25fr 0.25fr;
 }
