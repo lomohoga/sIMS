@@ -1,6 +1,6 @@
 class DatabaseConnectionError (Exception):
     def __init__ (self, *args):
-        super().__init__(args)
+        super().__init__(*args)
 
     def __str__ (self):
         return "Could not connect to the database. Please make sure that the MySQL service is running, then try again."
@@ -10,7 +10,7 @@ class DatabaseConnectionError (Exception):
 # exception for items not in database
 class ItemNotFoundError (Exception):
     def __init__ (self, *args, **kwargs):
-        super().__init__(args)
+        super().__init__(*args)
         self.args = (kwargs['item'],)
 
     def __str__ (self) -> str:
@@ -19,7 +19,7 @@ class ItemNotFoundError (Exception):
 # exception thrown when trying to add item with already existing item ID
 class ExistingItemError (Exception):
     def __init__ (self, *args, **kwargs):
-        super().__init__(args)
+        super().__init__(*args)
         self.args = (kwargs['item'],)
 
     def __str__ (self):
@@ -28,7 +28,7 @@ class ExistingItemError (Exception):
 # exception thrown when trying to remove item that appears in an ongoing request
 class OngoingRequestItemError (Exception):
     def __init__ (self, *args, **kwargs):
-        super().__init__(args)
+        super().__init__(*args)
         self.args = (kwargs['item'], kwargs['requests'])
 
     def __str__ (self):
@@ -39,7 +39,7 @@ class OngoingRequestItemError (Exception):
 # exception for requests not in database
 class RequestNotFoundError (Exception):
     def __init__ (self, *args, **kwargs):
-        super().__init__(args)
+        super().__init__(*args)
         self.args = (kwargs['request'],)
 
     def __str__ (self) -> str:
@@ -48,7 +48,7 @@ class RequestNotFoundError (Exception):
 # exception thrown when trying to update request status against correct status flow
 class RequestStatusError (Exception):
     def __init__ (self, *args, **kwargs):
-        super().__init__(args)
+        super().__init__(*args)
         self.args = (kwargs['from_status'], kwargs['to_status'])
 
     def __str__ (self):
@@ -84,7 +84,7 @@ class RequestStatusError (Exception):
 # exception thrown when trying to issue items in a request that is not in the approved stage
 class IllegalIssueError (Exception):
     def __init__ (self, *args, **kwargs):
-        super().__init__(args)
+        super().__init__(*args)
         self.args = (kwargs['request'],)
 
     def __str__ (self):
@@ -93,7 +93,7 @@ class IllegalIssueError (Exception):
 # exception thrown when trying to issue a request with unissued items
 class IncompleteIssueError (Exception):
     def __init__ (self, *args, **kwargs):
-        super().__init__(args)
+        super().__init__(*args)
         self.args = (kwargs['request'],)
 
     def __str__ (self):
@@ -102,7 +102,7 @@ class IncompleteIssueError (Exception):
 # exception thrown when trying to issue item that has already been issued
 class ItemIssuedError (Exception):
     def __init__ (self, *args, **kwargs):
-        super().__init__(args)
+        super().__init__(*args)
         self.args = (kwargs['item'], kwargs['request'])
 
     def __str__ (self):
@@ -111,7 +111,7 @@ class ItemIssuedError (Exception):
 # exception thrown when item is not found in request
 class ItemNotInRequestError (Exception):
     def __init__ (self, *args, **kwargs):
-        super().__init__(args)
+        super().__init__(*args)
         self.args = (kwargs['item'], kwargs['request'])
 
     def __str__ (self):
@@ -122,16 +122,24 @@ class ItemNotInRequestError (Exception):
 # exception for users not in database
 class UserNotFoundError (Exception):
     def __init__ (self, *args, **kwargs):
-        super().__init__(args)
+        super().__init__(*args)
         self.args = (kwargs['username'],)
 
     def __str__ (self) -> str:
         return f"User {self.args[0]} was not found in the database."
 
+# exception thrown when trying to perform actions with an account that was removed while performing said action
+class SelfNotFoundError (UserNotFoundError):
+    def __init__ (self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def __str__ (self):
+        return "You may not perform this action since your account is no longer registered in the database."
+
 # exception for emails not registered in database
 class EmailNotFoundError (Exception):
     def __init__ (self, *args, **kwargs):
-        super().__init__(args)
+        super().__init__(*args, **kwargs)
         self.args = (kwargs['email'],)
 
     def __str__ (self) -> str:
@@ -146,6 +154,15 @@ class UserRoleError (Exception):
     def __str__ (self):
         if self.args[1] == 0: return "Cannot promote or demote the administrator."
         return f"Cannot {'demote' if self.args[1] == 2 else 'promote'} user {self.args[0]}; they are already {'personnel' if self.args[1] == 2 else 'a custodian'}."
+
+# exception thrown when trying to perform actions with an account whose role was updated while performing said action
+class SelfRoleError (UserRoleError):
+    def __init__ (self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def __str__ (self):
+        if self.args[1] == 1: return "You may not perform this action since your account was recently promoted to custodian."
+        if self.args[1] == 2: return "You may not perform this action since your account was recently demoted to personnel."
 
 # exception thrown when email is already registered
 class ExistingEmailError (Exception):
@@ -178,7 +195,7 @@ class IncorrectPasswordError (Exception):
 # exception thrown when password reset code has expire
 class ExpiredCodeError (Exception):
     def __init__ (self, *args):
-        super().__init__(args)
+        super().__init__(*args)
 
     def __str__ ():
         return "The code entered is correct, but has expired."
@@ -186,7 +203,7 @@ class ExpiredCodeError (Exception):
 # exception thrown when password reset code is incorrect
 class IncorrectCodeError (Exception):
     def __init__ (self, *args):
-        super().__init__(args)
+        super().__init__(*args)
 
     def __str__ ():
         return "The code entered is incorrect."

@@ -7,7 +7,7 @@ from src.blueprints.database import connect_db
 from src.blueprints.decode_keyword import decode_keyword
 from src.blueprints.format_data import format_requests
 from src.blueprints.auth import login_required
-from src.blueprints.exceptions import RequestNotFoundError, RequestStatusError, ItemIssuedError, ItemNotInRequestError, DatabaseConnectionError, IllegalIssueError, IncompleteIssueError
+from src.blueprints.exceptions import RequestNotFoundError, RequestStatusError, ItemIssuedError, ItemNotInRequestError, DatabaseConnectionError, IllegalIssueError, IncompleteIssueError, SelfRoleError, SelfNotFoundError
 
 locale.setlocale(locale.LC_ALL, 'en_PH.utf8')
 bp_request = Blueprint("bp_request", __name__, url_prefix = "/requests")
@@ -153,6 +153,11 @@ def receive_request ():
 
             cxn = connect_db()
             db = cxn.cursor()
+
+            db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
+            f = db.fetchone()
+            if f is None: raise SelfNotFoundError(username = session['user']['Username'])
+            if f[0] == 1: raise SelfRoleError(username = session['user']['Username'], role = f[0])
         
             db.execute(f"SELECT StatusID FROM request WHERE RequestID = {request}")
             f = db.fetchone()
@@ -184,6 +189,11 @@ def issue_item ():
 
             cxn = connect_db()
             db = cxn.cursor()
+
+            db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
+            f = db.fetchone()
+            if f is None: raise SelfNotFoundError(username = session['user']['Username'])
+            if f[0] == 2: raise SelfRoleError(username = session['user']['Username'], role = f[0])
         
             db.execute(f"SELECT StatusID FROM request WHERE RequestID = {body['RequestID']}")
             f = db.fetchone()
@@ -220,6 +230,11 @@ def issue_request ():
 
             cxn = connect_db()
             db = cxn.cursor()
+
+            db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
+            f = db.fetchone()
+            if f is None: raise SelfNotFoundError(username = session['user']['Username'])
+            if f[0] == 2: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
             db.execute(f"SELECT StatusID FROM request WHERE RequestID = {request}")
             f = db.fetchone()

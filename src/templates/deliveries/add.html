@@ -87,8 +87,8 @@
     </div>
 </div>
 
-<div id="deliveries-bottom">
-    <span id="errmsg"></span>
+<div class="form-bottom">
+    <span class="form-msg"></span>
     <form id="submit-form">
         <input type="submit" value="Log deliveries" name="update-btn" disabled>
     </form>
@@ -149,13 +149,7 @@
     });
 
     document.querySelector(".selection-table").addEventListener("input", enableSubmit);
-
-    window.addEventListener("load", async () => {
-        for (let row of await populateItems(document.querySelector(".search-table .table-body"), "", { stock: false, buttons: true })) {
-            row.querySelector(".select-row").addEventListener("click", () => selectItem(row));
-        }
-    });
-
+    
     document.addEventListener("tablerefresh", () => {
         enableSubmit();
 
@@ -170,6 +164,9 @@
     document.querySelector("#submit-form").addEventListener("submit", e => {
         e.preventDefault();
 
+        document.querySelector(".form-bottom .form-msg").classList.remove("error");
+        document.querySelector(".form-bottom .form-msg").innerText = "";
+
         let values = [];
 
         for (let row of Array.from(document.querySelectorAll(".selection-table .table-body .table-row"))) {
@@ -179,7 +176,7 @@
                 "ItemID": children[0].innerText,
                 "DeliveryDate": children[6].firstChild.value,
                 "DeliveryQuantity": +children[7].firstChild.value,
-            })
+            });
         }
         
         fetch("{{ url_for('bp_delivery.add_deliveries') }}", {
@@ -191,20 +188,18 @@
         }).then(async d => {
             if (d.status === 200) window.location = "{{ url_for('bp_delivery.deliveries') }}";
             if (d.status === 500) {
-                let response = await d.json();
-                let errorCode = response["error"];
-                if(errorCode == 2003){
-                    document.querySelector("#errmsg").innerHTML = "Database error. Please try again later.";
-                }
-                else{
-                    document.querySelector("#errmsg").innerHTML = "Internal server error. Please try again later.";
-                }    
+                document.querySelector(".form-bottom .form-msg").classList.add("error");
+                document.querySelector(".form-bottom .form-msg").innerHTML = `<b>ERROR:</b> ${(await d.json())['error']}`;
+
             }
-        })
-        .catch(() => {
-            document.querySelector("#errmsg").innerHTML = "Server unavailable. Please try again later.";
         });
     })
+
+    window.addEventListener("load", async () => {
+        for (let row of await populateItems(document.querySelector(".search-table .table-body"), "", { stock: false, buttons: true })) {
+            row.querySelector(".select-row").addEventListener("click", () => selectItem(row));
+        }
+    });
 </script>
 
 {% endblock %}

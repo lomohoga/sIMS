@@ -6,7 +6,7 @@ from src.blueprints.format_data import format_items
 from src.blueprints.auth import login_required
 from src.blueprints.database import connect_db
 from src.blueprints.decode_keyword import decode_keyword, escape
-from src.blueprints.exceptions import DatabaseConnectionError, ItemNotFoundError, ExistingItemError, OngoingRequestItemError, UserDeliveryError
+from src.blueprints.exceptions import DatabaseConnectionError, ItemNotFoundError, ExistingItemError, OngoingRequestItemError, SelfNotFoundError, SelfRoleError
 
 bp_inventory = Blueprint('bp_inventory', __name__, url_prefix = "/inventory")
 
@@ -66,6 +66,11 @@ def add_items ():
                 cxn = connect_db()
                 db = cxn.cursor()
 
+                db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
+                f = db.fetchone()
+                if f is None: raise SelfNotFoundError(username = session['user']['Username'])
+                if f[0] == 2: raise SelfRoleError(username = session['user']['Username'], role = f[0])
+
                 for v in values['values']:
                     db.execute(f"SELECT * FROM item WHERE ItemID = '{v['ItemID']}'")
                     if db.fetchone() is not None: raise ExistingItemError(item = v['ItemID'])
@@ -102,6 +107,11 @@ def remove_items ():
 
                 cxn = connect_db()
                 db = cxn.cursor()
+
+                db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
+                f = db.fetchone()
+                if f is None: raise SelfNotFoundError(username = session['user']['Username'])
+                if f[0] == 2: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
                 for x in items:
                     db.execute(f"SELECT * FROM item WHERE ItemID = '{x}'")
@@ -143,6 +153,11 @@ def update_items ():
                 cxn = connect_db()
                 db = cxn.cursor()
 
+                db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
+                f = db.fetchone()
+                if f is None: raise SelfNotFoundError(username = session['user']['Username'])
+                if f[0] == 2: raise SelfRoleError(username = session['user']['Username'], role = f[0])
+
                 for v in values:
                     db.execute(f"SELECT * FROM item WHERE ItemID = '{v}'")
                     if db.fetchone() is None: raise ItemNotFoundError(item = values[v]['ItemID'])
@@ -179,6 +194,11 @@ def request_items ():
 
                 cxn = connect_db()
                 db = cxn.cursor()
+
+                db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
+                f = db.fetchone()
+                if f is None: raise SelfNotFoundError(username = session['user']['Username'])
+                if f[0] == 1: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
                 db.execute(f"INSERT INTO request (RequestedBy) VALUES ('{session['user']['Username']}')")
                 db.execute("SELECT LAST_INSERT_ID()")
