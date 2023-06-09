@@ -71,7 +71,7 @@ def add_deliveries ():
                 db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
                 f = db.fetchone()
                 if f is None: raise SelfNotFoundError(username = session['user']['Username'])
-                if f[0] == 1: raise SelfRoleError(username = session['user']['Username'], role = f[0])
+                if f[0] == 2 and f[0] != session['user']['RoleID']: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
                 for v in values['values']:
                     db.execute(f"SELECT * FROM item WHERE ItemID = '{v['ItemID']}'")

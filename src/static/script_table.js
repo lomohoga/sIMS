@@ -142,7 +142,7 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                 let td = document.createElement("div");
                 if (k === 'ItemID') td.classList.add("mono");
                 if (k === 'ItemDescription') td.classList.add("left");
-                if (k === 'AvailableStock' && +j['RequestQuantity'] > +j[k]) td.classList.add("red");
+                if (k === 'AvailableStock' && +j['RequestQuantity'] > +j[k] && !["Completed", "Cancelled", "Denied"].includes(req['Status'])) td.classList.add("red");
                 td.innerText = j[k];
                 
                 tr.appendChild(td)
