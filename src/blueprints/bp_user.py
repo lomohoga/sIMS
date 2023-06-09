@@ -72,6 +72,14 @@ def generate_userID (first, last, cxn):
 
     return userID
 
+# generate password for new users
+def generate_password ():
+    a = ["Red", "Green", "Blue", "Pink", "Brown", "White", "Black", "Aqua", "Peach", "Gray"]
+    b = ["Dog", "Cat", "Crab", "Horse", "Bird", "Whale", "Goat", "Ant", "Worm", "Eagle"]
+    c = str(randbelow(100)).rjust(2, "0")
+
+    return a[randbelow(10)] + b[randbelow(10)] + c
+
 ### ROUTES ###
 
 bp_user = Blueprint("bp_user", __name__, url_prefix = "/users")
@@ -90,7 +98,6 @@ sender_address = 'iamjhin01@gmail.com'
 sender_pass = 'qenmyutlantkdgap'
 
 # route for adding users
-# password for new users is 'ilovesims'
 @bp_user.route('/add', methods = ["GET", "POST"])
 @login_required
 def add_users ():
@@ -110,20 +117,23 @@ def add_users ():
                 cxn = connect_db()
                 db = cxn.cursor()
                 mail_session = start_email_session()
-                default = generateHash('ilovesims')
 
                 users = {}
+                passwords = {}
 
                 for v in values:
+                    password = generate_password()
+
                     db.execute(f"SELECT * FROM user WHERE Email = '{v['email']}'")
                     if db.fetchone() is not None: raise ExistingEmailError(email = v['email'])
 
                     userID = generate_userID(v['firstName'], v['lastName'], cxn)
-                    db.execute(f"INSERT INTO user VALUES ('{userID}', '{default}', '{v['firstName']}', '{v['lastName']}', '{v['email']}', {v['role']}, 0, 0)")
+                    db.execute(f"INSERT INTO user VALUES ('{userID}', '{generateHash(password)}', '{v['firstName']}', '{v['lastName']}', '{v['email']}', {v['role']}, 0, 0)")
                     users[v['email']] = userID
+                    passwords[v['email']] = password
                 cxn.commit()
 
-                for u in users: send_email(mail_session, "add", u, username = users[u], password = 'ilovesims')
+                for u in users: send_email(mail_session, "add", u, username = users[u], password = passwords[u])
             except MySQLError as e:
                 if e.args[0] == 3819: raise InvalidEmailError
                 if e.args[0] == 2003: raise DatabaseConnectionError
