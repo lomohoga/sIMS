@@ -137,7 +137,7 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
 
         for (let j of req["Items"]) {
             for (let k of requestColumns.slice(4)) {
-                if (k === 'RequestedBy' && !custodian) continue;
+                if (k === 'RequestedBy' && privileges === 2) continue;
 
                 let td = document.createElement("div");
                 if (k === 'ItemID') td.classList.add("mono");
@@ -153,10 +153,11 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
 
                 if (j['QuantityIssued'] === '\u2014') {
                         let btn = document.createElement("button");
+                        btn.disabled = +j['AvailableStock'] === 0;
                         btn.classList.add("issue");
                         btn.type = "button";
                         btn.role = "button";
-                        btn.title = "Issue item";
+                        btn.title = btn.disabled ? "Cannot issue item" : "Issue item";
                         btn.innerHTML = "<i class='bi bi-box-seam'></i>";
 
                         btn.addEventListener("click", () => {
