@@ -51,7 +51,7 @@ def send_email (session, type, recipient, **kwargs):
         msg.set_content(f"Your 4-digit code is {kwargs['code']}.")
     
     text = msg.as_string()
-    # session.sendmail(sender_address, recipient, text)
+    session.sendmail(sender_address, recipient, text)
 
 # generate username for new users
 def generate_userID (first, last, cxn):
@@ -72,6 +72,14 @@ def generate_userID (first, last, cxn):
 
     return userID
 
+# generate password for new users
+def generate_password ():
+    a = ["Red", "Green", "Blue", "Pink", "Brown", "White", "Black", "Aqua", "Peach", "Gray"]
+    b = ["Dog", "Cat", "Crab", "Horse", "Bird", "Whale", "Goat", "Ant", "Worm", "Eagle"]
+    c = str(randbelow(100)).rjust(2, "0")
+
+    return a[randbelow(10)] + b[randbelow(10)] + c
+
 ### ROUTES ###
 
 bp_user = Blueprint("bp_user", __name__, url_prefix = "/users")
@@ -90,7 +98,6 @@ sender_address = 'iamjhin01@gmail.com'
 sender_pass = 'qenmyutlantkdgap'
 
 # route for adding users
-# password for new users is 'ilovesims'
 @bp_user.route('/add', methods = ["GET", "POST"])
 @login_required
 def add_users ():
@@ -102,26 +109,31 @@ def add_users ():
 
     if request.method == 'POST':
         try:
+            cxn = None
+            mail_session = None
             try:
                 values = request.get_json()["values"]
 
                 cxn = connect_db()
                 db = cxn.cursor()
                 mail_session = start_email_session()
-                default = generateHash('ilovesims')
 
                 users = {}
+                passwords = {}
 
                 for v in values:
+                    password = generate_password()
+
                     db.execute(f"SELECT * FROM user WHERE Email = '{v['email']}'")
                     if db.fetchone() is not None: raise ExistingEmailError(email = v['email'])
 
                     userID = generate_userID(v['firstName'], v['lastName'], cxn)
-                    db.execute(f"INSERT INTO user VALUES ('{userID}', '{default}', '{v['firstName']}', '{v['lastName']}', '{v['email']}', {v['role']}, 0, 0)")
+                    db.execute(f"INSERT INTO user VALUES ('{userID}', '{generateHash(password)}', '{v['firstName']}', '{v['lastName']}', '{v['email']}', {v['role']}, 0, 0)")
                     users[v['email']] = userID
+                    passwords[v['email']] = password
                 cxn.commit()
 
-                for u in users: send_email(mail_session, "add", u, username = users[u], password = 'ilovesims')
+                for u in users: send_email(mail_session, "add", u, username = users[u], password = passwords[u])
             except MySQLError as e:
                 if e.args[0] == 3819: raise InvalidEmailError
                 if e.args[0] == 2003: raise DatabaseConnectionError
@@ -129,8 +141,8 @@ def add_users ():
                 current_app.logger.error(e.args[1])
                 return { "error": e.args[1] }, 500
             finally:
-                cxn.close()
-                mail_session.quit()
+                if cxn is not None: cxn.close()
+                if mail_session is not None: mail_session.quit()
         except ExistingEmailError as e:
             current_app.logger.error(e)
             return { "error": str(e), "email": e.args[0] }, 500
@@ -152,6 +164,8 @@ def remove_users ():
 
     if request.method == "POST":
         try:
+            cxn = None
+            mail_session = None
             try:
                 users = request.get_json()["users"]
 
@@ -178,8 +192,8 @@ def remove_users ():
                 current_app.logger.error(e.args[1])
                 return { "error": e.args[1] }, 500
             finally:
-                cxn.close()
-                mail_session.quit()
+                if cxn is not None: cxn.close()
+                if mail_session is not None: mail_session.quit()
         except Exception as e:
             current_app.logger.error(e)
             return { "error": str(e) }, 500
@@ -191,6 +205,8 @@ def remove_users ():
 @login_required
 def promote_user ():
     try:
+        cxn = None
+        mail_session = None
         try:
             username = request.get_json()["username"]
 
@@ -217,8 +233,8 @@ def promote_user ():
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
-            mail_session.quit()
+            if cxn is not None: cxn.close()
+            if mail_session is not None: mail_session.quit()
     except Exception as e:
         current_app.logger.error(e)
         return { "error": str(e) }, 500
@@ -230,6 +246,8 @@ def promote_user ():
 @login_required
 def demote_user ():
     try:
+        cxn = None
+        mail_session = None
         try:
             username = request.get_json()["username"]
         
@@ -256,8 +274,8 @@ def demote_user ():
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
-            mail_session.quit()
+            if cxn is not None: cxn.close()
+            if mail_session is not None: mail_session.quit()
     except Exception as e:
         current_app.logger.error(e)
         return { "error": str(e) }, 500
@@ -277,6 +295,7 @@ def search_users ():
     query = f"SELECT Username, FirstName, LastName, Email, RoleName as Role FROM user LEFT JOIN role USING (RoleID) {'' if len(conditions) == 0 else 'WHERE (' + ' AND '.join(conditions) + ')'} ORDER BY Username"
     
     try:
+        cxn = None
         try:
             cxn = connect_db()
             db = cxn.cursor()
@@ -289,7 +308,7 @@ def search_users ():
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
+            if cxn is not None: cxn.close()
     except Exception as e:
         current_app.logger.error(e)
         return { "error": str(e) }, 500
@@ -308,9 +327,10 @@ def search_users ():
 @bp_user.route('/check_email', methods = ["POST"])
 def check_email ():
     try:
-        email = request.get_json()["email"]
-
+        cxn = None
         try:
+            email = request.get_json()["email"]
+
             cxn = connect_db()
             db = cxn.cursor()
 
@@ -324,7 +344,7 @@ def check_email ():
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
+            if cxn is not None: cxn.close()
     except Exception as e:
         current_app.logger.error(e)
         return { "error": str(e) }, 500
@@ -335,10 +355,12 @@ def check_email ():
 @bp_user.route('/generate_code', methods = ["POST"])
 def generate_code (email = ''):
     try:
-        if (email == ''): email = request.get_json()["email"]
-        code_key = randbelow(9000) + 1000
-
+        cxn = None
+        mail_session = None
         try:
+            if (email == ''): email = request.get_json()["email"]
+            code_key = randbelow(9000) + 1000
+
             cxn = connect_db()
             db = cxn.cursor()
 
@@ -350,17 +372,17 @@ def generate_code (email = ''):
 
             mail_session = start_email_session()
             send_email(mail_session, "code", email, code = code_key)
-            mail_session.quit()
         except MySQLError as e:
             if e.args[0] == 2003: raise DatabaseConnectionError
 
             current_app.logger.error(e.args[1])
             return { "error": e.args[0] }, 500
+        finally:
+            if cxn is not None: cxn.close()
+            if mail_session is not None: mail_session.quit()
     except Exception as e:
         current_app.logger.error(e)
         return { "error": str(e) }, 500
-    finally:
-        cxn.close()
 
     return Response(status = 200)
 
@@ -368,10 +390,11 @@ def generate_code (email = ''):
 @bp_user.route('/verify_code', methods = ["POST"])
 def check_code ():
     try:
-        code = request.get_json()["code"]
-        email = request.get_json()["email"]
-
+        cxn = None
         try:
+            code = request.get_json()["code"]
+            email = request.get_json()["email"]
+
             cxn = connect_db()
             db = cxn.cursor()
 
@@ -387,7 +410,7 @@ def check_code ():
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
+            if cxn is not None: cxn.close()
     except Exception as e:
         current_app.logger.error(e)
         return { "error": str(e) }, 500
@@ -398,14 +421,16 @@ def check_code ():
 @bp_user.route('/forgot_password', methods = ["POST"])
 def forgot_password ():
     try:
-        r = request.get_json()
-        email, password = r['email'], r['new-password']
-
-        cxn = connect_db()
-        db = cxn.cursor()
-        mail_session = start_email_session()
-
+        cxn = None
+        mail_session = None
         try:
+            r = request.get_json()
+            email, password = r['email'], r['new-password']
+
+            cxn = connect_db()
+            db = cxn.cursor()
+            mail_session = start_email_session()
+
             db.execute(f"SELECT * FROM user WHERE Email = '{email}'")
             if db.fetchone() is None: raise EmailNotFoundError(email = email)
 
@@ -419,8 +444,8 @@ def forgot_password ():
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            mail_session.quit()
-            cxn.close()
+            if cxn is not None: cxn.close()
+            if mail_session is not None: mail_session.quit()
     except Exception as e:
         current_app.logger.error(e)
         return { "error": str(e) }, 500
@@ -431,16 +456,17 @@ def forgot_password ():
 @bp_user.route('/change_password', methods = ["POST"])
 @login_required
 def change_password ():
-    req = request.get_json()
-
     try:
-        if generateHash(req['old-password']) != session['user']['Password']: raise IncorrectPasswordError(changing = True)
-
-        cxn = connect_db()
-        db = cxn.cursor()
-        mail_session = start_email_session()
-
+        cxn = None
+        mail_session = None
         try:
+            req = request.get_json()
+            if generateHash(req['old-password']) != session['user']['Password']: raise IncorrectPasswordError(changing = True)
+
+            cxn = connect_db()
+            db = cxn.cursor()
+            mail_session = start_email_session()
+
             db.execute(f"SELECT * FROM user WHERE Username = '{session['user']['Username']}'")
             f = db.fetchone()
             if f is None: raise UserNotFoundError(username = session['user']['Username'])
@@ -449,8 +475,8 @@ def change_password ():
             cxn.commit()
             send_email(mail_session, "password", session['user']['Email'])
         finally:
-            cxn.close()
-            mail_session.quit()
+            if cxn is not None: cxn.close()
+            if mail_session is not None: mail_session.quit()
     except MySQLError as e:
         current_app.logger.error(e.args[1])
         if e.args[0] == 2003: raise DatabaseConnectionError
@@ -465,19 +491,21 @@ def change_password ():
 @bp_user.route('/change_email', methods = ["POST"])
 @login_required
 def change_email ():
-    password = request.get_json()["password"]
-    
-    if session['user']['Password'] != generateHash(password):
-        return { "error": -1, "msg": "The password you have entered is incorrect. Please make sure you have entered your password correctly." }, 500
-    
-    email = request.get_json()["email"]
-
     try:
-        cxn = connect_db()
-        db = cxn.cursor()
-        mail_session = start_email_session()
-
+        cxn = None
+        mail_session = None
         try:
+            password = request.get_json()["password"]
+            
+            if session['user']['Password'] != generateHash(password):
+                return { "error": -1, "msg": "The password you have entered is incorrect. Please make sure you have entered your password correctly." }, 500
+            
+            email = request.get_json()["email"]
+
+            cxn = connect_db()
+            db = cxn.cursor()
+            mail_session = start_email_session()
+
             db.execute(f"SELECT * FROM user WHERE Username = '{session['user']['Username']}'")
             f = db.fetchone()
             if f is None: raise UserNotFoundError(username = session['user']['Username'])
@@ -486,8 +514,8 @@ def change_email ():
             cxn.commit()
             send_email(mail_session, "email", email)
         finally:
-            cxn.close()
-            mail_session.quit()
+            if cxn is not None: cxn.close()
+            if mail_session is not None: mail_session.quit()
     except MySQLError as e:
         current_app.logger.error(e.args[1])
         if e.args[0] == 3819: raise InvalidEmailError(email = email)

@@ -22,6 +22,7 @@ def search_deliveries ():
         return render_template("error.html", errcode = 403, errmsg = "You do not have permission to search for deliveries."), 403
 
     try:
+        cxn = None
         try:
             keywords = [] if "keywords" not in request.args else [decode_keyword(x).lower() for x in request.args.get("keywords").split(" ")]
 
@@ -42,7 +43,7 @@ def search_deliveries ():
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
+            if cxn is not None: cxn.close()
     except Exception as e:
         current_app.logger.error(e)
         return { "error": str(e) }, 500
@@ -60,6 +61,7 @@ def add_deliveries ():
 
     if request.method == 'POST':
         try:
+            cxn = None
             try:
                 values = request.get_json()
 
@@ -83,7 +85,7 @@ def add_deliveries ():
                 current_app.logger.error(e.args[1])
                 return { "error": e.args[1] }, 500
             finally:
-                cxn.close()
+                if cxn is not None: cxn.close()
         except Exception as e:
             current_app.logger.error(e)
             return { "error": str(e) }, 500

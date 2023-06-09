@@ -58,38 +58,38 @@ dialog form .form-grid {
     display: grid;
     gap: 0.5rem;
     grid-template-columns: max-content 1fr;
-    align-items: baseline;
+    align-items: center;
 }
 
 dialog form label {
     justify-self: end;
 }
 
-dialog .form-bottom {
+dialog .modal-bottom {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: end;
     gap: 1rem;
 }
 
-dialog .form-bottom > * {
+dialog .modal-bottom > * {
     flex-grow: 1;
     flex-shrink: 1;
 }
 
-dialog .form-bottom input[type=button],
-dialog .form-bottom input[type=submit] {
+dialog .modal-bottom input[type=button],
+dialog .modal-bottom input[type=submit] {
     flex-grow: 0;
     flex-shrink: 0;
 }
 
-dialog form .form-msg {
+dialog form .modal-msg {
     margin: 0;
     font-style: italic;
     text-align: right;
 }
 
-dialog form .form-msg.error {
+dialog form .modal-msg.error {
     color: var(--red);
 }
 
@@ -180,7 +180,7 @@ dialog form .form-msg.error {
 
 #quantity-span > span {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: 0.5rem;
 }
 

@@ -23,6 +23,7 @@ def requests ():
 @login_required
 def search_requests ():
     try:
+        cxn = None
         try:
             keywords = [] if "keywords" not in request.args else [decode_keyword(x).lower() for x in request.args.get("keywords").split(" ")]
             filters = [] if "filter" not in request.args else request.args.get("filter").split(",")
@@ -45,7 +46,7 @@ def search_requests ():
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
+            if cxn is not None: cxn.close()
     except Exception as e:
         current_app.logger.error(e)
         return { "error": str(e) }, 500
@@ -56,18 +57,19 @@ def search_requests ():
 @bp_request.route('/approve', methods = ["POST"])
 def approve_request ():
     try:
+        cxn = None
         try:
-            request = request.get_json()['RequestID']
+            req = request.get_json()['RequestID']
 
             cxn = connect_db()
             db = cxn.cursor()
 
-            db.execute(f"SELECT StatusID FROM request WHERE RequestID = {request}")
+            db.execute(f"SELECT StatusID FROM request WHERE RequestID = {req}")
             f = db.fetchone()
-            if f is None: raise RequestNotFoundError(request = request)
+            if f is None: raise RequestNotFoundError(request = req)
             if f[0] != 1: raise RequestStatusError(from_status = f[0], to_status = 2)
             
-            db.execute(f"UPDATE request SET StatusID = 2, ActingAdmin = '{session['user']['Username']}' WHERE RequestID = {request}")
+            db.execute(f"UPDATE request SET StatusID = 2, ActingAdmin = '{session['user']['Username']}', DateApproved = CURDATE() WHERE RequestID = {req}")
             cxn.commit()
         except MySQLError as e:
             if e.args[0] == 2003: raise DatabaseConnectionError
@@ -75,7 +77,7 @@ def approve_request ():
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
+            if cxn is not None: cxn.close()
     except Exception as e:
         current_app.logger.error(e)
         return { "error": str(e) }, 500
@@ -86,18 +88,19 @@ def approve_request ():
 @bp_request.route('/deny', methods = ["POST"])
 def deny_request ():
     try:
-        id = request.get_json()['RequestID']
-
-        cxn = connect_db()
-        db = cxn.cursor()
-
+        cxn = None
         try:
-            db.execute(f"SELECT StatusID FROM request WHERE RequestID = {id}")
+            req = request.get_json()['RequestID']
+
+            cxn = connect_db()
+            db = cxn.cursor()
+
+            db.execute(f"SELECT StatusID FROM request WHERE RequestID = {req}")
             f = db.fetchone()
-            if f is None: raise RequestNotFoundError(request = id)
+            if f is None: raise RequestNotFoundError(request = req)
             if f[0] != 1: raise RequestStatusError(from_status = f[0], to_status = 5)
             
-            db.execute(f"UPDATE request SET StatusID = 5, ActingAdmin = '{session['user']['Username']}' WHERE RequestID = {id}")
+            db.execute(f"UPDATE request SET StatusID = 5, ActingAdmin = '{session['user']['Username']}', DateCancelled = CURDATE() WHERE RequestID = {req}")
             cxn.commit()
         except MySQLError as e:
             if e.args[0] == 2003: raise DatabaseConnectionError
@@ -105,7 +108,7 @@ def deny_request ():
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
+            if cxn is not None: cxn.close()
     except Exception as e:
         current_app.logger.error(e)
         return { "error": str(e) }, 500
@@ -117,6 +120,7 @@ def deny_request ():
 @login_required
 def cancel_request ():
     try:
+        cxn = None
         try:
             body = request.get_json()
 
@@ -128,7 +132,7 @@ def cancel_request ():
             if f is None: raise RequestNotFoundError(request = id)
             if f[0] in [4, 5, 6]: raise RequestStatusError(from_status = f[0], to_status = 6)
             
-            db.execute(f"UPDATE request SET StatusID = 6 WHERE RequestID = {body['RequestID']}")
+            db.execute(f"UPDATE request SET StatusID = 6, CancelledBy = {session['user']['Username']}, DateCancelled = CURDATE() WHERE RequestID = {body['RequestID']}")
             cxn.commit()
         except MySQLError as e:
             if e.args[0] == 2003: raise DatabaseConnectionError
@@ -136,7 +140,7 @@ def cancel_request ():
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
+            if cxn is not None: cxn.close()
     except Exception as e:
         current_app.logger.error(e)
         return { "error": str(e) }, 500
@@ -148,8 +152,9 @@ def cancel_request ():
 @login_required
 def receive_request ():
     try:
+        cxn = None
         try:
-            request = request.get_json()['RequestID']
+            req = request.get_json()['RequestID']
 
             cxn = connect_db()
             db = cxn.cursor()
@@ -159,12 +164,12 @@ def receive_request ():
             if f is None: raise SelfNotFoundError(username = session['user']['Username'])
             if f[0] == 1: raise SelfRoleError(username = session['user']['Username'], role = f[0])
         
-            db.execute(f"SELECT StatusID FROM request WHERE RequestID = {request}")
+            db.execute(f"SELECT StatusID FROM request WHERE RequestID = {req}")
             f = db.fetchone()
-            if f is None: raise RequestNotFoundError(request = request)
+            if f is None: raise RequestNotFoundError(request = req)
             if f[0] != 3: raise RequestStatusError(from_status = f[0], to_status = 4)
             
-            db.execute(f"UPDATE request SET StatusID = 4, ReceivedBy = '{session['user']['Username']}', DateReceived = CURDATE() WHERE RequestID = {request}")
+            db.execute(f"UPDATE request SET StatusID = 4, ReceivedBy = '{session['user']['Username']}', DateReceived = CURDATE() WHERE RequestID = {req}")
             cxn.commit()
         except MySQLError as e:
             if e.args[0] == 2003: raise DatabaseConnectionError
@@ -172,7 +177,7 @@ def receive_request ():
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
+            if cxn is not None: cxn.close()
     except Exception as e:
         current_app.logger.error(e)
         return { "error": str(e) }, 500
@@ -184,6 +189,7 @@ def receive_request ():
 @login_required
 def issue_item ():
     try:
+        cxn = None
         try:
             body = request.get_json()
 
@@ -200,7 +206,7 @@ def issue_item ():
             if f is None: raise RequestNotFoundError(request = body['RequestID'])
             if f[0] != 2: raise IllegalIssueError(request = body['RequestID'])
             
-            db.execute(f"SELECT QuantityIssued FROM request_item WHERE RequestID = {body['RequestID']} AND ItemID = {body['ItemID']}")
+            db.execute(f"SELECT QuantityIssued FROM request_item WHERE RequestID = {body['RequestID']} AND ItemID = '{body['ItemID']}'")
             g = db.fetchone()
             if g is None: raise ItemNotInRequestError(item = body['ItemID'], request = body['RequestID'])
             if g[0] is not None: raise ItemIssuedError(item = body['ItemID'], request = body['RequestID'])
@@ -213,7 +219,7 @@ def issue_item ():
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
+            if cxn is not None: cxn.close()
     except Exception as e:
         current_app.logger.error(e)
         return { "error": str(e) }, 500
@@ -225,8 +231,9 @@ def issue_item ():
 @login_required
 def issue_request ():
     try:
+        cxn = None
         try:
-            request = request.get_json()['RequestID']
+            req = request.get_json()['RequestID']
 
             cxn = connect_db()
             db = cxn.cursor()
@@ -236,16 +243,16 @@ def issue_request ():
             if f is None: raise SelfNotFoundError(username = session['user']['Username'])
             if f[0] == 2: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
-            db.execute(f"SELECT StatusID FROM request WHERE RequestID = {request}")
+            db.execute(f"SELECT StatusID FROM request WHERE RequestID = {req}")
             f = db.fetchone()
-            if f is None: raise RequestNotFoundError(request = request)
+            if f is None: raise RequestNotFoundError(request = req)
             if f[0] != 2: raise RequestStatusError(from_status = f[0], to_status = 3)
 
-            db.execute(f"SELECT QuantityIssued FROM request_item WHERE RequestID = {request}")
+            db.execute(f"SELECT QuantityIssued FROM request_item WHERE RequestID = {req}")
             g = all([x[0] is not None for x in db.fetchall()])
-            if not g: raise IncompleteIssueError(request = request)
+            if not g: raise IncompleteIssueError(request = req)
             
-            db.execute(f"UPDATE request SET StatusID = 3, IssuedBy = '{session['user']['Username']}', DateIssued = CURDATE() WHERE RequestID = {request}")
+            db.execute(f"UPDATE request SET StatusID = 3, IssuedBy = '{session['user']['Username']}', DateIssued = CURDATE() WHERE RequestID = {req}")
             cxn.commit()
         except MySQLError as e:
             if e.args[0] == 2003: raise DatabaseConnectionError
@@ -253,7 +260,7 @@ def issue_request ():
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
+            if cxn is not None: cxn.close()
     except Exception as e:
         current_app.logger.error(e)
         return { "error": str(e) }, 500

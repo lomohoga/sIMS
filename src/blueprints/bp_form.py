@@ -26,6 +26,7 @@ def generate_58 ():
         return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
 
     try:
+        cxn = None
         try:
             item = request.args["item"]
 
@@ -37,16 +38,16 @@ def generate_58 ():
             if f is None: raise SelfNotFoundError(username = session['user']['Username'])
             if f[0] == 2: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
-            return form_58(item)
+            return form_58(db, item)
         except MySQLError as e:
             if e == 2003: raise DatabaseConnectionError
 
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
+            if cxn is not None: cxn.close()
     except Exception as e:
-        current_app.logger.log(e)
+        current_app.logger.error(e)
         return { "error": str(e) }, 500
 
 # route for generating appendix 59
@@ -57,6 +58,7 @@ def generate_59 ():
         return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
 
     try:
+        cxn = None
         try:
             item = request.args["item"]
 
@@ -68,7 +70,7 @@ def generate_59 ():
             if f is None: raise SelfNotFoundError(username = session['user']['Username'])
             if f[0] == 2: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
-            form = form_59(item)
+            form = form_59(db, item)
             return form if form is not None else Response(status = 204)
         except MySQLError as e:
             if e == 2003: raise DatabaseConnectionError
@@ -76,9 +78,9 @@ def generate_59 ():
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
+            if cxn is not None: cxn.close()
     except Exception as e:
-        current_app.logger.log(e)
+        current_app.logger.error(e)
         return { "error": str(e) }, 500
 
 # route for generating appendix 63
@@ -89,6 +91,7 @@ def generate_63 ():
         return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
 
     try:
+        cxn = None
         try:
             item = request.args["item"]
 
@@ -100,16 +103,16 @@ def generate_63 ():
             if f is None: raise SelfNotFoundError(username = session['user']['Username'])
             if f[0] == 2: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
-            return form_63(item)
+            return form_63(db, item)
         except MySQLError as e:
             if e == 2003: raise DatabaseConnectionError
 
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
+            if cxn is not None: cxn.close()
     except Exception as e:
-        current_app.logger.log(e)
+        current_app.logger.error(e)
         return { "error": str(e) }, 500
 
 # route for generating appendix 69
@@ -120,6 +123,7 @@ def generate_69 ():
         return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
 
     try:
+        cxn = None
         try:
             item = request.args["item"]
 
@@ -131,16 +135,16 @@ def generate_69 ():
             if f is None: raise SelfNotFoundError(username = session['user']['Username'])
             if f[0] == 2: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
-            return form_69(item)
+            return form_69(db, item)
         except MySQLError as e:
             if e == 2003: raise DatabaseConnectionError
 
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
+            if cxn is not None: cxn.close()
     except Exception as e:
-        current_app.logger.log(e)
+        current_app.logger.error(e)
         return { "error": str(e) }, 500
 
 # route for generating appendix 71
@@ -151,6 +155,7 @@ def generate_71 ():
         return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
 
     try:
+        cxn = None
         try:
             item = request.args["item"]
 
@@ -162,7 +167,7 @@ def generate_71 ():
             if f is None: raise SelfNotFoundError(username = session['user']['Username'])
             if f[0] == 2: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
-            form = form_71(item)
+            form = form_71(db, item)
             return form if form is not None else Response(status = 204)
         except MySQLError as e:
             if e == 2003: raise DatabaseConnectionError
@@ -170,7 +175,7 @@ def generate_71 ():
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
+            if cxn is not None: cxn.close()
     except Exception as e:
-        current_app.logger.log(e)
+        current_app.logger.error(e)
         return { "error": str(e) }, 500

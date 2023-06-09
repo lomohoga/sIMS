@@ -189,21 +189,15 @@
             document.querySelector(".request-table").parentElement.style.display = "";
             document.querySelector("#search-box").placeholder = "Search requests\u2026";
 
-            populateRequests(document.querySelector(".request-table .table-body")).then(rows => {
+            populateRequests(document.querySelector(".request-table .table-body"), undefined, undefined, undefined, { buttons: false }).then(rows => {
                 for (let row of rows) {
-                    row.removeChild(row.querySelector(".actions"));
-                    
-                    let div = document.createElement("div");
-                    div.style.gridArea = `1 / 12 / ${row.querySelectorAll(".mono").length + 1} / 13`;
-                    if (!row.querySelector(".status").classList.contains('completed')) {
-                        tr.appendChild(div);
-                        continue;
-                    }
+                    if (row.children[3].innerText.toLowerCase() !== "completed") continue;
 
+                    let div = row.querySelector(".actions");
                     let btn = document.createElement("button");
                     btn.role = "button";
                     btn.innerText = "Generate";
-                    btn.title = v === '63' ? `Generate Appendix ${v}` : "Generate Appendices 59 and 71";
+                    btn.title = v === '63' ? "Generate Appendix 63" : "Generate Appendices 59 and 71";
                     btn.classList.add("blue");
                     div.appendChild(btn);
                     row.appendChild(div);
