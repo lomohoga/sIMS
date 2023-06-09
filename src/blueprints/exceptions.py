@@ -207,3 +207,13 @@ class IncorrectCodeError (Exception):
 
     def __str__ ():
         return "The code entered is incorrect."
+
+### form generation errors ###
+
+class FormGenerationError (Exception):
+    def __init__ (self, *args, **kwargs):
+        super().__init__(*args)
+        self.args(form = kwargs['form'])
+
+    def __str__ (self):
+        return f"Could not generate Appendix {self.args[0]}."

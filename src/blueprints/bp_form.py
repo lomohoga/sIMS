@@ -37,7 +37,7 @@ def generate_58 ():
             if f is None: raise SelfNotFoundError(username = session['user']['Username'])
             if f[0] == 2: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
-            return form_58(item)
+            return form_58(db, item)
         except MySQLError as e:
             if e == 2003: raise DatabaseConnectionError
 
@@ -46,7 +46,7 @@ def generate_58 ():
         finally:
             cxn.close()
     except Exception as e:
-        current_app.logger.log(e)
+        current_app.logger.error(e)
         return { "error": str(e) }, 500
 
 # route for generating appendix 59
@@ -68,7 +68,7 @@ def generate_59 ():
             if f is None: raise SelfNotFoundError(username = session['user']['Username'])
             if f[0] == 2: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
-            form = form_59(item)
+            form = form_59(db, item)
             return form if form is not None else Response(status = 204)
         except MySQLError as e:
             if e == 2003: raise DatabaseConnectionError
@@ -78,7 +78,7 @@ def generate_59 ():
         finally:
             cxn.close()
     except Exception as e:
-        current_app.logger.log(e)
+        current_app.logger.error(e)
         return { "error": str(e) }, 500
 
 # route for generating appendix 63
@@ -100,7 +100,7 @@ def generate_63 ():
             if f is None: raise SelfNotFoundError(username = session['user']['Username'])
             if f[0] == 2: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
-            return form_63(item)
+            return form_63(db, item)
         except MySQLError as e:
             if e == 2003: raise DatabaseConnectionError
 
@@ -109,7 +109,7 @@ def generate_63 ():
         finally:
             cxn.close()
     except Exception as e:
-        current_app.logger.log(e)
+        current_app.logger.error(e)
         return { "error": str(e) }, 500
 
 # route for generating appendix 69
@@ -131,7 +131,7 @@ def generate_69 ():
             if f is None: raise SelfNotFoundError(username = session['user']['Username'])
             if f[0] == 2: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
-            return form_69(item)
+            return form_69(db, item)
         except MySQLError as e:
             if e == 2003: raise DatabaseConnectionError
 
@@ -140,7 +140,7 @@ def generate_69 ():
         finally:
             cxn.close()
     except Exception as e:
-        current_app.logger.log(e)
+        current_app.logger.error(e)
         return { "error": str(e) }, 500
 
 # route for generating appendix 71
@@ -162,7 +162,7 @@ def generate_71 ():
             if f is None: raise SelfNotFoundError(username = session['user']['Username'])
             if f[0] == 2: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
-            form = form_71(item)
+            form = form_71(db, item)
             return form if form is not None else Response(status = 204)
         except MySQLError as e:
             if e == 2003: raise DatabaseConnectionError
@@ -172,5 +172,5 @@ def generate_71 ():
         finally:
             cxn.close()
     except Exception as e:
-        current_app.logger.log(e)
+        current_app.logger.error(e)
         return { "error": str(e) }, 500

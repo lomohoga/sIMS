@@ -1,12 +1,8 @@
+from mysql.connector import Error as MySQLError
+
 # to save the file as a stream
 from tempfile import NamedTemporaryFile
 from os import remove
-
-# to get the current date & time (for the filename)
-from datetime import datetime
-
-# to access the database
-import mysql.connector
 
 # to open the form
 from openpyxl import load_workbook
@@ -15,19 +11,16 @@ from openpyxl import load_workbook
 from openpyxl.cell.text import InlineFont
 from openpyxl.cell.rich_text import TextBlock, CellRichText
 
-def form_58 (item):
-    cxn = mysql.connector.connect(host = "localhost", user = "root", password = "password", database = "sims")
+from src.blueprints.database import connect_db
+from src.blueprints.exceptions import ItemNotFoundError, RequestNotFoundError
 
-    db = cxn.cursor()
+def form_58 (db, item):
     db.execute(f"SELECT * FROM item WHERE ItemID = '{item}'")
     data = db.fetchone()
+    if data is None: raise ItemNotFoundError(item = item)
 
-    db.execute(f"SELECT * FROM (SELECT RequestID, RequestDate, DeliveryStock, RequestQuantity, UPPER(CONCAT(FirstName, ' ', LastName)) as RequestedBy, ShelfLife FROM request_item INNER JOIN (SELECT ItemID, ShelfLife, COALESCE(SUM(IF(ShelfLife IS NULL OR DATEDIFF(CURDATE(), ADDDATE(DeliveryDate, ShelfLife)) >= 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) GROUP BY ItemID) AS w USING (ItemID) INNER JOIN request USING (RequestID) INNER JOIN user ON RequestedBy = Username WHERE ItemID = '{item}' ORDER BY RequestID DESC LIMIT 30) AS x ORDER BY RequestID ASC")
+    db.execute(f"SELECT * FROM (SELECT RequestID, RequestDate, DeliveryStock, QuantityIssued, UPPER(CONCAT(FirstName, ' ', LastName)) as RequestedBy, ShelfLife FROM request_item INNER JOIN (SELECT ItemID, ShelfLife, COALESCE(SUM(IF(ShelfLife IS NULL OR DATEDIFF(CURDATE(), ADDDATE(DeliveryDate, ShelfLife)) <= 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) GROUP BY ItemID) AS w USING (ItemID) INNER JOIN request USING (RequestID) INNER JOIN user ON RequestedBy = Username WHERE ItemID = '{item}' AND StatusID = 4 ORDER BY RequestID DESC LIMIT 30) AS x ORDER BY RequestID ASC")
     requests = db.fetchall()
-
-    cxn.close()
-
-    if data == None: raise Exception(f"Item ID {item} not found.")
 
     wb = load_workbook("./src/form_templates/template_58.xlsx", rich_text = True)
     ws = wb.active
@@ -57,10 +50,10 @@ def form_58 (item):
     finally:
         remove(file.name)
 
-def form_59 (request):
-    cxn = mysql.connector.connect(host = "localhost", user = "root", password = "password", database = "sims")
+def form_59 (db, request):
+    db.execute(f"SELECT * FROM request WHERE RequestID = {request}")
+    if db.fetchone() is None: raise RequestNotFoundError(request = request)
 
-    db = cxn.cursor()
     db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) FROM request INNER JOIN user ON RequestedBy = Username WHERE RequestID = {request}")
     (req_by,) = db.fetchone()
     db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) FROM request INNER JOIN user ON IssuedBy = Username WHERE RequestID = {request}")
@@ -70,8 +63,6 @@ def form_59 (request):
 
     db.execute(f"SELECT RequestQuantity, Unit, Price, Price * RequestQuantity, ItemDescription, ItemID, ShelfLife FROM request_item INNER JOIN stock USING (ItemID) INNER JOIN request USING (RequestID) WHERE RequestID = '{request}' AND Price < 15000")
     items = db.fetchall()
-
-    cxn.close()
 
     if len(items) == 0: return None
 
@@ -104,30 +95,44 @@ def form_59 (request):
     finally:
         remove(file.name)
 
-def form_63 (request):
-    cxn = mysql.connector.connect(host = "localhost", user = "root", password = "password", database = "sims")
+def form_63 (db, request):
+    db.execute(f"SELECT * FROM request WHERE RequestID = {request}")
+    if db.fetchone() is None: raise RequestNotFoundError(request = request)
 
-    db = cxn.cursor()
-    db.execute(f"SELECT RequestID, UPPER(CONCAT(FirstName, ' ', LastName)) as RequestedBy, item.ItemID as ItemID, item.ItemDescription as ItemDescription, RequestQuantity, QuantityIssued FROM request_item INNER JOIN request USING (RequestID) INNER JOIN item USING (ItemID) INNER JOIN stock USING (ItemID) INNER JOIN user ON RequestedBy = Username WHERE RequestID = '{request}'")
+    db.execute(f"SELECT RequestID, item.ItemID AS ItemID, item.ItemDescription AS ItemDescription, RequestQuantity, QuantityIssued FROM request_item INNER JOIN request USING (RequestID) INNER JOIN item USING (ItemID) INNER JOIN stock USING (ItemID) INNER JOIN user ON RequestedBy = Username WHERE RequestID = '{request}'")
     data = db.fetchall()
 
-    cxn.close()
+    db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) AS RequestedBy, DateApproved FROM request INNER JOIN user ON (Username = RequestedBy)")
+    req_requested = db.fetchone()
+    db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) AS ActingAdmin, DateApproved FROM request INNER JOIN user ON (Username = ActingAdmin)")
+    req_approved = db.fetchone()
+    db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) AS IssuedBy, DateApproved FROM request INNER JOIN user ON (Username = IssuedBy)")
+    req_issued = db.fetchone()
+    db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) AS ReceivedBy, DateApproved FROM request INNER JOIN user ON (Username = ReceivedBy)")
+    req_received = db.fetchone()
 
     wb = load_workbook("./src/form_templates/template_63.xlsx", rich_text = True)
     ws = wb.active
 
-    # ws["A9"] = CellRichText(ws["A9"].value, TextBlock(InlineFont(b = True), data[1]))
-
     for i in range(len(data)):
         req = data[i]
 
-        ws[f"A{12 + i}"] = req[2]
-        ws[f"C{12 + i}"] = req[3]
-        ws[f"D{12 + i}"] = req[4]
-        if req[5] > 0:
+        ws[f"A{12 + i}"] = req[1]
+        ws[f"C{12 + i}"] = req[2]
+        ws[f"D{12 + i}"] = req[3]
+        if req[4] > 0:
             ws[f"E{12 + i}"] = "\u2714"
-            ws[f"G{12 + i}"] = req[5]
+            ws[f"G{12 + i}"] = req[4]
         else: ws[f"F{12 + i}"] = "\u2714"
+
+        ws["C37"] = req_requested[0]
+        ws["C39"] = req_requested[1]
+        ws["D37"] = req_approved[0]
+        ws["D39"] = req_approved[1]
+        ws["F37"] = req_issued[0]
+        ws["F39"] = req_issued[1]
+        ws["H37"] = req_received[0]
+        ws["H39"] = req_received[1]
 
     file = NamedTemporaryFile(suffix = ".xlsx", delete = False)
 
@@ -139,19 +144,13 @@ def form_63 (request):
     finally:
         remove(file.name)
 
-def form_69 (item):
-    cxn = mysql.connector.connect(host = "localhost", user = "root", password = "password", database = "sims")
-
-    db = cxn.cursor()
+def form_69 (db, item):
     db.execute(f"SELECT * FROM item WHERE ItemID = '{item}'")
     data = db.fetchone()
+    if data is None: raise ItemNotFoundError(item = item)
 
-    db.execute(f"SELECT * FROM (SELECT RequestID, RequestDate, DeliveryStock, RequestQuantity, UPPER(CONCAT(FirstName, ' ', LastName)) as RequestedBy, Price FROM request_item INNER JOIN (SELECT ItemID, Price, COALESCE(SUM(IF(ShelfLife IS NULL OR DATEDIFF(CURDATE(), ADDDATE(DeliveryDate, ShelfLife)) >= 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) GROUP BY ItemID) AS w USING (ItemID) INNER JOIN request USING (RequestID) INNER JOIN user ON RequestedBy = Username WHERE ItemID = '{item}' ORDER BY RequestID DESC LIMIT 30) AS x ORDER BY RequestID ASC")
+    db.execute(f"SELECT * FROM (SELECT RequestID, RequestDate, DeliveryStock, QuantityIssued, UPPER(CONCAT(FirstName, ' ', LastName)) as RequestedBy, Price FROM request_item INNER JOIN (SELECT ItemID, Price, COALESCE(SUM(IF(ShelfLife IS NULL OR DATEDIFF(CURDATE(), ADDDATE(DeliveryDate, ShelfLife)) <= 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) GROUP BY ItemID) AS w USING (ItemID) INNER JOIN request USING (RequestID) INNER JOIN user ON RequestedBy = Username WHERE ItemID = '{item}' AND StatusID = 4 ORDER BY RequestID DESC LIMIT 30) AS x ORDER BY RequestID ASC")
     requests = db.fetchall()
-
-    cxn.close()
-
-    if data == None: raise Exception(f"Item ID {item} not found.")
 
     wb = load_workbook("./src/form_templates/template_69.xlsx", rich_text = True)
     ws = wb.active
@@ -168,7 +167,7 @@ def form_69 (item):
         ws[f"E{13 + i}"] = req[3]
         ws[f"F{13 + i}"] = req[4]
         ws[f"H{13 + i}"] = ws[f"D{13 + i}"].value - ws[f"E{13 + i}"].value if i == 0 else ws[f"H{12 + i}"].value - ws[f"E{13 + i}"].value
-        if i == 0: ws[f"I{13 + i}"] = req[5]
+        ws[f"I{13 + i}"] = req[5]
 
     file = NamedTemporaryFile(suffix = ".xlsx", delete = False)
 
@@ -180,10 +179,10 @@ def form_69 (item):
     finally:
         remove(file.name)
 
-def form_71 (request):
-    cxn = mysql.connector.connect(host = "localhost", user = "root", password = "password", database = "sims")
+def form_71 (db, request):
+    db.execute(f"SELECT * FROM request WHERE RequestID = {request}")
+    if db.fetchone() is None: raise RequestNotFoundError(request = request)
 
-    db = cxn.cursor()
     db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) FROM request INNER JOIN user ON RequestedBy = Username WHERE RequestID = {request}")
     (req_by,) = db.fetchone()
     db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) FROM request INNER JOIN user ON IssuedBy = Username WHERE RequestID = {request}")
@@ -193,8 +192,6 @@ def form_71 (request):
 
     db.execute(f"SELECT RequestQuantity, Unit, ItemDescription, ItemID, Price * RequestQuantity FROM request_item INNER JOIN stock USING (ItemID) INNER JOIN request USING (RequestID) WHERE RequestID = '{request}' AND Price >= 15000")
     items = db.fetchall()
-
-    cxn.close()
 
     if len(items) == 0: return None
 

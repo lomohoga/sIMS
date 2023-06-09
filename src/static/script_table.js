@@ -18,15 +18,7 @@ function escapeKeyword (k) {
 
 // fetches items from database
 async function getItems (keyword = "") {
-    return fetch(encodeURI(`/inventory/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`))
-    .then(d => {
-        if(d.status == 200){
-            return d.json().then(j => j["items"]);
-        }
-        else{
-            return -1;
-        }
-    });
+    return fetch(encodeURI(`/inventory/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`)).then(x => x.json());
 }
 
 // populates item table with items from getItems()
@@ -36,13 +28,14 @@ async function populateItems (tbody, keyword = "", { stock = true, buttons = fal
     tbody.querySelector(".table-loading").classList.remove("hide");
     tbody.querySelector(".table-empty").classList.add("hide");
 
-    let items = await getItems(keyword);
-    if(items == -1){
+    let response = await getItems(keyword);
+    if ("error" in response) {
         tbody.querySelector(".table-error").classList.remove("hide");
         tbody.querySelector(".table-loading").classList.add("hide");
         return;
     }
 
+    let items = response['items'];
     let rows = [];
 
     for (let x of items) {
@@ -101,31 +94,24 @@ async function populateItems (tbody, keyword = "", { stock = true, buttons = fal
 
 // fetches requests from database
 async function getRequests (keyword = "", filter = []) {
-    return fetch(encodeURI(`/requests/search${keyword === "" ? "" : "&keywords=" + escapeKeyword(keyword) + ""}${filter.length === 0 ? "" : "&filter=" + filter.join(",")}`.replace("&", "?")))
-    .then(d => {
-        if (d.status == 200) {
-            return d.json().then(j => j["requests"]);
-        }
-        else {
-            return -1;
-        }
-    });
+    return fetch(encodeURI(`/requests/search${keyword === "" ? "" : "&keywords=" + escapeKeyword(keyword) + ""}${filter.length === 0 ? "" : "&filter=" + filter.join(",")}`.replace("&", "?"))).then(x => x.json());
 }
 
 // populates request table with requests from getRequests()
-async function populateRequests (tbody, keyword = "", privileges = 2, filter = undefined) {
+async function populateRequests (tbody, keyword = "", privileges = 2, filter = undefined, { buttons = true } = {}) {
     while (tbody.childElementCount > 3) tbody.removeChild(tbody.lastChild);
 
     tbody.querySelector(".table-loading").classList.remove("hide");
     tbody.querySelector(".table-empty").classList.add("hide");
 
-    let requests = await getRequests(keyword, filter);
-    if (requests == -1) {
+    let response = await getRequests(keyword, filter);
+    if ("error" in response) {
         tbody.querySelector(".table-error").classList.remove("hide");
         tbody.querySelector(".table-loading").classList.add("hide");
         return;
     }
 
+    let requests = response['requests'];
     let rows = [];
     
     for (let req of requests) {
@@ -201,30 +187,16 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                                         "ItemID": j['ItemID'],
                                         "QuantityIssued": +modal.querySelector("input[type=number]").value
                                     })
-                                }).then(d => {
+                                }).then(async d => {
                                     if (d.status === 200) {
                                         modal.close();
                                         populateRequests(tbody, keyword, privileges, filter);
                                     }
 
-                                    if (d.status === 500){
-                                        d.json().then(a => {
-                                            let p = modal.querySelector('.message')
-                                            p.style.display = 'block'
-                                            
-                                            if (a["error"] == 2003) {
-                                                p.innerHTML = "Database error. Please try again later."
-                                            }
-                                            else {
-                                                p.innerHTML = "Internal server error. Please try again later."
-                                            }
-                                        });
+                                    if (d.status === 500) {
+                                        modal.querySelector(".modal-msg").classList.add("error");
+                                        modal.querySelector(".modal-msg").innerHTML = `<b>ERROR:</b> ${(await d.json())['error']}`;
                                     }
-                                })
-                                .catch(() => {
-                                    let p = modal.querySelector('.message')
-                                    p.innerHTML = 'Server unavailable. Please try again later.'
-                                    p.style.display = 'block'
                                 });
                             });
                         });
@@ -241,287 +213,83 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
         actions.style.gridRow = `1 / ${req["Items"].length + 1}`;
         actions.style.gridColumn = `-1 / ${(privileges !== 1 || (req['Status'] === 'Approved' && req['Items'].map(x => x['QuantityIssued']).some(x => x === '\u2014'))) ? '-2' : '-3'}`;
         
-        if (req['Status'] === 'Approved' && privileges === 1) {
-            if (req["Items"].map(x => x['QuantityIssued']).every(x => x !== '\u2014')) {
-                let issueBtn = document.createElement("button");
-                issueBtn.type = "button";
-                issueBtn.role = "button";
-                issueBtn.title = "Issue requested items";
-                issueBtn.innerHTML = "<i class='bi bi-check-circle'></i>";
-                issueBtn.classList.add("green");
+        if (buttons) {
+            if (req['Status'] === 'Approved' && privileges === 1) {
+                if (req["Items"].map(x => x['QuantityIssued']).every(x => x !== '\u2014')) {
+                    let issueBtn = document.createElement("button");
+                    issueBtn.type = "button";
+                    issueBtn.role = "button";
+                    issueBtn.title = "Issue requested items";
+                    issueBtn.innerHTML = "<i class='bi bi-check-circle'></i>";
+                    issueBtn.classList.add("green");
 
-                issueBtn.addEventListener("click", () => {
-                    let modal = document.querySelector("#modal-requests");
+                    issueBtn.addEventListener("click", () => {
+                        let modal = document.querySelector("#modal-requests");
 
-                    modal.showModal();
-                    modal.querySelector("p").style.display = "";
-                    modal.querySelector("#quantity-span").style.display = "none";
-                    modal.querySelector("h1").innerText = "Issue request";
-                    modal.querySelector("p").innerHTML = "<span>Are you sure you want to issue <b>all</b> items in this request?</span>";
-                    modal.querySelector("input[type=submit]").value = "Issue request";
-                    modal.querySelector("input[type=submit]").classList.add("btn-green");
-                    modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
-                    modal.querySelector("input[type=submit]").offsetHeight;
-                    modal.querySelector("input[type=submit]").style.transitionDuration = '';
+                        modal.showModal();
+                        modal.querySelector("p").style.display = "";
+                        modal.querySelector("#quantity-span").style.display = "none";
+                        modal.querySelector("h1").innerText = "Issue request";
+                        modal.querySelector("p").innerHTML = "<span>Are you sure you want to issue <b>all</b> items in this request?</span>";
+                        modal.querySelector("input[type=submit]").value = "Issue request";
+                        modal.querySelector("input[type=submit]").classList.add("btn-green");
+                        modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
+                        modal.querySelector("input[type=submit]").offsetHeight;
+                        modal.querySelector("input[type=submit]").style.transitionDuration = '';
 
-                    modal.querySelector("input[type=submit]").addEventListener("click", e => {
-                        e.preventDefault();
-                        
-                        fetch("./issue", {
-                            "method": "POST",
-                            "headers": {
-                                "Content-Type": "application/json"
-                            },
-                            "body": JSON.stringify({
-                                "RequestID": req['RequestID']
-                            })
-                        }).then(d => {
-                            if (d.status === 200) {
-                                modal.close();
-                                populateRequests(tbody, keyword, privileges, filter);
-                            }
+                        modal.querySelector("input[type=submit]").addEventListener("click", e => {
+                            e.preventDefault();
+                            
+                            fetch("./issue", {
+                                "method": "POST",
+                                "headers": {
+                                    "Content-Type": "application/json"
+                                },
+                                "body": JSON.stringify({
+                                    "RequestID": req['RequestID']
+                                })
+                            }).then(async d => {
+                                if (d.status === 200) {
+                                    modal.close();
+                                    populateRequests(tbody, keyword, privileges, filter);
+                                }
 
-                            if (d.status === 500){
-                                d.json().then(a => {
-                                    let p = modal.querySelector('.message')
-                                    p.style.display = 'block'
-                                    
-                                    if (a["error"] === 2003) {
-                                        p.innerHTML = "Database error. Please try again later."
-                                    } else {
-                                        p.innerHTML = "Internal server error. Please try again later."
-                                    }
-                                });
-                            }
-                        })
-                        .catch(() => {
-                            let p = modal.querySelector('.message')
-                            p.innerHTML = 'Server unavailable. Please try again later.'
-                            p.style.display = 'block'
+                                if (d.status === 500) {
+                                    modal.querySelector(".modal-msg").classList.add("error");
+                                    modal.querySelector(".modal-msg").innerHTML = `<b>ERROR:</b> ${(await d.json())['error']}`;
+                                }
+                            });
                         });
                     });
-                });
 
-                actions.append(issueBtn);
-            }
-            
-            let cancelBtn = document.createElement("button");
-            cancelBtn.type = "button";
-            cancelBtn.role = "button";
-            cancelBtn.title = "Cancel request";
-            cancelBtn.innerHTML = "<i class='bi bi-x-circle'></i>";
-            cancelBtn.classList.add("red");
-
-            cancelBtn.addEventListener("click", () => {
-                let modal = document.querySelector("#modal-requests");
-
-                modal.showModal();
-                modal.querySelector("p").style.display = "";
-                modal.querySelector("#quantity-span").style.display = "none";
-                modal.querySelector("h1").innerText = "Cancel request";
-                modal.querySelector("p").innerHTML = "Are you sure you want to cancel this request?<br><i><b style='color: var(--red);'>WARNING:</b> This will forfeit <b>all</b> items in this request!</i>";
-                modal.querySelector("input[type=submit]").value = "Cancel request";
-                modal.querySelector("input[type=submit]").classList.add("btn-red");
-                modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
-                modal.querySelector("input[type=submit]").offsetHeight;
-                modal.querySelector("input[type=submit]").style.transitionDuration = '';
-
-                modal.querySelector("input[type=submit]").addEventListener("click", e => {
-                    e.preventDefault();
-
-                    fetch("./cancel", {
-                        "method": "POST",
-                        "headers": {
-                            "Content-Type": "application/json"
-                        },
-                        "body": JSON.stringify({
-                            "RequestID": req['RequestID']
-                        })
-                    }).then(d => {
-                        if (d.status === 200) {
-                            modal.close();
-                            populateRequests(tbody, keyword, privileges, filter);
-                        }
-
-                        if (d.status === 500){
-                            d.json().then(a => {
-                                let p = modal.querySelector('.message')
-                                p.style.display = 'block'
-                                
-                                if (a["error"] === 2003) {
-                                    p.innerHTML = "Database error. Please try again later."
-                                } else {
-                                    p.innerHTML = "Internal server error. Please try again later."
-                                }
-                            });
-                        }
-                    })
-                    .catch(() => {
-                        let p = modal.querySelector('.message')
-                        p.innerHTML = 'Server unavailable. Please try again later.'
-                        p.style.display = 'block'
-                    });
-                });
-            });
-
-            actions.append(cancelBtn);
-        }
-        
-        if (req['Status'] === 'Pending' && privileges === 0) {
-            let approveBtn = document.createElement("button");
-            approveBtn.title = "Approve request";
-            approveBtn.type = "button";
-            approveBtn.role = "button";
-            approveBtn.value = req["RequestID"];
-            approveBtn.innerHTML = "<i class='bi bi-check-circle'></i>";
-            approveBtn.classList.add("green");
-
-            approveBtn.addEventListener("click", () => {
-                let modal = document.querySelector("#modal-requests");
-
-                modal.showModal();
-                modal.querySelector("p").style.display = "";
-                modal.querySelector("#quantity-span").style.display = "none";
-                modal.querySelector("h1").innerText = "Approve request";
-                modal.querySelector("p").innerHTML = "Are you sure you want to approve this request?";
-                modal.querySelector("input[type=submit]").value = "Approve request";
-                modal.querySelector("input[type=submit]").classList.add("btn-green");
-                modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
-                modal.querySelector("input[type=submit]").offsetHeight;
-                modal.querySelector("input[type=submit]").style.transitionDuration = '';
-
-                modal.querySelector("input[type=submit]").addEventListener("click", e => {
-                    e.preventDefault();
-
-                    fetch("./approve", {
-                        "method": "POST",
-                        "headers": {
-                            "Content-Type": "application/json"
-                        },
-                        "body": JSON.stringify({
-                            "RequestID": req['RequestID']
-                        })
-                    }).then(d => {
-                        if (d.status === 200) {
-                            modal.close();
-                            populateRequests(tbody, keyword, privileges, filter);
-                        }
-
-                        if (d.status === 500){
-                            d.json().then(a => {
-                                let p = modal.querySelector('.message')
-                                p.style.display = 'block'
-                                
-                                if(a["error"] == 2003){
-                                    p.innerHTML = "Database error. Please try again later."
-                                }
-                                else{
-                                    p.innerHTML = "Internal server error. Please try again later."
-                                }
-                            });
-                        }
-                    })
-                    .catch(() => {
-                        let p = modal.querySelector('.message')
-                        p.innerHTML = 'Server unavailable. Please try again later.'
-                        p.style.display = 'block'
-                    });
-                });
-            });
-
-            let denyBtn = document.createElement("button");
-            denyBtn.title = "Deny request";
-            denyBtn.type = "button";
-            denyBtn.role = "button";
-            denyBtn.value = req["RequestID"];
-            denyBtn.innerHTML = "<i class='bi bi-x-circle'></i>";
-            denyBtn.classList.add("red");
-
-            denyBtn.addEventListener("click", () => {
-                let modal = document.querySelector("#modal-requests");
-
-                modal.showModal();
-                modal.querySelector("p").style.display = "";
-                modal.querySelector("#quantity-span").style.display = "none";
-                modal.querySelector("h1").innerText = "Deny request";
-                modal.querySelector("p").innerHTML = "Are you sure you want to deny this request?";
-                modal.querySelector("input[type=submit]").value = "Deny request";
-                modal.querySelector("input[type=submit]").classList.add("btn-red");
-                modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
-                modal.querySelector("input[type=submit]").offsetHeight;
-                modal.querySelector("input[type=submit]").style.transitionDuration = '';
-
-                modal.querySelector("input[type=submit]").addEventListener("click", e => {
-                    e.preventDefault();
-                    
-                    fetch("./deny", {
-                        "method": "POST",
-                        "headers": {
-                            "Content-Type": "application/json"
-                        },
-                        "body": JSON.stringify({
-                            "RequestID": req['RequestID']
-                        })
-                    }).then(d => {
-                        if (d.status === 200) {
-                            modal.close();
-                            populateRequests(tbody, keyword, privileges, filter);
-                        }
-
-                        if (d.status === 500){
-                            d.json().then(a => {
-                                let p = modal.querySelector('.message')
-                                p.style.display = 'block'
-                                
-                                if(a["error"] == 2003){
-                                    p.innerHTML = "Database error. Please try again later."
-                                }
-                                else{
-                                    p.innerHTML = "Internal server error. Please try again later."
-                                }
-                            });
-                        }
-                    })
-                    .catch(() => {
-                        let p = modal.querySelector('.message')
-                        p.innerHTML = 'Server unavailable. Please try again later.'
-                        p.style.display = 'block'
-                    });
-                });
-            });
-            
-            actions.appendChild(approveBtn);
-            actions.appendChild(denyBtn);
-        }
-        
-        if (privileges === 2 && ['Pending', 'Approved', 'Issued'].includes(req['Status'])) {
-            if (req['Status'] === 'Issued') {
-                let receiveBtn = document.createElement("button");
-                receiveBtn.title = "Receive requested items";
-                receiveBtn.type = "button";
-                receiveBtn.role = "button";
-                receiveBtn.value = req["RequestID"];
-                receiveBtn.innerHTML = "<i class='bi bi-check-circle'></i>";
-                receiveBtn.classList.add("green");
+                    actions.append(issueBtn);
+                }
                 
-                receiveBtn.addEventListener("click", () => {
+                let cancelBtn = document.createElement("button");
+                cancelBtn.type = "button";
+                cancelBtn.role = "button";
+                cancelBtn.title = "Cancel request";
+                cancelBtn.innerHTML = "<i class='bi bi-x-circle'></i>";
+                cancelBtn.classList.add("red");
+
+                cancelBtn.addEventListener("click", () => {
                     let modal = document.querySelector("#modal-requests");
 
                     modal.showModal();
                     modal.querySelector("p").style.display = "";
                     modal.querySelector("#quantity-span").style.display = "none";
-                    modal.querySelector("h1").innerText = "Receive request";
-                    modal.querySelector("p").innerHTML = "Are you sure you want to receive this request?";
-                    modal.querySelector("input[type=submit]").value = "Receive request";
-                    modal.querySelector("input[type=submit]").classList.add("btn-green");
+                    modal.querySelector("h1").innerText = "Cancel request";
+                    modal.querySelector("p").innerHTML = "Are you sure you want to cancel this request?<br><i><b style='color: var(--red);'>WARNING:</b> This will forfeit <b>all</b> items in this request!</i>";
+                    modal.querySelector("input[type=submit]").value = "Cancel request";
+                    modal.querySelector("input[type=submit]").classList.add("btn-red");
                     modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
                     modal.querySelector("input[type=submit]").offsetHeight;
                     modal.querySelector("input[type=submit]").style.transitionDuration = '';
 
                     modal.querySelector("input[type=submit]").addEventListener("click", e => {
                         e.preventDefault();
-                        
-                        fetch("./receive", {
+
+                        fetch("./cancel", {
                             "method": "POST",
                             "headers": {
                                 "Content-Type": "application/json"
@@ -529,99 +297,224 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                             "body": JSON.stringify({
                                 "RequestID": req['RequestID']
                             })
-                        }).then(d => {
+                        }).then(async d => {
                             if (d.status === 200) {
                                 modal.close();
                                 populateRequests(tbody, keyword, privileges, filter);
                             }
 
-                            if (d.status === 500){
-                                d.json().then(a => {
-                                    let p = modal.querySelector('.message')
-                                    p.style.display = 'block'
-                                    
-                                    if(a["error"] == 2003){
-                                        p.innerHTML = "Database error. Please try again later."
-                                    }
-                                    else{
-                                        p.innerHTML = "Internal server error. Please try again later."
-                                    }
-                                });
+                            if (d.status === 500) {
+                                modal.querySelector(".modal-msg").classList.add("error");
+                                modal.querySelector(".modal-msg").innerHTML = `<b>ERROR:</b> ${(await d.json())['error']}`;
                             }
-                        })
-                        .catch(() => {
-                            let p = modal.querySelector('.message')
-                            p.innerHTML = 'Server unavailable. Please try again later.'
-                            p.style.display = 'block'
                         });
                     });
                 });
 
-                actions.append(receiveBtn);
+                actions.append(cancelBtn);
             }
+            
+            if (req['Status'] === 'Pending' && privileges === 0) {
+                let approveBtn = document.createElement("button");
+                approveBtn.title = "Approve request";
+                approveBtn.type = "button";
+                approveBtn.role = "button";
+                approveBtn.value = req["RequestID"];
+                approveBtn.innerHTML = "<i class='bi bi-check-circle'></i>";
+                approveBtn.classList.add("green");
 
-            let cancelBtn = document.createElement("button");
-            cancelBtn.title = "Cancel request";
-            cancelBtn.type = "button";
-            cancelBtn.role = "button";
-            cancelBtn.value = req["RequestID"];
-            cancelBtn.innerHTML = "<i class='bi bi-x-circle'></i>";
-            cancelBtn.classList.add("red");
+                approveBtn.addEventListener("click", () => {
+                    let modal = document.querySelector("#modal-requests");
 
-            cancelBtn.addEventListener("click", () => {
-                let modal = document.querySelector("#modal-requests");
+                    modal.showModal();
+                    modal.querySelector("p").style.display = "";
+                    modal.querySelector("#quantity-span").style.display = "none";
+                    modal.querySelector("h1").innerText = "Approve request";
+                    modal.querySelector("p").innerHTML = "Are you sure you want to approve this request?";
+                    modal.querySelector("input[type=submit]").value = "Approve request";
+                    modal.querySelector("input[type=submit]").classList.add("btn-green");
+                    modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
+                    modal.querySelector("input[type=submit]").offsetHeight;
+                    modal.querySelector("input[type=submit]").style.transitionDuration = '';
 
-                modal.showModal();
-                modal.querySelector("p").style.display = "";
-                modal.querySelector("#quantity-span").style.display = "none";
-                modal.querySelector("h1").innerText = "Cancel request";
-                modal.querySelector("p").innerHTML = "Are you sure you want to cancel this request?<br><i><b style='color: var(--red);'>WARNING:</b> This will forfeit <b>all</b> items in this request!</i>";
-                modal.querySelector("input[type=submit]").value = "Cancel request";
-                modal.querySelector("input[type=submit]").classList.add("btn-red");
-                modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
-                modal.querySelector("input[type=submit]").offsetHeight;
-                modal.querySelector("input[type=submit]").style.transitionDuration = '';
+                    modal.querySelector("input[type=submit]").addEventListener("click", e => {
+                        e.preventDefault();
 
-                modal.querySelector("input[type=submit]").addEventListener("click", e => {
-                    e.preventDefault();
-                    
-                    fetch("./cancel", {
-                        "method": "POST",
-                        "headers": {
-                            "Content-Type": "application/json"
-                        },
-                        "body": JSON.stringify({
-                            "RequestID": req['RequestID']
-                        })
-                    }).then(d => {
-                        if (d.status === 200) {
-                            modal.close();
-                            populateRequests(tbody, keyword, privileges, filter);
-                        }
+                        fetch("./approve", {
+                            "method": "POST",
+                            "headers": {
+                                "Content-Type": "application/json"
+                            },
+                            "body": JSON.stringify({
+                                "RequestID": req['RequestID']
+                            })
+                        }).then(async d => {
+                            if (d.status === 200) {
+                                modal.close();
+                                populateRequests(tbody, keyword, privileges, filter);
+                            }
 
-                        if (d.status === 500){
-                            d.json().then(a => {
-                                let p = modal.querySelector('.message')
-                                p.style.display = 'block'
-                                
-                                if(a["error"] == 2003){
-                                    p.innerHTML = "Database error. Please try again later."
-                                }
-                                else{
-                                    p.innerHTML = "Internal server error. Please try again later."
-                                }
-                            });
-                        }
-                    })
-                    .catch(() => {
-                        let p = modal.querySelector('.message')
-                        p.innerHTML = 'Server unavailable. Please try again later.'
-                        p.style.display = 'block'
+                            if (d.status === 500) {
+                                modal.querySelector(".modal-msg").classList.add("error");
+                                modal.querySelector(".modal-msg").innerHTML = `<b>ERROR:</b> ${(await d.json())['error']}`;
+                            }
+                        });
                     });
                 });
-            });
 
-            actions.append(cancelBtn);
+                let denyBtn = document.createElement("button");
+                denyBtn.title = "Deny request";
+                denyBtn.type = "button";
+                denyBtn.role = "button";
+                denyBtn.value = req["RequestID"];
+                denyBtn.innerHTML = "<i class='bi bi-x-circle'></i>";
+                denyBtn.classList.add("red");
+
+                denyBtn.addEventListener("click", () => {
+                    let modal = document.querySelector("#modal-requests");
+
+                    modal.showModal();
+                    modal.querySelector("p").style.display = "";
+                    modal.querySelector("#quantity-span").style.display = "none";
+                    modal.querySelector("h1").innerText = "Deny request";
+                    modal.querySelector("p").innerHTML = "Are you sure you want to deny this request?";
+                    modal.querySelector("input[type=submit]").value = "Deny request";
+                    modal.querySelector("input[type=submit]").classList.add("btn-red");
+                    modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
+                    modal.querySelector("input[type=submit]").offsetHeight;
+                    modal.querySelector("input[type=submit]").style.transitionDuration = '';
+
+                    modal.querySelector("input[type=submit]").addEventListener("click", e => {
+                        e.preventDefault();
+                        
+                        fetch("./deny", {
+                            "method": "POST",
+                            "headers": {
+                                "Content-Type": "application/json"
+                            },
+                            "body": JSON.stringify({
+                                "RequestID": req['RequestID']
+                            })
+                        }).then(async d => {
+                            if (d.status === 200) {
+                                modal.close();
+                                populateRequests(tbody, keyword, privileges, filter);
+                            }
+
+                            if (d.status === 500) {
+                                modal.querySelector(".modal-msg").classList.add("error");
+                                modal.querySelector(".modal-msg").innerHTML = `<b>ERROR:</b> ${(await d.json())['error']}`;
+                            }
+                        });
+                    });
+                });
+                
+                actions.appendChild(approveBtn);
+                actions.appendChild(denyBtn);
+            }
+            
+            if (privileges === 2 && ['Pending', 'Approved', 'Issued'].includes(req['Status'])) {
+                if (req['Status'] === 'Issued') {
+                    let receiveBtn = document.createElement("button");
+                    receiveBtn.title = "Receive requested items";
+                    receiveBtn.type = "button";
+                    receiveBtn.role = "button";
+                    receiveBtn.value = req["RequestID"];
+                    receiveBtn.innerHTML = "<i class='bi bi-check-circle'></i>";
+                    receiveBtn.classList.add("green");
+                    
+                    receiveBtn.addEventListener("click", () => {
+                        let modal = document.querySelector("#modal-requests");
+
+                        modal.showModal();
+                        modal.querySelector("p").style.display = "";
+                        modal.querySelector("#quantity-span").style.display = "none";
+                        modal.querySelector("h1").innerText = "Receive request";
+                        modal.querySelector("p").innerHTML = "Are you sure you want to receive this request?";
+                        modal.querySelector("input[type=submit]").value = "Receive request";
+                        modal.querySelector("input[type=submit]").classList.add("btn-green");
+                        modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
+                        modal.querySelector("input[type=submit]").offsetHeight;
+                        modal.querySelector("input[type=submit]").style.transitionDuration = '';
+
+                        modal.querySelector("input[type=submit]").addEventListener("click", e => {
+                            e.preventDefault();
+                            
+                            fetch("./receive", {
+                                "method": "POST",
+                                "headers": {
+                                    "Content-Type": "application/json"
+                                },
+                                "body": JSON.stringify({
+                                    "RequestID": req['RequestID']
+                                })
+                            }).then(async d => {
+                                if (d.status === 200) {
+                                    modal.close();
+                                    populateRequests(tbody, keyword, privileges, filter);
+                                }
+
+                                if (d.status === 500) {
+                                    modal.querySelector(".modal-msg").classList.add("error");
+                                    modal.querySelector(".modal-msg").innerHTML = `<b>ERROR:</b> ${(await d.json())['error']}`;
+                                }
+                            });
+                        });
+                    });
+
+                    actions.append(receiveBtn);
+                }
+
+                let cancelBtn = document.createElement("button");
+                cancelBtn.title = "Cancel request";
+                cancelBtn.type = "button";
+                cancelBtn.role = "button";
+                cancelBtn.value = req["RequestID"];
+                cancelBtn.innerHTML = "<i class='bi bi-x-circle'></i>";
+                cancelBtn.classList.add("red");
+
+                cancelBtn.addEventListener("click", () => {
+                    let modal = document.querySelector("#modal-requests");
+
+                    modal.showModal();
+                    modal.querySelector("p").style.display = "";
+                    modal.querySelector("#quantity-span").style.display = "none";
+                    modal.querySelector("h1").innerText = "Cancel request";
+                    modal.querySelector("p").innerHTML = "Are you sure you want to cancel this request?<br><i><b style='color: var(--red);'>WARNING:</b> This will forfeit <b>all</b> items in this request!</i>";
+                    modal.querySelector("input[type=submit]").value = "Cancel request";
+                    modal.querySelector("input[type=submit]").classList.add("btn-red");
+                    modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
+                    modal.querySelector("input[type=submit]").offsetHeight;
+                    modal.querySelector("input[type=submit]").style.transitionDuration = '';
+
+                    modal.querySelector("input[type=submit]").addEventListener("click", e => {
+                        e.preventDefault();
+                        
+                        fetch("./cancel", {
+                            "method": "POST",
+                            "headers": {
+                                "Content-Type": "application/json"
+                            },
+                            "body": JSON.stringify({
+                                "RequestID": req['RequestID']
+                            })
+                        }).then(async d => {
+                            if (d.status === 200) {
+                                modal.close();
+                                populateRequests(tbody, keyword, privileges, filter);
+                            }
+
+                            if (d.status === 500) {
+                                modal.querySelector(".modal-msg").classList.add("error");
+                                modal.querySelector(".modal-msg").innerHTML = `<b>ERROR:</b> ${(await d.json())['error']}`;
+                            }
+                        });
+                    });
+                });
+
+                actions.append(cancelBtn);
+            }
+            
         }
         
         tr.appendChild(actions);
@@ -772,8 +665,8 @@ async function populateUsers (tbody, keyword = "", { buttons = false } = {}) {
                         f.preventDefault();
 
                         modal.querySelectorAll("form input").forEach(x => x.disabled = true);
-                        modal.querySelector(".message").classList.remove("error");
-                        modal.querySelector(".message").innerHTML = "Please wait\u2026";
+                        modal.querySelector(".form-msg").classList.remove("error");
+                        modal.querySelector(".form-msg").innerHTML = "Please wait\u2026";
 
                         fetch("./demote", {
                             "method": "POST",
@@ -788,8 +681,8 @@ async function populateUsers (tbody, keyword = "", { buttons = false } = {}) {
                                 populateUsers(tbody);
                                 document.querySelector("#search").reset();
                             } else if (res.status === 500) {
-                                modal.querySelector(".message").classList.add("error");
-                                modal.querySelector(".message").innerHTML = `<b>ERROR:</b> ${(await res.json())['error']}`;
+                                modal.querySelector(".form-msg").classList.add("error");
+                                modal.querySelector(".form-msg").innerHTML = `<b>ERROR:</b> ${(await res.json())['error']}`;
                             }
                         });
                     });
@@ -814,8 +707,8 @@ async function populateUsers (tbody, keyword = "", { buttons = false } = {}) {
                         f.preventDefault();
 
                         modal.querySelectorAll("form input").forEach(x => x.disabled = true);
-                        modal.querySelector(".message").classList.remove("error");
-                        modal.querySelector(".message").innerHTML = "Please wait\u2026";
+                        modal.querySelector(".form-msg").classList.remove("error");
+                        modal.querySelector(".form-msg").innerHTML = "Please wait\u2026";
 
                         fetch("./promote", {
                             "method": "POST",
@@ -830,8 +723,8 @@ async function populateUsers (tbody, keyword = "", { buttons = false } = {}) {
                                 populateUsers(tbody);
                                 document.querySelector("#search").reset();
                             } else if (res.status === 500) {
-                                modal.querySelector(".message").classList.add("error");
-                                modal.querySelector(".message").innerHTML = `<b>ERROR:</b> ${(await res.json())['error']}`;
+                                modal.querySelector(".form-msg").classList.add("error");
+                                modal.querySelector(".form-msg").innerHTML = `<b>ERROR:</b> ${(await res.json())['error']}`;
                             }
                         });
                     });
