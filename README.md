@@ -1,4 +1,5 @@
 # sIMS: *simple* inventory management system
+sIMS is a tailor-made inventory management system specifically designed for San Roque National High School. This program converts the procurement, management, and distribution of school resources into digital processes. The system utilizes a Flask application as its server application and uses MySQL as its database system. 
 
 ## Requirements
 * Python 3.10.x
@@ -16,12 +17,12 @@ After creating the virtual environment, activate it by running the following:
 ```
 Once the virtual environment has been activated, further terminal prompts should show `(venv)` at the beginning.
 
-Install this project's required packages by running the following:
+Install this project's dependencies by running the following:
 ```powershell
 > pip install requirements.txt
 ```
 
-Finally, import the MySQL database dump that comes with the repository (`sims.sql`) into your machine's local MySQL connection. This may be done by selecting `Server > Data Import` after connecting through the MySQL Workbench.
+Finally, import the MySQL database dump file that comes with the repository (`sims.sql`) into your machine's local MySQL connection. This may be done by selecting `Server > Data Import` after connecting through the MySQL Workbench.
 
 ## Running the application
 To run the application, first make sure that the MySQL80 service is running on your machine. This can be done by checking the Windows Task Manager, navigating to the Services tab, and ensuring that the MySQL80 service status is *Running*.
