@@ -51,7 +51,7 @@ def send_email (session, type, recipient, **kwargs):
         msg.set_content(f"Your 4-digit code is {kwargs['code']}.")
     
     text = msg.as_string()
-    # session.sendmail(sender_address, recipient, text)
+    session.sendmail(sender_address, recipient, text)
 
 # generate username for new users
 def generate_userID (first, last, cxn):
