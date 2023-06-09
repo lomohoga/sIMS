@@ -60,6 +60,7 @@ def add_items ():
 
     if request.method == 'POST':        
         try:
+            cxn = None
             try:
                 values = request.get_json()
 
@@ -83,7 +84,7 @@ def add_items ():
                 current_app.logger.error(e.args[1])
                 return { "error": e.args[1] }, 500
             finally:
-                cxn.close()
+                if cxn is not None: cxn.close()
         except Exception as e:
             current_app.logger.error(e)
             return { "error": str(e) }, 500
@@ -102,6 +103,7 @@ def remove_items ():
 
     if request.method == "POST":
         try:
+            cxn = None
             try:
                 items = request.get_json()["items"]
 
@@ -128,7 +130,7 @@ def remove_items ():
                 current_app.logger.error(e.args[1])
                 return { "error": e.args[1] }, 500
             finally:
-                cxn.close()
+                if cxn is not None: cxn.close()
         except Exception as e:
             current_app.logger.error(e)
             return { "error": str(e) }, 500
@@ -147,6 +149,7 @@ def update_items ():
 
     if request.method == "POST":
         try:
+            cxn = None
             try:
                 values = request.get_json()["values"]
 
@@ -173,7 +176,7 @@ def update_items ():
                 current_app.logger.error(e.args[1])
                 return { "error": e.args[1] }, 500
             finally:
-                cxn.close()
+                if cxn is not None: cxn.close()
         except Exception as e:
             current_app.logger.error(e)
             return { "error": str(e) }, 500
@@ -189,6 +192,7 @@ def request_items ():
 
     if (request.method == "POST"):
         try:
+            cxn = None
             try:
                 req = request.get_json()["items"]
 
@@ -216,7 +220,7 @@ def request_items ():
                 current_app.logger.error(e.args[1])
                 return { "error": e.args[1] }, 500
             finally:
-                cxn.close()
+                if cxn is not None: cxn.close()
         except Exception as e:
             current_app.logger.error(e)
             return { "error": str(e) }, 500

@@ -26,6 +26,7 @@ def generate_58 ():
         return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
 
     try:
+        cxn = None
         try:
             item = request.args["item"]
 
@@ -44,7 +45,7 @@ def generate_58 ():
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
+            if cxn is not None: cxn.close()
     except Exception as e:
         current_app.logger.error(e)
         return { "error": str(e) }, 500
@@ -57,6 +58,7 @@ def generate_59 ():
         return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
 
     try:
+        cxn = None
         try:
             item = request.args["item"]
 
@@ -76,7 +78,7 @@ def generate_59 ():
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
+            if cxn is not None: cxn.close()
     except Exception as e:
         current_app.logger.error(e)
         return { "error": str(e) }, 500
@@ -89,6 +91,7 @@ def generate_63 ():
         return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
 
     try:
+        cxn = None
         try:
             item = request.args["item"]
 
@@ -107,7 +110,7 @@ def generate_63 ():
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
+            if cxn is not None: cxn.close()
     except Exception as e:
         current_app.logger.error(e)
         return { "error": str(e) }, 500
@@ -120,6 +123,7 @@ def generate_69 ():
         return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
 
     try:
+        cxn = None
         try:
             item = request.args["item"]
 
@@ -138,7 +142,7 @@ def generate_69 ():
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
+            if cxn is not None: cxn.close()
     except Exception as e:
         current_app.logger.error(e)
         return { "error": str(e) }, 500
@@ -151,6 +155,7 @@ def generate_71 ():
         return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
 
     try:
+        cxn = None
         try:
             item = request.args["item"]
 
@@ -170,7 +175,7 @@ def generate_71 ():
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
+            if cxn is not None: cxn.close()
     except Exception as e:
         current_app.logger.error(e)
         return { "error": str(e) }, 500

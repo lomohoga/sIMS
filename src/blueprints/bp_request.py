@@ -23,6 +23,7 @@ def requests ():
 @login_required
 def search_requests ():
     try:
+        cxn = None
         try:
             keywords = [] if "keywords" not in request.args else [decode_keyword(x).lower() for x in request.args.get("keywords").split(" ")]
             filters = [] if "filter" not in request.args else request.args.get("filter").split(",")
@@ -45,7 +46,7 @@ def search_requests ():
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
+            if cxn is not None: cxn.close()
     except Exception as e:
         current_app.logger.error(e)
         return { "error": str(e) }, 500
@@ -56,6 +57,7 @@ def search_requests ():
 @bp_request.route('/approve', methods = ["POST"])
 def approve_request ():
     try:
+        cxn = None
         try:
             req = request.get_json()['RequestID']
 
@@ -75,7 +77,7 @@ def approve_request ():
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            if cxn: cxn.close()
+            if cxn is not None: cxn.close()
     except Exception as e:
         current_app.logger.error(e)
         return { "error": str(e) }, 500
@@ -86,12 +88,13 @@ def approve_request ():
 @bp_request.route('/deny', methods = ["POST"])
 def deny_request ():
     try:
-        req = request.get_json()['RequestID']
-
-        cxn = connect_db()
-        db = cxn.cursor()
-
+        cxn = None
         try:
+            req = request.get_json()['RequestID']
+
+            cxn = connect_db()
+            db = cxn.cursor()
+
             db.execute(f"SELECT StatusID FROM request WHERE RequestID = {req}")
             f = db.fetchone()
             if f is None: raise RequestNotFoundError(request = req)
@@ -105,7 +108,7 @@ def deny_request ():
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
+            if cxn is not None: cxn.close()
     except Exception as e:
         current_app.logger.error(e)
         return { "error": str(e) }, 500
@@ -117,6 +120,7 @@ def deny_request ():
 @login_required
 def cancel_request ():
     try:
+        cxn = None
         try:
             body = request.get_json()
 
@@ -136,7 +140,7 @@ def cancel_request ():
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
+            if cxn is not None: cxn.close()
     except Exception as e:
         current_app.logger.error(e)
         return { "error": str(e) }, 500
@@ -148,6 +152,7 @@ def cancel_request ():
 @login_required
 def receive_request ():
     try:
+        cxn = None
         try:
             req = request.get_json()['RequestID']
 
@@ -172,7 +177,7 @@ def receive_request ():
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
+            if cxn is not None: cxn.close()
     except Exception as e:
         current_app.logger.error(e)
         return { "error": str(e) }, 500
@@ -184,6 +189,7 @@ def receive_request ():
 @login_required
 def issue_item ():
     try:
+        cxn = None
         try:
             body = request.get_json()
 
@@ -213,7 +219,7 @@ def issue_item ():
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
+            if cxn is not None: cxn.close()
     except Exception as e:
         current_app.logger.error(e)
         return { "error": str(e) }, 500
@@ -225,6 +231,7 @@ def issue_item ():
 @login_required
 def issue_request ():
     try:
+        cxn = None
         try:
             req = request.get_json()['RequestID']
 
@@ -253,7 +260,7 @@ def issue_request ():
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
-            cxn.close()
+            if cxn is not None: cxn.close()
     except Exception as e:
         current_app.logger.error(e)
         return { "error": str(e) }, 500

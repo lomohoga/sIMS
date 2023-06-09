@@ -13,14 +13,15 @@ def login ():
         return render_template('login.html')
     
     if request.method == 'POST':
-        req = request.get_json()
-        username, password = req['username'], req['password']
-
         try:
-            cxn = connect_db()
-            db = cxn.cursor()
-
+            cxn = None
             try:
+                req = request.get_json()
+                username, password = req['username'], req['password']
+
+                cxn = connect_db()
+                db = cxn.cursor()
+
                 db.execute(f"SELECT Username, Password, FirstName, LastName, RoleID, RoleName, Email FROM user LEFT JOIN role USING (RoleID) WHERE Username = '{username}' OR Email = '{username}'")
                 record = db.fetchone()
 
@@ -32,19 +33,16 @@ def login ():
                     
                 session.clear()
                 session['user'] = user
-                return Response(status = 200)
             except MySQLError as e:
                 current_app.logger.error(e.args[1])
                 return { "error": e.args[1] }, 500
-            except Exception as e:
-                current_app.logger.error(e)
-                return { "error": "e" }
             finally:
-                cxn.close()
-
-        except MySQLError as e:
-            if e.args[0] == 2003: return { "error": "Could not connect to database. Please make sure that MySQL is currently running." }, 500
-            else: return { "error": e.args[1] }, 500
+                if cxn is not None: cxn.close()
+        except Exception as e:
+            current_app.logger.error(e)
+            return { "error": str(e) }
+        
+    return Response(status = 200)
 
 # route for logging out
 @bp_auth.route('/logout')
