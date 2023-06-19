@@ -59,10 +59,10 @@ def add_deliveries ():
             cxn = connect_db()
             db = cxn.cursor()
 
-                db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
-                f = db.fetchone()
-                if f is None: raise SelfNotFoundError(username = session['user']['Username'])
-                if f[0] == 1: raise SelfRoleError(username = session['user']['Username'], role = f[0])
+            db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
+            f = db.fetchone()
+            if f is None: raise SelfNotFoundError(username = session['user']['Username'])
+            if f[0] != 1: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
             for v in values['values']:
                 db.execute(f"SELECT * FROM item WHERE ItemID = '{v['ItemID']}'")
@@ -74,7 +74,6 @@ def add_deliveries ():
             current_app.logger.error(str(e))
             return { "error": str(e) }, 500
         finally:
-            if cxn is not None:
-                cxn.close()
+            if cxn is not None: cxn.close()
         
         return Response(status = 200)

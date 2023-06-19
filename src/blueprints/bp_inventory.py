@@ -1,12 +1,10 @@
 from flask import Blueprint, Response, render_template, request, session, current_app
 
-from mysql.connector import Error as MySQLError
-
 from src.blueprints.format_data import format_items
 from src.blueprints.auth import login_required
 from src.blueprints.database import connect_db
 from src.blueprints.decode_keyword import decode_keyword, escape
-from src.blueprints.exceptions import DatabaseConnectionError, ItemNotFoundError, ExistingItemError, OngoingRequestItemError, SelfNotFoundError, SelfRoleError
+from src.blueprints.exceptions import ItemNotFoundError, ExistingItemError, OngoingRequestItemError, SelfNotFoundError, SelfRoleError
 
 bp_inventory = Blueprint('bp_inventory', __name__, url_prefix = "/inventory")
 
@@ -20,31 +18,25 @@ def inventory ():
 @bp_inventory.route('/search')
 @login_required
 def search_items ():
+    keywords = [] if "keywords" not in request.args else [decode_keyword(x).lower() for x in request.args.get("keywords").split(" ")]
+    conditions = []
+    for x in keywords:
+        conditions.append(f"(ItemID LIKE '%{x}%' OR ItemName LIKE '%{x}%' OR ItemDescription LIKE '%{x}%')")
+    query = f"SELECT * from stock {'' if len(conditions) == 0 else 'WHERE (' + ' AND '.join(conditions) + ')'} ORDER BY ItemID"
+
+    cxn = None
+
     try:
-        try:
-            keywords = [] if "keywords" not in request.args else [decode_keyword(x).lower() for x in request.args.get("keywords").split(" ")]
+        cxn = connect_db()
+        db = cxn.cursor()
 
-            conditions = []
-            for x in keywords:
-                conditions.append(f"(ItemID LIKE '%{x}%' OR ItemName LIKE '%{x}%' OR ItemDescription LIKE '%{x}%')")
-
-            query = f"SELECT * from stock {'' if len(conditions) == 0 else 'WHERE (' + ' AND '.join(conditions) + ')'} ORDER BY ItemID"
-
-            cxn = connect_db()
-            db = cxn.cursor()
-
-            db.execute(query)
-            items = db.fetchall()
-        except MySQLError as e:
-            if e.args[0] == 2003: raise DatabaseConnectionError
-
-            current_app.logger.error(e.args[1])
-            return { "error": e.args[1] }, 500
-        finally:
-            cxn.close()
+        db.execute(query)
+        items = db.fetchall()
     except Exception as e:
-        current_app.logger.error(e)
-        return { "error": e }, 500
+        current_app.logger.error(str(e))
+        return { "error": str(e) }, 500
+    finally:
+        if cxn is not None: cxn.close()
 
     return { "items": format_items(items) }
 
@@ -59,35 +51,28 @@ def add_items ():
             return render_template("inventory/add.html")
 
     if request.method == 'POST':        
+        cxn = None
+        values = request.get_json()
         try:
-            cxn = None
-            try:
-                values = request.get_json()
+            cxn = connect_db()
+            db = cxn.cursor()
 
-                cxn = connect_db()
-                db = cxn.cursor()
+            db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
+            f = db.fetchone()
+            if f is None: raise SelfNotFoundError(username = session['user']['Username'])
+            if f[0] == 2 and f[0] != session['user']['RoleID']: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
-                db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
-                f = db.fetchone()
-                if f is None: raise SelfNotFoundError(username = session['user']['Username'])
-                if f[0] == 2 and f[0] != session['user']['RoleID']: raise SelfRoleError(username = session['user']['Username'], role = f[0])
+            for v in values['values']:
+                db.execute(f"SELECT * FROM item WHERE ItemID = '{v['ItemID']}'")
+                if db.fetchone() is not None: raise ExistingItemError(item = v['ItemID'])
 
-                for v in values['values']:
-                    db.execute(f"SELECT * FROM item WHERE ItemID = '{v['ItemID']}'")
-                    if db.fetchone() is not None: raise ExistingItemError(item = v['ItemID'])
-
-                    db.execute(f"INSERT INTO item VALUES ('{v['ItemID']}', '{escape(v['ItemName'])}', '{escape(v['ItemDescription'])}', {'NULL' if v['ShelfLife'] is None else v['ShelfLife']}, {v['Price']}, '{v['Unit']}')")
-                cxn.commit()
-            except MySQLError as e:
-                if e.args[0] == 2003: raise DatabaseConnectionError
-
-                current_app.logger.error(e.args[1])
-                return { "error": e.args[1] }, 500
-            finally:
-                if cxn is not None: cxn.close()
+                db.execute(f"INSERT INTO item VALUES ('{v['ItemID']}', '{escape(v['ItemName'])}', '{escape(v['ItemDescription'])}', {'NULL' if v['ShelfLife'] is None else v['ShelfLife']}, {v['Price']}, '{v['Unit']}')")
+            cxn.commit()
         except Exception as e:
-            current_app.logger.error(e)
+            current_app.logger.error(str(e))
             return { "error": str(e) }, 500
+        finally:
+            if cxn is not None: cxn.close()
         
         return Response(status = 200)
 
@@ -102,38 +87,28 @@ def remove_items ():
             return render_template("inventory/remove.html")
 
     if request.method == "POST":
+        items = request.get_json()["items"]
+        cxn = None
         try:
-            cxn = None
-            try:
-                items = request.get_json()["items"]
+            cxn = connect_db()
+            db = cxn.cursor()
 
-                cxn = connect_db()
-                db = cxn.cursor()
+            db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
+            f = db.fetchone()
+            if f is None: raise SelfNotFoundError(username = session['user']['Username'])
+            if f[0] == 2 and f[0] != session['user']['RoleID']: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
-                db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
-                f = db.fetchone()
-                if f is None: raise SelfNotFoundError(username = session['user']['Username'])
-                if f[0] == 2 and f[0] != session['user']['RoleID']: raise SelfRoleError(username = session['user']['Username'], role = f[0])
+            for x in items:
+                db.execute(f"SELECT * FROM item WHERE ItemID = '{x}'")
+                if db.fetchone() is None: raise ItemNotFoundError(item = x)
 
-                for x in items:
-                    db.execute(f"SELECT * FROM item WHERE ItemID = '{x}'")
-                    if db.fetchone() is None: raise ItemNotFoundError(item = x)
-
-                    db.execute(f"DELETE FROM item WHERE ItemID = '{x}'")
-                cxn.commit()
-            except MySQLError as e:
-                if e.args[0] == 2003: raise DatabaseConnectionError
-                if e.args[0] == 1451:
-                    db.execute(f"SELECT COUNT(*) FROM request_item WHERE ItemID = '{x}'")
-                    raise OngoingRequestItemError(item = x, requests = db.fetchone()[0])
-                
-                current_app.logger.error(e.args[1])
-                return { "error": e.args[1] }, 500
-            finally:
-                if cxn is not None: cxn.close()
+                db.execute(f"DELETE FROM item WHERE ItemID = '{x}'")
+            cxn.commit()
         except Exception as e:
-            current_app.logger.error(e)
+            current_app.logger.error(str(e))
             return { "error": str(e) }, 500
+        finally:
+            if cxn is not None: cxn.close()
 
         return Response(status = 200)
 
@@ -148,38 +123,31 @@ def update_items ():
             return render_template("inventory/update.html")
 
     if request.method == "POST":
+        values = request.get_json()["values"]
+        cxn = None
         try:
-            cxn = None
-            try:
-                values = request.get_json()["values"]
+            cxn = connect_db()
+            db = cxn.cursor()
 
-                cxn = connect_db()
-                db = cxn.cursor()
+            db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
+            f = db.fetchone()
+            if f is None: raise SelfNotFoundError(username = session['user']['Username'])
+            if f[0] == 2 and f[0] != session['user']['RoleID']: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
-                db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
-                f = db.fetchone()
-                if f is None: raise SelfNotFoundError(username = session['user']['Username'])
-                if f[0] == 2 and f[0] != session['user']['RoleID']: raise SelfRoleError(username = session['user']['Username'], role = f[0])
+            for v in values:
+                db.execute(f"SELECT * FROM item WHERE ItemID = '{v}'")
+                if db.fetchone() is None: raise ItemNotFoundError(item = values[v]['ItemID'])
 
-                for v in values:
-                    db.execute(f"SELECT * FROM item WHERE ItemID = '{v}'")
-                    if db.fetchone() is None: raise ItemNotFoundError(item = values[v]['ItemID'])
+                db.execute(f"SELECT * FROM item WHERE ItemID = '{values[v]['ItemID']}'")
+                if db.fetchone() is not None and v != values[v]['ItemID']: raise ExistingItemError(item = v)
 
-                    db.execute(f"SELECT * FROM item WHERE ItemID = '{values[v]['ItemID']}'")
-                    if db.fetchone() is not None and v != values[v]['ItemID']: raise ExistingItemError(item = v)
-
-                    db.execute(f"UPDATE item SET ItemID = '{values[v]['ItemID']}', ItemName = '{escape(values[v]['ItemName'])}', ItemDescription = '{escape(values[v]['ItemDescription'])}', ShelfLife = {'NULL' if values[v]['ShelfLife'] is None else values[v]['ShelfLife']}, Price = {values[v]['Price']}, Unit = '{values[v]['Unit']}' WHERE ItemID = '{v}'")
-                cxn.commit()
-            except MySQLError as e:
-                if e.args[0] == 2003: raise DatabaseConnectionError
-
-                current_app.logger.error(e.args[1])
-                return { "error": e.args[1] }, 500
-            finally:
-                if cxn is not None: cxn.close()
+                db.execute(f"UPDATE item SET ItemID = '{values[v]['ItemID']}', ItemName = '{escape(values[v]['ItemName'])}', ItemDescription = '{escape(values[v]['ItemDescription'])}', ShelfLife = {'NULL' if values[v]['ShelfLife'] is None else values[v]['ShelfLife']}, Price = {values[v]['Price']}, Unit = '{values[v]['Unit']}' WHERE ItemID = '{v}'")
+            cxn.commit()
         except Exception as e:
-            current_app.logger.error(e)
+            current_app.logger.error(str(e))
             return { "error": str(e) }, 500
+        finally:
+            if cxn is not None: cxn.close()
         
         return Response(status = 200)
 
@@ -191,38 +159,31 @@ def request_items ():
         return render_template("inventory/request.html")
 
     if (request.method == "POST"):
+        cxn = None
+        req = request.get_json()["items"]
         try:
-            cxn = None
-            try:
-                req = request.get_json()["items"]
+            cxn = connect_db()
+            db = cxn.cursor()
 
-                cxn = connect_db()
-                db = cxn.cursor()
+            db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
+            f = db.fetchone()
+            if f is None: raise SelfNotFoundError(username = session['user']['Username'])
+            if f[0] == 1 and f[0] != session['user']['RoleID']: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
-                db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
-                f = db.fetchone()
-                if f is None: raise SelfNotFoundError(username = session['user']['Username'])
-                if f[0] == 1 and f[0] != session['user']['RoleID']: raise SelfRoleError(username = session['user']['Username'], role = f[0])
+            db.execute(f"INSERT INTO request (RequestedBy) VALUES ('{session['user']['Username']}')")
+            db.execute("SELECT LAST_INSERT_ID()")
+            requestID = db.fetchone()[0]
 
-                db.execute(f"INSERT INTO request (RequestedBy) VALUES ('{session['user']['Username']}')")
-                db.execute("SELECT LAST_INSERT_ID()")
-                requestID = db.fetchone()[0]
+            for x in req:
+                db.execute(f"SELECT * FROM item WHERE ItemID = '{x['ItemID']}'")
+                if db.fetchone() is None: raise ItemNotFoundError(item = x['ItemID'])
 
-                for x in req:
-                    db.execute(f"SELECT * FROM item WHERE ItemID = '{x['ItemID']}'")
-                    if db.fetchone() is None: raise ItemNotFoundError(item = x['ItemID'])
-
-                    db.execute(f"INSERT INTO request_item (RequestID, ItemID, RequestQuantity) VALUES ({requestID}, '{x['ItemID']}', {x['RequestQuantity']})")
-                cxn.commit()
-            except MySQLError as e:
-                if e.args[0] == 2003: raise DatabaseConnectionError
-
-                current_app.logger.error(e.args[1])
-                return { "error": e.args[1] }, 500
-            finally:
-                if cxn is not None: cxn.close()
+                db.execute(f"INSERT INTO request_item (RequestID, ItemID, RequestQuantity) VALUES ({requestID}, '{x['ItemID']}', {x['RequestQuantity']})")
+            cxn.commit()
         except Exception as e:
-            current_app.logger.error(e)
+            current_app.logger.error(str(e))
             return { "error": str(e) }, 500
+        finally:
+            if cxn is not None: cxn.close()
 
         return Response(status = 200)

@@ -15,7 +15,6 @@ def login ():
         req = request.get_json()
         username, password = req['username'], req['password']
         cxn = None
-
         try:
             cxn = connect_db()
             db = cxn.cursor()
@@ -26,12 +25,11 @@ def login ():
             current_app.logger.error(str(e))
             return { "error": str(e) }, 500
         finally:
-            if cxn is not None:
-                cxn.close()
+            if cxn is not None: cxn.close()
 
-        if record is None: return { "error": "User not found. Please check your credentials." }, 500
+        if record is None: return { "error": "Invalid login. Please try again." }, 500
         user = {a: b for a, b in zip(["Username", "Password", "FirstName", "LastName", "RoleID", "RoleName", "Email"], record)}
-        if generateHash(password) != user["Password"]: return { "error": "Incorrect password. Please try again." }, 500
+        if generateHash(password) != user["Password"]: return { "error": "Invalid login. Please try again." }, 500
             
         session.clear()
         session['user'] = user

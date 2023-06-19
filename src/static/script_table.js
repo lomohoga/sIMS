@@ -666,8 +666,8 @@ async function populateUsers (tbody, keyword = "", { buttons = false } = {}) {
                         f.preventDefault();
 
                         modal.querySelectorAll("form input").forEach(x => x.disabled = true);
-                        modal.querySelector(".form-msg").classList.remove("error");
-                        modal.querySelector(".form-msg").innerHTML = "Please wait\u2026";
+                        modal.querySelector(".modal-msg").classList.remove("error");
+                        modal.querySelector(".modal-msg").innerHTML = "Please wait\u2026";
 
                         fetch("./demote", {
                             "method": "POST",
@@ -708,8 +708,8 @@ async function populateUsers (tbody, keyword = "", { buttons = false } = {}) {
                         f.preventDefault();
 
                         modal.querySelectorAll("form input").forEach(x => x.disabled = true);
-                        modal.querySelector(".form-msg").classList.remove("error");
-                        modal.querySelector(".form-msg").innerHTML = "Please wait\u2026";
+                        modal.querySelector(".modal-msg").classList.remove("error");
+                        modal.querySelector(".modal-msg").innerHTML = "Please wait\u2026";
 
                         fetch("./promote", {
                             "method": "POST",

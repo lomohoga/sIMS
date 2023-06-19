@@ -139,7 +139,7 @@ class SelfNotFoundError (UserNotFoundError):
 # exception for emails not registered in database
 class EmailNotFoundError (Exception):
     def __init__ (self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(args, kwargs)
         self.args = (kwargs['email'],)
 
     def __str__ (self) -> str:

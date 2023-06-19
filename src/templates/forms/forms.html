@@ -156,7 +156,13 @@
                         let filename = `Appendix${v}_${row.firstChild.innerText}`;
 
                         fetch(`./${v}?item=${row.firstChild.innerText}`)
-                        .then(res => res.body.getReader().read())
+                        .then(res => {
+                            if(res.status === 500){
+                                throw(res)
+                            }
+
+                            return res.body.getReader().read()
+                        })
                         .then(data => {
                             if (!data.value) throw `Item ID ${itemID.value} not found.`;
                             
@@ -170,7 +176,15 @@
                             a.href = link;
                             a.download = filename;
                             a.click();
-                        });
+                        })
+                        .catch((error) => {
+                            error.json().then(a => {
+                                let x = document.querySelector("#snackbar");
+                                x.innerText = a["error"];
+                                x.classList.add("show");
+                                setTimeout(function(){ x.classList.remove("show") }, 3000);
+                            })
+                        })
                     });
                 }
             });
@@ -211,6 +225,7 @@
                             fetch(`./${w}?item=${row.firstChild.innerText}`)
                             .then(d => {
                                 if (d.status === 200) return d;
+                                else throw(d)
                             })
                             .then(res => res.body.getReader().read())
                             .then(data => {
@@ -226,6 +241,14 @@
                                 a.href = link;
                                 a.download = filename;
                                 a.click();
+                            })
+                            .catch((error) => {
+                                error.json().then(a => {
+                                    let x = document.querySelector("#snackbar");
+                                    x.innerText = a["error"];
+                                    x.classList.add("show");
+                                    setTimeout(function(){ x.classList.remove("show") }, 3000);
+                                })
                             });
                         }
                     });
