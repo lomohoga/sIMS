@@ -28,7 +28,7 @@ def generate_58 ():
     item = request.args["item"]
     try:
         cxn = connect_db()
-        db = cxn.cursor()
+        db = cxn.cursor(buffered=True)
 
         db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
         f = db.fetchone()
@@ -53,7 +53,7 @@ def generate_59 ():
     item = request.args["item"]
     try:
         cxn = connect_db()
-        db = cxn.cursor()
+        db = cxn.cursor(buffered=True)
 
         db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
         f = db.fetchone()
@@ -80,7 +80,7 @@ def generate_63 ():
     item = request.args["item"]
     try:
         cxn = connect_db()
-        db = cxn.cursor()
+        db = cxn.cursor(buffered=True)
         
         db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
         f = db.fetchone()
@@ -105,7 +105,7 @@ def generate_69 ():
     item = request.args["item"]
     try:
         cxn = connect_db()
-        db = cxn.cursor()
+        db = cxn.cursor(buffered=True)
         
         db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
         f = db.fetchone()
@@ -130,7 +130,7 @@ def generate_71 ():
     item = request.args["item"]
     try:
         cxn = connect_db()
-        db = cxn.cursor()
+        db = cxn.cursor(buffered=True)
 
         db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
         f = db.fetchone()
