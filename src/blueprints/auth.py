@@ -21,15 +21,3 @@ def generateHash (a):
     m = sha256()
     m.update(a.encode('utf-8'))
     return m.hexdigest()
-
-# update values of session['user']
-def update_session():
-    cxn = connect_db()
-    db = cxn.cursor()
-    db.execute(f"SELECT Username, Password, FirstName, LastName, RoleID, RoleName, Email FROM user LEFT JOIN role USING (RoleID) WHERE Username = '{session['user']['Username']}'")
-    user = {a: b for a, b in zip(["Username", "Password", "FirstName", "LastName", "RoleID", "RoleName", "Email"], db.fetchone())}
-    cxn.close()
-
-    session.clear()
-    session['user'] = user
-    return

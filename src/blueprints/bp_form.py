@@ -26,29 +26,26 @@ def generate_58 ():
         return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
 
     try:
-        cxn = None
+        item = request.args["item"]
+
+        cxn = connect_db()
+        db = cxn.cursor()
         try:
-            item = request.args["item"]
-
-            cxn = connect_db()
-            db = cxn.cursor()
-
             db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
             f = db.fetchone()
             if f is None: raise SelfNotFoundError(username = session['user']['Username'])
             if f[0] == 2: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
-            return form_58(db, item)
-        except MySQLError as e:
-            if e == 2003: raise DatabaseConnectionError
-
+            return form_58(item)
+        except Exception as e:
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
             if cxn is not None: cxn.close()
     except Exception as e:
-        current_app.logger.error(e)
-        return { "error": str(e) }, 500
+        current_app.logger.log(e)
+        if e == 2003: raise DatabaseConnectionError
+        return { "error": e.args[1] }, 500
 
 # route for generating appendix 59
 @bp_form.route('/59')
@@ -58,13 +55,11 @@ def generate_59 ():
         return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
 
     try:
-        cxn = None
+        item = request.args["item"]
+
+        cxn = connect_db()
+        db = cxn.cursor()
         try:
-            item = request.args["item"]
-
-            cxn = connect_db()
-            db = cxn.cursor()
-
             db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
             f = db.fetchone()
             if f is None: raise SelfNotFoundError(username = session['user']['Username'])
@@ -72,16 +67,15 @@ def generate_59 ():
 
             form = form_59(db, item)
             return form if form is not None else Response(status = 204)
-        except MySQLError as e:
-            if e == 2003: raise DatabaseConnectionError
-
+        except Exception as e:
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
             if cxn is not None: cxn.close()
     except Exception as e:
-        current_app.logger.error(e)
-        return { "error": str(e) }, 500
+        current_app.logger.log(e)
+        if e == 2003: raise DatabaseConnectionError
+        return { "error": e.args[1] }, 500
 
 # route for generating appendix 63
 @bp_form.route('/63')
@@ -91,29 +85,26 @@ def generate_63 ():
         return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
 
     try:
-        cxn = None
+        item = request.args["item"]
+
+        cxn = connect_db()
+        db = cxn.cursor()
         try:
-            item = request.args["item"]
-
-            cxn = connect_db()
-            db = cxn.cursor()
-
             db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
             f = db.fetchone()
             if f is None: raise SelfNotFoundError(username = session['user']['Username'])
             if f[0] == 2: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
-            return form_63(db, item)
-        except MySQLError as e:
-            if e == 2003: raise DatabaseConnectionError
-
+            return form_63(item)
+        except Exception as e:
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
             if cxn is not None: cxn.close()
     except Exception as e:
-        current_app.logger.error(e)
-        return { "error": str(e) }, 500
+        current_app.logger.log(e)
+        if e == 2003: raise DatabaseConnectionError
+        return { "error": e.args[1] }, 500
 
 # route for generating appendix 69
 @bp_form.route('/69')
@@ -123,29 +114,26 @@ def generate_69 ():
         return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
 
     try:
-        cxn = None
+        item = request.args["item"]
+
+        cxn = connect_db()
+        db = cxn.cursor()
         try:
-            item = request.args["item"]
-
-            cxn = connect_db()
-            db = cxn.cursor()
-
             db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
             f = db.fetchone()
             if f is None: raise SelfNotFoundError(username = session['user']['Username'])
             if f[0] == 2: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
-            return form_69(db, item)
-        except MySQLError as e:
-            if e == 2003: raise DatabaseConnectionError
-
+            return form_69(item)
+        except Exception as e:
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
             if cxn is not None: cxn.close()
     except Exception as e:
-        current_app.logger.error(e)
-        return { "error": str(e) }, 500
+        current_app.logger.log(e)
+        if e == 2003: raise DatabaseConnectionError
+        return { "error": e.args[1] }, 500
 
 # route for generating appendix 71
 @bp_form.route('/71')
@@ -155,13 +143,11 @@ def generate_71 ():
         return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
 
     try:
-        cxn = None
+        item = request.args["item"]
+
+        cxn = connect_db()
+        db = cxn.cursor()
         try:
-            item = request.args["item"]
-
-            cxn = connect_db()
-            db = cxn.cursor()
-
             db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
             f = db.fetchone()
             if f is None: raise SelfNotFoundError(username = session['user']['Username'])
@@ -169,13 +155,12 @@ def generate_71 ():
 
             form = form_71(db, item)
             return form if form is not None else Response(status = 204)
-        except MySQLError as e:
-            if e == 2003: raise DatabaseConnectionError
-
+        except Exception as e:
             current_app.logger.error(e.args[1])
             return { "error": e.args[1] }, 500
         finally:
             if cxn is not None: cxn.close()
     except Exception as e:
-        current_app.logger.error(e)
-        return { "error": str(e) }, 500
+        current_app.logger.log(e)
+        if e == 2003: raise DatabaseConnectionError
+        return { "error": e.args[1]}, 500
