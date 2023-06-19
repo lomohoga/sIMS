@@ -122,17 +122,17 @@ def cancel_request ():
     try:
         cxn = None
         try:
-            body = request.get_json()
+            req = request.get_json()['RequestID']
 
             cxn = connect_db()
             db = cxn.cursor()
 
-            db.execute(f"SELECT StatusID FROM request WHERE RequestID = {id}")
+            db.execute(f"SELECT StatusID FROM request WHERE RequestID = {req}")
             f = db.fetchone()
-            if f is None: raise RequestNotFoundError(request = id)
+            if f is None: raise RequestNotFoundError(request = req)
             if f[0] in [4, 5, 6]: raise RequestStatusError(from_status = f[0], to_status = 6)
             
-            db.execute(f"UPDATE request SET StatusID = 6, CancelledBy = {session['user']['Username']}, DateCancelled = CURDATE() WHERE RequestID = {body['RequestID']}")
+            db.execute(f"UPDATE request SET StatusID = 6, CancelledBy = '{session['user']['Username']}', DateCancelled = CURDATE() WHERE RequestID = {req}")
             cxn.commit()
         except MySQLError as e:
             if e.args[0] == 2003: raise DatabaseConnectionError
@@ -162,7 +162,7 @@ def receive_request ():
             db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
             f = db.fetchone()
             if f is None: raise SelfNotFoundError(username = session['user']['Username'])
-            if f[0] == 1: raise SelfRoleError(username = session['user']['Username'], role = f[0])
+            if f[0] == 1 and f[0] != session['user']['RoleID']: raise SelfRoleError(username = session['user']['Username'], role = f[0])
         
             db.execute(f"SELECT StatusID FROM request WHERE RequestID = {req}")
             f = db.fetchone()
@@ -199,7 +199,7 @@ def issue_item ():
             db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
             f = db.fetchone()
             if f is None: raise SelfNotFoundError(username = session['user']['Username'])
-            if f[0] == 2: raise SelfRoleError(username = session['user']['Username'], role = f[0])
+            if f[0] == 2 and f[0] != session['user']['RoleID']: raise SelfRoleError(username = session['user']['Username'], role = f[0])
         
             db.execute(f"SELECT StatusID FROM request WHERE RequestID = {body['RequestID']}")
             f = db.fetchone()
@@ -241,7 +241,7 @@ def issue_request ():
             db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
             f = db.fetchone()
             if f is None: raise SelfNotFoundError(username = session['user']['Username'])
-            if f[0] == 2: raise SelfRoleError(username = session['user']['Username'], role = f[0])
+            if f[0] == 2 and f[0] != session['user']['RoleID']: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
             db.execute(f"SELECT StatusID FROM request WHERE RequestID = {req}")
             f = db.fetchone()

@@ -70,7 +70,7 @@ def add_items ():
                 db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
                 f = db.fetchone()
                 if f is None: raise SelfNotFoundError(username = session['user']['Username'])
-                if f[0] == 2: raise SelfRoleError(username = session['user']['Username'], role = f[0])
+                if f[0] == 2 and f[0] != session['user']['RoleID']: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
                 for v in values['values']:
                     db.execute(f"SELECT * FROM item WHERE ItemID = '{v['ItemID']}'")
@@ -113,7 +113,7 @@ def remove_items ():
                 db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
                 f = db.fetchone()
                 if f is None: raise SelfNotFoundError(username = session['user']['Username'])
-                if f[0] == 2: raise SelfRoleError(username = session['user']['Username'], role = f[0])
+                if f[0] == 2 and f[0] != session['user']['RoleID']: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
                 for x in items:
                     db.execute(f"SELECT * FROM item WHERE ItemID = '{x}'")
@@ -159,14 +159,14 @@ def update_items ():
                 db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
                 f = db.fetchone()
                 if f is None: raise SelfNotFoundError(username = session['user']['Username'])
-                if f[0] == 2: raise SelfRoleError(username = session['user']['Username'], role = f[0])
+                if f[0] == 2 and f[0] != session['user']['RoleID']: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
                 for v in values:
                     db.execute(f"SELECT * FROM item WHERE ItemID = '{v}'")
                     if db.fetchone() is None: raise ItemNotFoundError(item = values[v]['ItemID'])
 
                     db.execute(f"SELECT * FROM item WHERE ItemID = '{values[v]['ItemID']}'")
-                    if db.fetchone() is not None: raise ExistingItemError(item = v)
+                    if db.fetchone() is not None and v != values[v]['ItemID']: raise ExistingItemError(item = v)
 
                     db.execute(f"UPDATE item SET ItemID = '{values[v]['ItemID']}', ItemName = '{escape(values[v]['ItemName'])}', ItemDescription = '{escape(values[v]['ItemDescription'])}', ShelfLife = {'NULL' if values[v]['ShelfLife'] is None else values[v]['ShelfLife']}, Price = {values[v]['Price']}, Unit = '{values[v]['Unit']}' WHERE ItemID = '{v}'")
                 cxn.commit()
@@ -202,7 +202,7 @@ def request_items ():
                 db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
                 f = db.fetchone()
                 if f is None: raise SelfNotFoundError(username = session['user']['Username'])
-                if f[0] == 1: raise SelfRoleError(username = session['user']['Username'], role = f[0])
+                if f[0] == 1 and f[0] != session['user']['RoleID']: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
                 db.execute(f"INSERT INTO request (RequestedBy) VALUES ('{session['user']['Username']}')")
                 db.execute("SELECT LAST_INSERT_ID()")

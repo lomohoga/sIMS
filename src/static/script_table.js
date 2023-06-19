@@ -137,12 +137,12 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
 
         for (let j of req["Items"]) {
             for (let k of requestColumns.slice(4)) {
-                if (k === 'RequestedBy' && !custodian) continue;
+                if (k === 'RequestedBy' && privileges === 2) continue;
 
                 let td = document.createElement("div");
                 if (k === 'ItemID') td.classList.add("mono");
                 if (k === 'ItemDescription') td.classList.add("left");
-                if (k === 'AvailableStock' && +j['RequestQuantity'] > +j[k]) td.classList.add("red");
+                if (k === 'AvailableStock' && +j['RequestQuantity'] > +j[k] && !["Completed", "Cancelled", "Denied"].includes(req['Status'])) td.classList.add("red");
                 td.innerText = j[k];
                 
                 tr.appendChild(td)
@@ -153,10 +153,11 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
 
                 if (j['QuantityIssued'] === '\u2014') {
                         let btn = document.createElement("button");
+                        btn.disabled = +j['AvailableStock'] === 0;
                         btn.classList.add("issue");
                         btn.type = "button";
                         btn.role = "button";
-                        btn.title = "Issue item";
+                        btn.title = btn.disabled ? "Cannot issue item" : "Issue item";
                         btn.innerHTML = "<i class='bi bi-box-seam'></i>";
 
                         btn.addEventListener("click", () => {
