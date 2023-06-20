@@ -123,6 +123,7 @@
 
 <script>
     let currentSort = [0, true];
+    let medianPrice = 50000;
 
     document.querySelector("#choose-form").addEventListener("input", () => {
         let v = document.querySelector("#choose-form select").value;
@@ -142,6 +143,15 @@
 
             populateItems(document.querySelector(".inventory-table .table-body")).then(rows => {
                 for (let row of rows) {
+                    let price = parseFloat(row.querySelector('.tabnum').textContent.slice(1).replace(/,/g, ''));
+                    if(v === '58' && price >= medianPrice){
+                        continue;
+                    }
+
+                    if(v === '69' && price < medianPrice){
+                        continue;
+                    }
+
                     let div = document.createElement("div");
                     let btn = document.createElement("button");
                     btn.role = "button";
