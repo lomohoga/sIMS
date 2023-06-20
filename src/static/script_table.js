@@ -115,8 +115,21 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
     let rows = [];
     
     for (let req of requests) {
+        let parent = document.createElement("div");
+        parent.classList.add("request-parent");
+
+        let anon = document.createElement("div");
+        let remark = document.createElement("div");
+        remark.innerHTML = "<b>Purpose:</b> Science project kakakakakakakakakakakakaka"
+        let reason = document.createElement("div");
+        reason.innerHTML = "<b>Reason:</b> Science project kakakakakakakakakakakakaka"
+        anon.appendChild(remark);
+        anon.appendChild(reason);
+
         let tr = document.createElement("div");
         tr.classList.add("table-row")
+        parent.appendChild(tr);
+        parent.appendChild(anon);
 
         for (let i of requestColumns.slice(0, 4)){
             if (!(i in req)) continue;
@@ -519,7 +532,7 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
         }
         
         tr.appendChild(actions);
-        tbody.appendChild(tr);
+        tbody.appendChild(parent);
         rows.push(tr);
     }
 
@@ -750,14 +763,21 @@ async function populateUsers (tbody, keyword = "", { buttons = false } = {}) {
 }
 
 // sorts table based on column
-function sortTable (table, column, currentSort, { shelfLife = false, numerical = false, date = false } = {}) {
+function sortTable (table, column, currentSort, { shelfLife = false, numerical = false, date = false, request = false, } = {}) {
     let oldSym = table.querySelector(`.table-header .table-row > :nth-child(${currentSort[0] + 1}) .bi`);
     oldSym.classList.remove(`bi-chevron-${currentSort[1] ? "up" : "down"}`);
     oldSym.classList.add("bi-chevron-expand");
     
     let tbody = table.querySelector(".table-body");
 
-    let rows = Array.from(tbody.querySelectorAll(".table-row:not(.hide)"));
+    let rows;
+    if(request){
+        rows = Array.from(tbody.querySelectorAll(".request-parent"));
+    }
+    else{
+        rows = Array.from(tbody.querySelectorAll(".table-row:not(.hide)"));
+    }
+
     currentSort = [column, column === currentSort[0] ? !currentSort[1] : true];
     rows.sort((a, b) => {
         let [x, y] = [a.children[column].innerText, b.children[column].innerText];

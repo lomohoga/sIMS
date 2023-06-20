@@ -3,9 +3,9 @@
     justify-content:center;
 }
 
-.request-table .table-body .table-row:not(.table-loading, .table-empty) {
+/* .request-table .table-body .table-row:not(.table-loading, .table-empty) {
     border-bottom: 0.05rem solid var(--light-gray);
-}
+} */
 
 .request-table .table-row.item-not-found {
     background: var(--light-red-3);
@@ -134,4 +134,19 @@
 #request-filters .selected.red:focus {
     background: var(--status-red-dark);
     box-shadow: 0rem 0.1rem 0.2rem var(--status-red-shadow);
+}
+
+.request-parent{
+    border-bottom: 0.05rem solid var(--light-gray);
+}
+
+.request-parent:hover{
+    background: var(--light-gray-2);
+}
+
+.request-parent > div:nth-child(2){
+    grid-auto-rows: 1fr;
+    padding-left: 0.75rem;
+    padding-bottom: 1rem;
+    padding-top: 0.25rem;
 }

@@ -108,7 +108,7 @@
     document.querySelectorAll(".request-table .sort-btn").forEach(x => {
         const p = x.parentElement;
         x.addEventListener("click", () => {
-            currentSort = sortTable(document.querySelector(".request-table"), Array.prototype.indexOf.call(p.parentElement.children, p), currentSort, { shelfLife: x.innerText.includes("Shelf Life"), date: x.innerText.includes("Date") });
+            currentSort = sortTable(document.querySelector(".request-table"), Array.prototype.indexOf.call(p.parentElement.children, p), currentSort, { shelfLife: x.innerText.includes("Shelf Life"), date: x.innerText.includes("Date"), request: true });
         });
     });
 
