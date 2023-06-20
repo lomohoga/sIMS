@@ -682,8 +682,8 @@ async function populateUsers (tbody, keyword = "", { buttons = false } = {}) {
                                 populateUsers(tbody);
                                 document.querySelector("#search").reset();
                             } else if (res.status === 500) {
-                                modal.querySelector(".form-msg").classList.add("error");
-                                modal.querySelector(".form-msg").innerHTML = `<b>ERROR:</b> ${(await res.json())['error']}`;
+                                modal.querySelector(".modal-msg").classList.add("error");
+                                modal.querySelector(".modal-msg").innerHTML = `<b>ERROR:</b> ${(await res.json())['error']}`;
                             }
                         });
                     });
@@ -724,8 +724,8 @@ async function populateUsers (tbody, keyword = "", { buttons = false } = {}) {
                                 populateUsers(tbody);
                                 document.querySelector("#search").reset();
                             } else if (res.status === 500) {
-                                modal.querySelector(".form-msg").classList.add("error");
-                                modal.querySelector(".form-msg").innerHTML = `<b>ERROR:</b> ${(await res.json())['error']}`;
+                                modal.querySelector(".modal-msg").classList.add("error");
+                                modal.querySelector(".modal-msg").innerHTML = `<b>ERROR:</b> ${(await res.json())['error']}`;
                             }
                         });
                     });

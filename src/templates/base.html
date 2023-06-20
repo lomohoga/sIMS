@@ -195,14 +195,14 @@
     // modal form event listeners
     document.querySelector("#form-change-email").addEventListener("input", () => {
         changeEmailValidity();
-        document.querySelector("#form-change-email .form-msg").innerText = '';
-        document.querySelector("#form-change-email .form-msg").classList.remove("error");
+        document.querySelector("#form-change-email .modal-msg").innerText = '';
+        document.querySelector("#form-change-email .modal-msg").classList.remove("error");
     });
 
     document.querySelector("#form-change-email").addEventListener("submit", e => {
         e.preventDefault();
 
-        document.querySelector("#modal-change-email .form-msg").innerText = "Please wait\u2026";
+        document.querySelector("#modal-change-email .modal-msg").innerText = "Please wait\u2026";
 
         fetch("{{ url_for('bp_user.change_email') }}", {
             "method": "POST",
@@ -220,13 +220,13 @@
                 window.setTimeout(() => window.location = "{{ url_for('bp_auth.logout') }}", 3000);
             } else {
                 document.querySelector("#form-change-email").reset();
-                document.querySelector('#form-change-email .form-msg').classList.add("error");
-                document.querySelector("#form-change-email .form-msg").innerText = (await d.json())["error"]
+                document.querySelector('#form-change-email .modal-msg').classList.add("error");
+                document.querySelector("#form-change-email .modal-msg").innerText = (await d.json())["error"]
             }
         })
         .catch(() => {
-            document.querySelector('#form-change-email .form-msg').classList.add("error");
-            document.querySelector("#form-change-email .form-msg").innerText = "Server unavailable. Please try again later."; 
+            document.querySelector('#form-change-email .modal-msg').classList.add("error");
+            document.querySelector("#form-change-email .modal-msg").innerText = "Server unavailable. Please try again later."; 
         });
 
         changeEmailValidity();
@@ -234,14 +234,14 @@
 
     document.querySelector("#form-change-password").addEventListener("input", () => {
         changePasswordValidity();
-        document.querySelector("#form-change-password .form-msg").innerText = '';
-        document.querySelector("#form-change-password .form-msg").classList.remove("error");
+        document.querySelector("#form-change-password .modal-msg").innerText = '';
+        document.querySelector("#form-change-password .modal-msg").classList.remove("error");
     });
 
     document.querySelector("#form-change-password").addEventListener("submit", e => {
         e.preventDefault();
 
-        document.querySelector("#modal-change-password .form-msg").innerText = "Please wait\u2026";
+        document.querySelector("#modal-change-password .modal-msg").innerText = "Please wait\u2026";
 
         fetch("{{ url_for('bp_user.change_password') }}", {
             "method": "POST",
@@ -259,13 +259,13 @@
                 window.setTimeout(() => window.location = "{{ url_for('bp_auth.logout') }}", 3000);
             } else {
                 document.querySelector("#form-change-password").reset();
-                document.querySelector('#form-change-password .form-msg').classList.add("error");
-                document.querySelector("#form-change-password .form-msg").innerText = (await d.json())["error"]
+                document.querySelector('#form-change-password .modal-msg').classList.add("error");
+                document.querySelector("#form-change-password .modal-msg").innerText = (await d.json())["error"]
             }
         })
         .catch(() => {
-            document.querySelector('#form-change-password .form-msg').classList.add("error");
-            document.querySelector("#form-change-password .form-msg").innerText = "Server unavailable. Please try again later."; 
+            document.querySelector('#form-change-password .modal-msg').classList.add("error");
+            document.querySelector("#form-change-password .modal-msg").innerText = "Server unavailable. Please try again later."; 
         });
 
         changePasswordValidity();
