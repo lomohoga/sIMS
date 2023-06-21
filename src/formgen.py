@@ -18,17 +18,19 @@ def form_58 (db, item):
     db.execute(f"SELECT * FROM item WHERE ItemID = '{item}'")
     data = db.fetchone()
     if data is None: raise ItemNotFoundError(item = item)
+    print(data)
 
     db.execute(f"SELECT * FROM (SELECT RequestID, RequestDate, DeliveryStock, QuantityIssued, UPPER(CONCAT(FirstName, ' ', LastName)) as RequestedBy, ShelfLife FROM request_item INNER JOIN (SELECT ItemID, ShelfLife, COALESCE(SUM(IF(ShelfLife IS NULL OR DATEDIFF(CURDATE(), ADDDATE(DeliveryDate, ShelfLife)) <= 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) GROUP BY ItemID) AS w USING (ItemID) INNER JOIN request USING (RequestID) INNER JOIN user ON RequestedBy = Username WHERE ItemID = '{item}' AND StatusID = 4 ORDER BY RequestID DESC LIMIT 30) AS x ORDER BY RequestID ASC")
     requests = db.fetchall()
+    print(requests)
 
     wb = load_workbook("./src/form_templates/template_58.xlsx", rich_text = True)
     ws = wb.active
 
     ws["F8"] = CellRichText(ws["F8"].value, TextBlock(InlineFont(b = True), data[0]))
     ws["A8"] = CellRichText(ws["A8"].value, TextBlock(InlineFont(b = True), data[1].upper()))
-    ws["A9"] = CellRichText(ws["A9"].value, TextBlock(InlineFont(b = True), data[2]))
-    ws["A10"] = CellRichText(ws["A10"].value, TextBlock(InlineFont(b = True), data[5]))
+    ws["A9"] = CellRichText(ws["A9"].value, TextBlock(InlineFont(b = True), data[3]))
+    ws["A10"] = CellRichText(ws["A10"].value, TextBlock(InlineFont(b = True), data[6]))
 
     for i in range(len(requests)):
         req = requests[i]
@@ -156,7 +158,7 @@ def form_69 (db, item):
     ws = wb.active
 
     ws["B8"] = CellRichText(ws["B8"].value, TextBlock(InlineFont(b = True), data[1].upper()))
-    ws["B10"] = CellRichText(ws["B10"].value, TextBlock(InlineFont(b = True), data[2]))
+    ws["B10"] = CellRichText(ws["B10"].value, TextBlock(InlineFont(b = True), data[3]))
     ws["I9"] = CellRichText(ws["I9"].value, TextBlock(InlineFont(b = True), data[0]))
 
     for i in range(len(requests)):
