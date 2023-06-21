@@ -115,18 +115,20 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
     let rows = [];
     
     for (let req of requests) {
-        console.log(req)
         let parent = document.createElement("div");
         parent.classList.add("request-parent");
 
         let anon = document.createElement("div");
-        let remark = document.createElement("div");
-        remark.innerHTML = "<b>Purpose:</b> " + req["Purpose"]
-        let reason = document.createElement("div");
-        reason.innerHTML = "<b>Reason:</b> Science project kakakakakakakakakakakakaka"
-        anon.appendChild(remark);
-        anon.appendChild(reason);
+        let purpose = document.createElement("div");
+        purpose.innerHTML = "<b>Purpose:</b> " + req["Purpose"]
+        anon.appendChild(purpose);
 
+        if(req["Remarks"] !== null){
+            let remark = document.createElement("div");
+            remark.innerHTML = "<b>Remark:</b> " + req["Remarks"]
+            anon.appendChild(remark);
+        }
+        
         let tr = document.createElement("div");
         tr.classList.add("table-row")
         parent.appendChild(tr);
@@ -181,6 +183,7 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                             modal.querySelector("h1").innerText = "Issue item";
                             modal.querySelector("p").style.display = "none";
                             modal.querySelector("#quantity-span").style.display = "";
+                            modal.querySelector("#req-remarks").style.display = "none";
                             modal.querySelector("input[type=number]").focus();
                             modal.querySelector("input[type=number]").min = 0;
                             modal.querySelector("input[type=number]").max = Math.min(+j['AvailableStock'].replace(",", ""), +j['RequestQuantity'].replace(",", ""));
@@ -241,9 +244,11 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                     issueBtn.addEventListener("click", () => {
                         let modal = document.querySelector("#modal-requests");
 
+                        // PUT TEXT BOX HERE
                         modal.showModal();
                         modal.querySelector("p").style.display = "";
                         modal.querySelector("#quantity-span").style.display = "none";
+                        modal.querySelector("#req-remarks").style.display = "flex";
                         modal.querySelector("h1").innerText = "Issue request";
                         modal.querySelector("p").innerHTML = "<span>Are you sure you want to issue <b>all</b> items in this request?</span>";
                         modal.querySelector("input[type=submit]").value = "Issue request";
@@ -261,7 +266,8 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                                     "Content-Type": "application/json"
                                 },
                                 "body": JSON.stringify({
-                                    "RequestID": req['RequestID']
+                                    "RequestID": req['RequestID'],
+                                    "Remarks": document.querySelector("#remarks").value
                                 })
                             }).then(async d => {
                                 if (d.status === 200) {
@@ -290,9 +296,11 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                 cancelBtn.addEventListener("click", () => {
                     let modal = document.querySelector("#modal-requests");
 
+                    // PUT TEXT BOX HERE
                     modal.showModal();
                     modal.querySelector("p").style.display = "";
                     modal.querySelector("#quantity-span").style.display = "none";
+                    modal.querySelector("#req-remarks").style.display = "flex";
                     modal.querySelector("h1").innerText = "Cancel request";
                     modal.querySelector("p").innerHTML = "Are you sure you want to cancel this request?<br><i><b style='color: var(--red);'>WARNING:</b> This will forfeit <b>all</b> items in this request!</i>";
                     modal.querySelector("input[type=submit]").value = "Cancel request";
@@ -310,7 +318,8 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                                 "Content-Type": "application/json"
                             },
                             "body": JSON.stringify({
-                                "RequestID": req['RequestID']
+                                "RequestID": req['RequestID'],
+                                "Remarks": document.querySelector("#remarks").value
                             })
                         }).then(async d => {
                             if (d.status === 200) {
@@ -344,6 +353,7 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                     modal.showModal();
                     modal.querySelector("p").style.display = "";
                     modal.querySelector("#quantity-span").style.display = "none";
+                    modal.querySelector("#req-remarks").style.display = "none";
                     modal.querySelector("h1").innerText = "Approve request";
                     modal.querySelector("p").innerHTML = "Are you sure you want to approve this request?";
                     modal.querySelector("input[type=submit]").value = "Approve request";
@@ -388,9 +398,11 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                 denyBtn.addEventListener("click", () => {
                     let modal = document.querySelector("#modal-requests");
 
+                    // PUT TEXT BOX HERE
                     modal.showModal();
                     modal.querySelector("p").style.display = "";
                     modal.querySelector("#quantity-span").style.display = "none";
+                    modal.querySelector("#req-remarks").style.display = "flex";
                     modal.querySelector("h1").innerText = "Deny request";
                     modal.querySelector("p").innerHTML = "Are you sure you want to deny this request?";
                     modal.querySelector("input[type=submit]").value = "Deny request";
@@ -408,7 +420,8 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                                 "Content-Type": "application/json"
                             },
                             "body": JSON.stringify({
-                                "RequestID": req['RequestID']
+                                "RequestID": req['RequestID'],
+                                "Remarks": document.querySelector("#remarks").value
                             })
                         }).then(async d => {
                             if (d.status === 200) {
@@ -444,6 +457,7 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                         modal.showModal();
                         modal.querySelector("p").style.display = "";
                         modal.querySelector("#quantity-span").style.display = "none";
+                        modal.querySelector("#req-remarks").style.display = "none";
                         modal.querySelector("h1").innerText = "Receive request";
                         modal.querySelector("p").innerHTML = "Are you sure you want to receive this request?";
                         modal.querySelector("input[type=submit]").value = "Receive request";
@@ -494,6 +508,7 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                     modal.showModal();
                     modal.querySelector("p").style.display = "";
                     modal.querySelector("#quantity-span").style.display = "none";
+                    modal.querySelector("#req-remarks").style.display = "flex";
                     modal.querySelector("h1").innerText = "Cancel request";
                     modal.querySelector("p").innerHTML = "Are you sure you want to cancel this request?<br><i><b style='color: var(--red);'>WARNING:</b> This will forfeit <b>all</b> items in this request!</i>";
                     modal.querySelector("input[type=submit]").value = "Cancel request";
@@ -511,7 +526,8 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                                 "Content-Type": "application/json"
                             },
                             "body": JSON.stringify({
-                                "RequestID": req['RequestID']
+                                "RequestID": req['RequestID'],
+                                "Remarks": document.querySelector("#remarks").value
                             })
                         }).then(async d => {
                             if (d.status === 200) {

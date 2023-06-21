@@ -36,7 +36,7 @@ def search_requests ():
         cxn = connect_db()
         db = cxn.cursor()
 
-        db.execute(f"SELECT RequestID, RequestedBy, DATE_FORMAT(RequestDate, '%d %b %Y') AS RequestDate, StatusName as Status, Purpose, ItemID, ItemName, ItemDescription, RequestQuantity, QuantityIssued, AvailableStock, Unit FROM request INNER JOIN request_status USING (StatusID) INNER JOIN request_item USING (RequestID) INNER JOIN stock USING (ItemID){' WHERE RequestID IN (SELECT DISTINCT RequestID FROM request INNER JOIN request_item USING (RequestID) INNER JOIN item USING (ItemID) WHERE ' + w + ')' if w != '' else ''} ORDER BY RequestID, ItemID")
+        db.execute(f"SELECT RequestID, RequestedBy, DATE_FORMAT(RequestDate, '%d %b %Y') AS RequestDate, StatusName as Status, Purpose, Remarks, ItemID, ItemName, ItemDescription, RequestQuantity, QuantityIssued, AvailableStock, Unit FROM request INNER JOIN request_status USING (StatusID) INNER JOIN request_item USING (RequestID) INNER JOIN stock USING (ItemID){' WHERE RequestID IN (SELECT DISTINCT RequestID FROM request INNER JOIN request_item USING (RequestID) INNER JOIN item USING (ItemID) WHERE ' + w + ')' if w != '' else ''} ORDER BY RequestID, ItemID")
         requests = db.fetchall()
     except Exception as e:
         current_app.logger.error(str(e))
@@ -74,6 +74,7 @@ def approve_request ():
 @bp_request.route('/deny', methods = ["POST"])
 def deny_request ():
     req = request.get_json()['RequestID']
+    remarks = request.get_json()['Remarks']
     cxn = None
     try:
         cxn = connect_db()
@@ -84,7 +85,7 @@ def deny_request ():
         if f is None: raise RequestNotFoundError(request = req)
         if f[0] != 1: raise RequestStatusError(from_status = f[0], to_status = 5)
         
-        db.execute(f"UPDATE request SET StatusID = 5, ActingAdmin = '{session['user']['Username']}', DateCancelled = CURDATE() WHERE RequestID = {req}")
+        db.execute(f"UPDATE request SET StatusID = 5, ActingAdmin = '{session['user']['Username']}', DateCancelled = CURDATE(), Remarks = '{remarks}' WHERE RequestID = {req}")
         cxn.commit()
     except Exception  as e:
         current_app.logger.error(str(e))
@@ -99,6 +100,7 @@ def deny_request ():
 @login_required
 def cancel_request ():
     req = request.get_json()['RequestID']
+    remarks = request.get_json()['Remarks']
     cxn = None
     try:
         cxn = connect_db()
@@ -109,7 +111,7 @@ def cancel_request ():
         if f is None: raise RequestNotFoundError(request = req)
         if f[0] in [4, 5, 6]: raise RequestStatusError(from_status = f[0], to_status = 6)
         
-        db.execute(f"UPDATE request SET StatusID = 6, CancelledBy = '{session['user']['Username']}', DateCancelled = CURDATE() WHERE RequestID = {req}")
+        db.execute(f"UPDATE request SET StatusID = 6, CancelledBy = '{session['user']['Username']}', DateCancelled = CURDATE(), Remarks = '{remarks}' WHERE RequestID = {req}")
         cxn.commit()
     except Exception as e:
         current_app.logger.error(str(e))
@@ -191,6 +193,7 @@ def issue_item ():
 @login_required
 def issue_request ():
     req = request.get_json()['RequestID']
+    remarks = request.get_json()['Remarks']
     cxn = None
     
     try:
@@ -211,7 +214,7 @@ def issue_request ():
         g = all([x[0] is not None for x in db.fetchall()])
         if not g: raise IncompleteIssueError(request = req)
         
-        db.execute(f"UPDATE request SET StatusID = 3, IssuedBy = '{session['user']['Username']}', DateIssued = CURDATE() WHERE RequestID = {req}")
+        db.execute(f"UPDATE request SET StatusID = 3, IssuedBy = '{session['user']['Username']}', DateIssued = CURDATE(), Remarks = '{remarks}' WHERE RequestID = {req}")
         cxn.commit()
     except Exception as e:
         current_app.logger.error(str(e))

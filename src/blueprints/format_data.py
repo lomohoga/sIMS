@@ -26,18 +26,19 @@ def format_requests (requests, custodian = True):
                 "RequestDate": req[2],
                 "Status": req[3],
                 "Purpose": req[4],
+                "Remarks": req[5],
                 "Items": []
             })
         
         z = list(filter(lambda x: x['RequestID'] == req[0], grouped))[0]
         o = {
-            "ItemID": req[5],
-            "ItemName": req[6],
-            "ItemDescription": req[7],
-            "RequestQuantity": locale.format_string("%d", req[8], grouping = True),
-            "QuantityIssued": locale.format_string("%d", req[9], grouping = True) if req[9] is not None else '\u2014',
-            "AvailableStock": locale.format_string("%d", req[10], grouping = True),
-            "Unit": req[11],
+            "ItemID": req[6],
+            "ItemName": req[7],
+            "ItemDescription": req[8],
+            "RequestQuantity": locale.format_string("%d", req[9], grouping = True),
+            "QuantityIssued": locale.format_string("%d", req[10], grouping = True) if req[10] is not None else '\u2014',
+            "AvailableStock": locale.format_string("%d", req[11], grouping = True),
+            "Unit": req[12],
         }
 
         z['Items'].append(o)
