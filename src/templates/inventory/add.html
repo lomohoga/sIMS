@@ -12,6 +12,7 @@
             <div class="table-row">
                 <div>Item ID</div>
                 <div>Name</div>
+                <div>Category</div>
                 <div>Description</div>
                 <div>Shelf Life</div>
                 <div>Unit Price</div>
@@ -36,7 +37,12 @@
     </form>
 </div>
 
-<script>
+<script type="module">
+    let x = await getCategories();
+    let cat = x["categories"].map(y => y["CategoryName"]);
+    cat.push("None");
+    console.log(cat)
+
     function disableButton () {
         document.querySelector("#submit-form [type=submit]").disabled =
             // Disable if there are no rows in table (1 child = the "Add row" button)
@@ -51,33 +57,47 @@
         let row = document.createElement("div");
         row.classList.add("table-row");
 
-        for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < 7; i++) {
             let el;
 
-            if (i === 2) {
+            if (i === 3) {
                 el = document.createElement("textarea");
                 el.rows = 1;
-            } else {
+            }
+            else if(i === 2){
+                el = document.createElement("select");
+
+                for (let x in cat) {
+                    let op = document.createElement("option");
+                    op.value = cat[x];
+                    op.innerHTML = cat[x];
+                    if(cat[x] === "None"){
+                        op.selected = true;
+                    }
+                    el.appendChild(op);
+                }
+            } 
+            else {
                 el = document.createElement("input");
 
                 if (i === 0) { el.type = "text"; el.maxLength = 16; }
                 if (i === 1) { el.type = "text"; el.maxLength = 20; }
-                if (i === 2) { el.type = "text"; el.maxLength = 100; }
-                if (i === 3) { el.type = "number"; el.min = 1; el.step = 1; }
-                if (i === 4) { el.type = "number"; el.min = 0; el.step = 0.01; }
-                if (i === 5) { el.type = "text"; el.maxLength = 20; }
+                if (i === 3) { el.type = "text"; el.maxLength = 100; }
+                if (i === 4) { el.type = "number"; el.min = 1; el.step = 1; }
+                if (i === 5) { el.type = "number"; el.min = 0; el.step = 0.01; }
+                if (i === 6) { el.type = "text"; el.maxLength = 20; }
             }
 
             let wrapper = document.createElement("div");
 
             if (i === 0) wrapper.classList.add("mono");
-            if (i === 2) wrapper.classList.add("left");
-            if (i === 3 || i === 4) wrapper.classList.add("right");
-            if (i === 3 || i === 4) wrapper.classList.add("tabnum");
+            if (i === 3) wrapper.classList.add("left");
+            if (i === 4 || i === 5) wrapper.classList.add("right");
+            if (i === 4 || i === 5) wrapper.classList.add("tabnum");
 
             wrapper.appendChild(el);
             
-            if (i === 3) {
+            if (i === 4) {
                 let sel = document.createElement("select");
 
                 for (let x in timeConv) {
@@ -142,10 +162,11 @@
             values.push({
                 "ItemID": children[0].firstChild.value,
                 "ItemName": children[1].firstChild.value,
-                "ItemDescription": children[2].firstChild.value,
-                "ShelfLife": children[3].lastChild.value === "-1" ? null : +children[3].firstChild.value * +children[3].lastChild.value,
-                "Price": +children[4].firstChild.value,
-                "Unit": children[5].firstChild.value.toLowerCase(),
+                "Category": children[2].firstChild.value === "None" ? null : children[2].firstChild.value,
+                "ItemDescription": children[3].firstChild.value,
+                "ShelfLife": children[4].lastChild.value === "-1" ? null : +children[3].firstChild.value * +children[3].lastChild.value,
+                "Price": +children[5].firstChild.value,
+                "Unit": children[6].firstChild.value.toLowerCase(),
             })
         }
         

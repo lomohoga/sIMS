@@ -7,11 +7,12 @@ def format_items (items):
         {
             "ItemID": item[0],
             "ItemName": item[1],
-            "ItemDescription": item[2],
-            "ShelfLife": locale.format_string("%d", item[3], grouping = True) if item[3] != None else "\u2014",
-            "Price": locale.currency(item[4], grouping = True),
-            "AvailableStock": locale.format_string("%d", item[5], grouping = True),
-            "Unit": item[6]
+            "Category": item[2] if item[2] is not None else "\u2014",
+            "ItemDescription": item[3],
+            "ShelfLife": locale.format_string("%d", item[4], grouping = True) if item[4] != None else "\u2014",
+            "Price": locale.currency(item[5], grouping = True),
+            "AvailableStock": locale.format_string("%d", item[6], grouping = True),
+            "Unit": item[7]
         } for item in items
     ]
 
@@ -34,11 +35,12 @@ def format_requests (requests, custodian = True):
         o = {
             "ItemID": req[6],
             "ItemName": req[7],
-            "ItemDescription": req[8],
-            "RequestQuantity": locale.format_string("%d", req[9], grouping = True),
-            "QuantityIssued": locale.format_string("%d", req[10], grouping = True) if req[10] is not None else '\u2014',
-            "AvailableStock": locale.format_string("%d", req[11], grouping = True),
-            "Unit": req[12],
+            "Category": req[8] if req[8] is not None else '\u2014',
+            "ItemDescription": req[9],
+            "RequestQuantity": locale.format_string("%d", req[10], grouping = True),
+            "QuantityIssued": locale.format_string("%d", req[11], grouping = True) if req[11] is not None else '\u2014',
+            "AvailableStock": locale.format_string("%d", req[12], grouping = True),
+            "Unit": req[13],
         }
 
         z['Items'].append(o)

@@ -6,10 +6,10 @@ const timeConv = {
     "N/A": -1
 };
 
-const itemColumns = ["ItemID", "ItemName", "ItemDescription", "ShelfLife", "Price", "AvailableStock", "Unit"];
+const itemColumns = ["ItemID", "ItemName", "Category", "ItemDescription", "ShelfLife", "Price", "AvailableStock", "Unit"];
 const categoriesColumns = ["CategoryName", "CategoryDescription"];
 const sourcesColumns = ["SourceName"];
-const requestColumns = ["RequestID", "RequestedBy", "RequestDate", "Status", "ItemID", "ItemName", "ItemDescription", "RequestQuantity", "QuantityIssued", "AvailableStock", "Unit"];
+const requestColumns = ["RequestID", "RequestedBy", "RequestDate", "Status", "ItemID", "ItemName", "Category", "ItemDescription", "RequestQuantity", "QuantityIssued", "AvailableStock", "Unit"];
 const deliveryColumns = ["DeliveryID", "ItemID", "ItemName", "ItemDescription", "DeliveryQuantity", "Unit", "ShelfLife", "DeliveryDate", "ReceivedBy", "IsExpired"];
 const userColumns = ["Username", "FirstName", "LastName", "Email", "Role"];
 
@@ -250,7 +250,7 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
         parent.appendChild(tr);
         parent.appendChild(anon);
 
-        for (let i of requestColumns.slice(0, 4)){
+        for (let i of requestColumns.slice(0, 5)){
             if (!(i in req)) continue;
 
             let td = document.createElement("div");

@@ -21,7 +21,7 @@ def search_items ():
     keywords = [] if "keywords" not in request.args else [decode_keyword(x).lower() for x in request.args.get("keywords").split(" ")]
     conditions = []
     for x in keywords:
-        conditions.append(f"(ItemID LIKE '%{x}%' OR ItemName LIKE '%{x}%' OR ItemDescription LIKE '%{x}%')")
+        conditions.append(f"(ItemID LIKE '%{x}%' OR ItemName LIKE '%{x}%' OR Category LIKE '%{x}%' OR ItemDescription LIKE '%{x}%')")
     query = f"SELECT * from stock {'' if len(conditions) == 0 else 'WHERE (' + ' AND '.join(conditions) + ')'} ORDER BY ItemID"
 
     cxn = None
@@ -53,6 +53,7 @@ def add_items ():
     if request.method == 'POST':        
         cxn = None
         values = request.get_json()
+        print(values['values'])
         try:
             cxn = connect_db()
             db = cxn.cursor()
@@ -66,7 +67,10 @@ def add_items ():
                 db.execute(f"SELECT * FROM item WHERE ItemID = '{v['ItemID']}'")
                 if db.fetchone() is not None: raise ExistingItemError(item = v['ItemID'])
 
-                db.execute(f"INSERT INTO item VALUES ('{v['ItemID']}', '{escape(v['ItemName'])}', '{escape(v['ItemDescription'])}', {'NULL' if v['ShelfLife'] is None else v['ShelfLife']}, {v['Price']}, '{v['Unit']}')")
+                if(v['Category'] is None):
+                    db.execute(f"INSERT INTO item VALUES ('{v['ItemID']}', '{escape(v['ItemName'])}', {'NULL'}, '{escape(v['ItemDescription'])}', {'NULL' if v['ShelfLife'] is None else v['ShelfLife']}, {v['Price']}, '{v['Unit']}')")
+                else:
+                    db.execute(f"INSERT INTO item VALUES ('{v['ItemID']}', '{escape(v['ItemName'])}', '{v['Category']}', '{escape(v['ItemDescription'])}', {'NULL' if v['ShelfLife'] is None else v['ShelfLife']}, {v['Price']}, '{v['Unit']}')")
             cxn.commit()
         except Exception as e:
             current_app.logger.error(str(e))
@@ -141,7 +145,10 @@ def update_items ():
                 db.execute(f"SELECT * FROM item WHERE ItemID = '{values[v]['ItemID']}'")
                 if db.fetchone() is not None and v != values[v]['ItemID']: raise ExistingItemError(item = v)
 
-                db.execute(f"UPDATE item SET ItemID = '{values[v]['ItemID']}', ItemName = '{escape(values[v]['ItemName'])}', ItemDescription = '{escape(values[v]['ItemDescription'])}', ShelfLife = {'NULL' if values[v]['ShelfLife'] is None else values[v]['ShelfLife']}, Price = {values[v]['Price']}, Unit = '{values[v]['Unit']}' WHERE ItemID = '{v}'")
+                if(values[v]["Category"] is None):
+                    db.execute(f"UPDATE item SET ItemID = '{values[v]['ItemID']}', ItemName = '{escape(values[v]['ItemName'])}', Category = NULL, ItemDescription = '{escape(values[v]['ItemDescription'])}', ShelfLife = {'NULL' if values[v]['ShelfLife'] is None else values[v]['ShelfLife']}, Price = {values[v]['Price']}, Unit = '{values[v]['Unit']}' WHERE ItemID = '{v}'")
+                else:
+                    db.execute(f"UPDATE item SET ItemID = '{values[v]['ItemID']}', ItemName = '{escape(values[v]['ItemName'])}', Category = '{values[v]['Category']}', ItemDescription = '{escape(values[v]['ItemDescription'])}', ShelfLife = {'NULL' if values[v]['ShelfLife'] is None else values[v]['ShelfLife']}, Price = {values[v]['Price']}, Unit = '{values[v]['Unit']}' WHERE ItemID = '{v}'")
             cxn.commit()
         except Exception as e:
             current_app.logger.error(str(e))

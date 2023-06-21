@@ -27,6 +27,7 @@
                         <i class="bi bi-chevron-expand"></i>
                     </button>
                 </div>
+                <div>Category</div>
                 <div class="table-sortable">
                     <button role="button" class="sort-btn">
                         Description
@@ -68,6 +69,7 @@
             <div class="table-row">
                 <div>Item ID</div>
                 <div>Name</div>
+                <div>Category</div>
                 <div>Description</div>
                 <div>
                     <span>
@@ -174,8 +176,8 @@
 
             values.push({
                 "ItemID": children[0].innerText,
-                "DeliveryDate": children[6].firstChild.value,
-                "DeliveryQuantity": +children[7].firstChild.value,
+                "DeliveryDate": children[7].firstChild.value,
+                "DeliveryQuantity": +children[8].firstChild.value,
             });
         }
         

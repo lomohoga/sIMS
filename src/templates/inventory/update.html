@@ -27,6 +27,7 @@
                         <i class="bi bi-chevron-expand"></i>
                     </button>
                 </div>
+                <div>Category</div>
                 <div class="table-sortable">
                     <button role="button" class="sort-btn">
                         Description
@@ -68,6 +69,7 @@
             <div class="table-row">
                 <div>Item ID</div>
                 <div>Name</div>
+                <div>Category</div>
                 <div>Description</div>
                 <div>
                     <span>
@@ -96,6 +98,8 @@
     let currentSortSearch = [0, true];
     let currentSortSelection = [0, true];
 
+    let cat;
+
     document.querySelectorAll(".search-table .sort-btn").forEach(x => {
         const p = x.parentElement;
         x.addEventListener("click", () => {
@@ -114,33 +118,47 @@
         let row = document.createElement("div");
         row.classList.add("table-row");
 
-        for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < 7; i++) {
             let el;
 
-            if (i === 2) {
+            if (i === 3) {
                 el = document.createElement("textarea");
                 el.rows = 1;
-            } else {
+            }
+            else if(i === 2){
+                el = document.createElement("select");
+
+                for (let x in cat) {
+                    let op = document.createElement("option");
+                    op.value = cat[x];
+                    op.innerHTML = cat[x];
+                    if(cat[x] === "None"){
+                        op.selected = true;
+                    }
+                    el.appendChild(op);
+                }
+            } 
+            else {
                 el = document.createElement("input");
 
                 if (i === 0) { el.type = "text"; el.maxLength = 16; }
                 if (i === 1) { el.type = "text"; el.maxLength = 20; }
-                if (i === 2) { el.type = "text"; el.maxLength = 100; }
-                if (i === 3) { el.type = "number"; el.min = 1; el.step = 1; }
-                if (i === 4) { el.type = "number"; el.min = 0; el.step = 0.01; }
-                if (i === 5) { el.type = "text"; el.maxLength = 20; }
+                if (i === 3) { el.type = "text"; el.maxLength = 100; }
+                if (i === 4) { el.type = "number"; el.min = 1; el.step = 1; }
+                if (i === 5) { el.type = "number"; el.min = 0; el.step = 0.01; }
+                if (i === 6) { el.type = "text"; el.maxLength = 20; }
             }
 
             let wrapper = document.createElement("div");
 
             if (i === 0) wrapper.classList.add("mono");
-            if (i === 2) wrapper.classList.add("left");
-            if (i === 3 || i === 4) wrapper.classList.add("right");
-            if (i === 3 || i === 4) wrapper.classList.add("tabnum");
+            if (i === 3) wrapper.classList.add("left");
+            if (i === 4 || i === 5) wrapper.classList.add("right");
+            if (i === 4 || i === 5) wrapper.classList.add("tabnum");
 
             wrapper.appendChild(el);
             
-            if (i === 3) {
+            if (i === 4) {
                 let sel = document.createElement("select");
 
                 for (let x in timeConv) {
@@ -183,15 +201,16 @@
     function selectItem (row) {
         let newRow = addRow();
 
-        for (let i = 0; i < 6; i++) {
-            if (i === 3) {
+        for (let i = 0; i < 7; i++) {
+            if (i === 4) {
                 if (row.children[i].innerHTML === '\u2014') {
                     newRow.children[i].lastChild.value = -1;
                     newRow.children[i].firstChild.classList.add("hide");
                     newRow.children[i].lastChild.classList.add("extend");
                 } else newRow.children[i].firstChild.value = row.children[i].innerText;
             }
-            else if (i === 4) newRow.children[i].firstChild.value = row.children[i].innerText.replaceAll(/[^0-9\.]/g, "");
+            else if (i === 5) newRow.children[i].firstChild.value = row.children[i].innerText.replaceAll(/[^0-9\.]/g, "");
+            else if (i === 2) continue;
             else newRow.children[i].firstChild.value = row.children[i].innerText;
         }
 
@@ -236,6 +255,10 @@
         for (let row of await populateItems(document.querySelector(".search-table .table-body"), "", { stock: false, buttons: true })) {
             row.querySelector(".select-row").addEventListener("click", () => selectItem(row));
         }
+
+        let x = await getCategories();
+        cat = x["categories"].map(y => y["CategoryName"]);
+        cat.push("None");
     });
 
     document.addEventListener("tablerefresh", () => {
@@ -261,10 +284,11 @@
             values[row.querySelector(".original-id").innerText] = {
                 "ItemID": children[0].firstChild.value,
                 "ItemName": children[1].firstChild.value,
-                "ItemDescription": children[2].firstChild.value,
-                "ShelfLife": children[3].lastChild.value === "-1" ? null : +children[3].firstChild.value * +children[3].lastChild.value,
-                "Price": +children[4].firstChild.value,
-                "Unit": children[5].firstChild.value,
+                "Category": children[2].firstChild.value === 'None' ? null : children[2].firstChild.value,
+                "ItemDescription": children[3].firstChild.value,
+                "ShelfLife": children[4].lastChild.value === "-1" ? null : +children[4].firstChild.value * +children[3].lastChild.value,
+                "Price": +children[5].firstChild.value,
+                "Unit": children[6].firstChild.value,
             }
         }
 

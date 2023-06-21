@@ -28,11 +28,14 @@ CREATE TABLE `delivery` (
   `DeliveryQuantity` int NOT NULL,
   `DeliveryDate` date NOT NULL DEFAULT (curdate()),
   `ReceivedBy` varchar(30) DEFAULT NULL,
+  `Source` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`DeliveryID`),
   KEY `ItemID` (`ItemID`),
   KEY `ReceivedBy` (`ReceivedBy`),
+  KEY  `Source` (`Source`),
   CONSTRAINT `delivery_ibfk_1` FOREIGN KEY (`ItemID`) REFERENCES `item` (`ItemID`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `delivery_ibfk_2` FOREIGN KEY (`ReceivedBy`) REFERENCES `user` (`Username`) ON DELETE SET NULL ON UPDATE CASCADE
+  CONSTRAINT `delivery_ibfk_2` FOREIGN KEY (`ReceivedBy`) REFERENCES `user` (`Username`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `delivery_ibfk_3` FOREIGN KEY (`Source`) REFERENCES `sources` (`SourceName`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -70,11 +73,14 @@ DROP TABLE IF EXISTS `item`;
 CREATE TABLE `item` (
   `ItemID` varchar(16) NOT NULL,
   `ItemName` varchar(20) NOT NULL,
+  `Category` varchar(24) DEFAULT NULL, 
   `ItemDescription` varchar(100) NOT NULL,
   `ShelfLife` int DEFAULT NULL,
   `Price` decimal(18,2) NOT NULL,
   `Unit` varchar(20) NOT NULL DEFAULT 'units',
-  PRIMARY KEY (`ItemID`)
+  PRIMARY KEY (`ItemID`),
+  KEY `Category` (`Category`),
+  CONSTRAINT `item_ibfk_1` FOREIGN KEY (`Category`) REFERENCES `categories` (`CategoryName`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -266,6 +272,7 @@ SET @saved_cs_client     = @@character_set_client;
 /*!50001 CREATE VIEW `stock` AS SELECT 
  1 AS `ItemID`,
  1 AS `ItemName`,
+ 1 AS `Category`,
  1 AS `ItemDescription`,
  1 AS `ShelfLife`,
  1 AS `Price`,
@@ -338,7 +345,7 @@ UNLOCK TABLES;
 /*!50001 SET collation_connection      = cp850_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `stock` AS select `item`.`ItemID` AS `ItemID`,`item`.`ItemName` AS `ItemName`,`item`.`ItemDescription` AS `ItemDescription`,`item`.`ShelfLife` AS `ShelfLife`,`item`.`Price` AS `Price`,(`x`.`DeliveryStock` - `y`.`IssuedStock`) AS `AvailableStock`,`item`.`Unit` AS `Unit` from ((`item` left join (select `item`.`ItemID` AS `ItemID`,coalesce(sum(if(((`item`.`ShelfLife` is null) or ((to_days(curdate()) - to_days((`delivery`.`DeliveryDate` + interval `item`.`ShelfLife` day))) <= 0)),`delivery`.`DeliveryQuantity`,0)),0) AS `DeliveryStock` from (`item` left join `delivery` on((`item`.`ItemID` = `delivery`.`ItemID`))) group by `item`.`ItemID`) `x` on((`item`.`ItemID` = `x`.`ItemID`))) left join (select `item`.`ItemID` AS `ItemID`,coalesce(sum(if((`request`.`StatusID` = 4),`request_item`.`QuantityIssued`,0)),0) AS `IssuedStock` from (`item` left join (`request_item` join `request` on((`request_item`.`RequestID` = `request`.`RequestID`))) on((`item`.`ItemID` = `request_item`.`ItemID`))) group by `item`.`ItemID`) `y` on((`item`.`ItemID` = `y`.`ItemID`))) order by `item`.`ItemID` */;
+/*!50001 VIEW `stock` AS select `item`.`ItemID` AS `ItemID`,`item`.`ItemName` AS `ItemName`,`item`.`Category` AS `Category`, `item`.`ItemDescription` AS `ItemDescription`,`item`.`ShelfLife` AS `ShelfLife`,`item`.`Price` AS `Price`,(`x`.`DeliveryStock` - `y`.`IssuedStock`) AS `AvailableStock`,`item`.`Unit` AS `Unit` from ((`item` left join (select `item`.`ItemID` AS `ItemID`,coalesce(sum(if(((`item`.`ShelfLife` is null) or ((to_days(curdate()) - to_days((`delivery`.`DeliveryDate` + interval `item`.`ShelfLife` day))) <= 0)),`delivery`.`DeliveryQuantity`,0)),0) AS `DeliveryStock` from (`item` left join `delivery` on((`item`.`ItemID` = `delivery`.`ItemID`))) group by `item`.`ItemID`) `x` on((`item`.`ItemID` = `x`.`ItemID`))) left join (select `item`.`ItemID` AS `ItemID`,coalesce(sum(if((`request`.`StatusID` = 4),`request_item`.`QuantityIssued`,0)),0) AS `IssuedStock` from (`item` left join (`request_item` join `request` on((`request_item`.`RequestID` = `request`.`RequestID`))) on((`item`.`ItemID` = `request_item`.`ItemID`))) group by `item`.`ItemID`) `y` on((`item`.`ItemID` = `y`.`ItemID`))) order by `item`.`ItemID` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
