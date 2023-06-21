@@ -8,6 +8,7 @@ const timeConv = {
 
 const itemColumns = ["ItemID", "ItemName", "ItemDescription", "ShelfLife", "Price", "AvailableStock", "Unit"];
 const categoriesColumns = ["CategoryName", "CategoryDescription"];
+const sourcesColumns = ["SourceName"];
 const requestColumns = ["RequestID", "RequestedBy", "RequestDate", "Status", "ItemID", "ItemName", "ItemDescription", "RequestQuantity", "QuantityIssued", "AvailableStock", "Unit"];
 const deliveryColumns = ["DeliveryID", "ItemID", "ItemName", "ItemDescription", "DeliveryQuantity", "Unit", "ShelfLife", "DeliveryDate", "ReceivedBy", "IsExpired"];
 const userColumns = ["Username", "FirstName", "LastName", "Email", "Role"];
@@ -143,6 +144,63 @@ async function populateCategories (tbody, keyword = "", { stock = true, buttons 
 
     tbody.querySelector(".table-loading").classList.add("hide");
     if (categories.length > 0) tbody.querySelector(".table-empty").classList.add("hide");
+    else tbody.querySelector(".table-empty").classList.remove("hide");
+
+    document.dispatchEvent(new Event("tablerefresh"));
+
+    return rows;
+}
+
+// fetches items from database
+async function getSources (keyword = "") {
+    return fetch(encodeURI(`/sources/search${keyword === "" ? "" : "?keywords=" + escapeKeyword(keyword)}`)).then(x => x.json());
+}
+
+// populates item table with items from getItems()
+async function populateSources (tbody, keyword = "", { stock = true, buttons = false, requesting = false } = {}) {
+    while (tbody.childElementCount > 3) tbody.removeChild(tbody.lastChild);
+
+    tbody.querySelector(".table-loading").classList.remove("hide");
+    tbody.querySelector(".table-empty").classList.add("hide");
+
+    let response = await getSources(keyword);
+    if ("error" in response) {
+        tbody.querySelector(".table-error").classList.remove("hide");
+        tbody.querySelector(".table-loading").classList.add("hide");
+        return;
+    }
+
+    let sources = response['sources'];
+    let rows = [];
+
+    for (let x of sources) {
+        let tr = document.createElement("div");
+        tr.classList.add("table-row");
+
+        for (let i of sourcesColumns) {
+            let y = x[i];
+            let td = document.createElement("div");
+            td.innerHTML = y;
+            tr.appendChild(td);
+        }
+        
+        if (buttons) {
+            let e = document.createElement("div");
+            let b = document.createElement("button");
+            b.type = "button";
+            b.role = "button";
+            b.innerHTML = "<i class='bi bi-plus-circle'></i><i class='bi bi-plus-circle-fill'></i>";
+            b.classList.add("select-row");
+            e.appendChild(b);
+            tr.appendChild(e);
+        }
+
+        tbody.appendChild(tr);
+        rows.push(tr);
+    }
+
+    tbody.querySelector(".table-loading").classList.add("hide");
+    if (sources.length > 0) tbody.querySelector(".table-empty").classList.add("hide");
     else tbody.querySelector(".table-empty").classList.remove("hide");
 
     document.dispatchEvent(new Event("tablerefresh"));

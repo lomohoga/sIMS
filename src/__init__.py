@@ -11,6 +11,7 @@ from src.blueprints.bp_request import bp_request
 from src.blueprints.bp_user import bp_user
 from src.blueprints.bp_delivery import bp_delivery
 from src.blueprints.bp_form import bp_form
+from src.blueprints.bp_sources import bp_sources
 
 #configure logger
 dictConfig({
@@ -48,6 +49,7 @@ def create_app (test_config = None):
     app.register_blueprint(bp_delivery)
     app.register_blueprint(bp_form)
     app.register_blueprint(bp_categories)
+    app.register_blueprint(bp_sources)
 
     # ensure the instance folder exists
     try:

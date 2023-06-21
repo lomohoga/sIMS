@@ -75,6 +75,8 @@
     </div>
 </div>
 
+<button id="manage-categories" type="button" role="button">Manage sources</button>
+
 <script>
     let currentSort = [0, true];
 
@@ -110,6 +112,10 @@
         document.querySelector(".delivery-table .bi-chevron-expand").classList.add("bi-chevron-up");
         document.querySelector(".delivery-table .bi-chevron-expand").classList.remove("bi-chevron-expand");
     });
+
+    document.querySelector("#manage-categories").addEventListener("click", () => {
+        window.location.href = "/sources";
+    })
 </script>
 
 {% endblock %}

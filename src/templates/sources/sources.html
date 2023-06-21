@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block main %}
+<div id="content-top">
+    <h1 class="main-header">Sources</h1>
+
+    <div class="btn-group">
+        <a class="btn" href="{{ url_for('bp_sources.add_sources') }}">Add sources</a>
+        <a class="btn" href="{{ url_for('bp_sources.remove_sources') }}">Remove sources</a>
+        <a class="btn" href="{{ url_for('bp_sources.update_sources') }}">Update sources</a>
+    </div>
+
+    <form id="search">
+        <input type="search" id="search-box" placeholder="Search sources&hellip;" name="keyword" autofocus>
+        <input type="submit" id="search-btn" value="Search" name="search-btn">
+    </form>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-main sources-table">
+        <div class="table-header">
+            <div class="table-row">
+                <div>Source Name</div>
+            </div>
+        </div>
+        <div class="table-body">
+            <div class="table-loading table-row hide">
+                <div>Please wait&hellip;</div>
+            </div>
+            <div class="table-empty table-row hide">
+                <div>No sources found.</div>
+            </div>
+            <div class="table-error table-row hide">
+                <div>An error occurred in the database. Please try again later.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<button id="manage-categories" type="button" role="button">Go back to deliveries</button>
+
+<script>
+    document.querySelector("#manage-categories").addEventListener("click", () => {
+        window.location.href = "/deliveries";
+    })
+
+    document.querySelector("#search").addEventListener("submit", e => {
+        e.preventDefault();
+        populateSources(document.querySelector(".sources-table .table-body"), document.querySelector("#search-box").value);
+    });
+
+    window.addEventListener("load", () => populateSources(document.querySelector(".sources-table .table-body")));
+</script>
+
+{% endblock %}

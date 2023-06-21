@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block main %}
+
+<div id="content-top">
+    <h1 class="main-header">Source Addition</h1>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-main add-table sources">
+        <div class="table-header">
+            <div class="table-row">
+                <div>Source Name</div>
+                <div></div>
+            </div>
+        </div>
+        <div class="table-body">
+            <div class="table-row" id="add-row">
+                <div>
+                    <button role="button" autofocus><i class="bi bi-plus-circle"></i>Add source</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="form-bottom">
+    <span class="form-msg"></span>
+    <form id="submit-form">
+        <input type="submit" value="Add sources" disabled>
+    </form>
+</div>
+
+<script>
+    function disableButton () {
+        document.querySelector("#submit-form [type=submit]").disabled =
+            // Disable if there are no rows in table (1 child = the "Add row" button)
+            document.querySelector(".add-table .table-body").childElementCount === 1
+            // Disable if any inputs are invalid
+            || Array.from(document.querySelectorAll(".add-table input")).some(x => x.value === '' && !x.classList.contains('hide'))
+            // Disable if at least one input box is invalid
+            || Array.from(document.querySelectorAll(".add-table input")).some(x => !x.checkValidity());
+    }
+
+    function addRow () {
+        let row = document.createElement("div");
+        row.classList.add("table-row");
+
+        let el = document.createElement("input");
+        el.type = "text";
+        el.maxLength = 50;
+
+        let wrapper = document.createElement("div");
+        wrapper.appendChild(el);
+        row.appendChild(wrapper);
+
+        let e = document.createElement("div");
+        let b = document.createElement("button");
+        b.type = "button";
+        b.role = "button";
+        b.innerHTML = "<i class='bi bi-dash-circle'></i><i class='bi bi-dash-circle-fill'></i>"
+        b.classList.add("delete-row");
+        e.appendChild(b);
+        row.append(e);
+        
+        b.addEventListener("click", () => {
+            document.querySelector(".add-table .table-body").removeChild(b.parentElement.parentElement);
+            disableButton();
+        });
+
+        document.querySelector(".add-table .table-body").insertBefore(row, document.querySelector("#add-row"));
+        disableButton();
+    }
+
+    document.querySelector(".add-table").addEventListener("input", () => {
+        let x = document.querySelector(".add-table .table-row.error");
+        if (x) x.classList.remove("error");
+    });
+
+    document.querySelector("#submit-form").addEventListener("submit", e => {
+        e.preventDefault();
+
+        document.querySelector(".form-bottom .form-msg").innerText = "Please wait\u2026";
+        document.querySelector(".form-bottom .form-msg").classList.remove("error");
+
+        let values = [];
+
+        for (let row of Array.from(document.querySelectorAll(".add-table .table-body .table-row:not(#add-row)"))) {
+            let children = row.children;
+
+            values.push({
+                "SourceName": children[0].firstChild.value,
+            })
+        }
+        
+        fetch("{{ url_for('bp_sources.add_sources') }}", {
+            "method": "POST",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": JSON.stringify({ "values": values })
+        }).then(async d => {
+            if (d.status === 200) window.location = "{{ url_for('bp_sources.sources') }}";
+            if (d.status === 500) {
+                let res = await d.json();
+
+                document.querySelector(".form-bottom .form-msg").innerHTML = `<b>ERROR:</b> ${res['error']}`;
+                document.querySelector(".form-bottom .form-msg").classList.add("error");
+
+                if ('item' in res) Array.prototype.filter.call(document.querySelectorAll(".add-table .table-body .table-row:not(#add-row)"), x => x.firstChild.firstChild.value === res['item'])[0].classList.add("error");
+            }
+        });
+    });
+
+    document.querySelector(".add-table").addEventListener("input", disableButton);
+
+    document.querySelector("#add-row").addEventListener("click", addRow);
+</script>
+
+{% endblock %}

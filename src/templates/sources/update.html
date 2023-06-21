@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block main %}
+
+<div id="content-top">
+    <h1 class="main-header">Source Update</h1>
+
+    <form id="search">
+        <input type="search" id="search-box" placeholder="Search sources&hellip;" name="keyword" autofocus>
+        <input type="submit" id="search-btn" value="Search" name="search-btn">
+    </form>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-main search-table sources">
+        <div class="table-header">
+            <div class="table-row">
+                <div>Source Name</div>
+                <div></div>
+            </div>
+        </div>
+        <div class="table-body">
+            <div class="table-row table-loading hide">
+                <div>Please wait&hellip;</div>
+            </div>
+            <div class="table-row table-empty hide">
+                <div>No sources found.</div>
+            </div>
+            <div class="table-error table-row hide">
+                <div>An error occurred in the database. Please try again later.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-main selection-table sources">
+        <div class="table-header">
+            <div class="table-row">
+                <div>Source Name</div>
+                <div></div>
+            </div>
+        </div>
+        <div class="table-body"> </div>
+    </div>
+</div>
+
+<div class="form-bottom">
+    <span class="form-msg"></span>
+    <form id="submit-form">
+        <input type="submit" value="Update selected sources" name="update-btn" disabled>
+    </form>
+</div>
+
+<script>
+    function addRow () {
+        let row = document.createElement("div");
+        row.classList.add("table-row");
+
+        let el = document.createElement("input");
+        el.type = "text";
+        el.maxLength = 50;
+
+        let wrapper = document.createElement("div");
+        wrapper.appendChild(el);
+        row.appendChild(wrapper);
+
+        let e = document.createElement("div");
+        let b = document.createElement("button");
+        b.type = "button";
+        b.role = "button";
+        b.innerHTML = "<i class='bi bi-dash-circle'></i><i class='bi bi-dash-circle-fill'></i>"
+        b.classList.add("delete-row");
+        e.appendChild(b);
+        row.append(e);
+
+        return row;
+    }
+
+    function selectItem (row) {
+        let newRow = addRow();
+
+        for (let i = 0; i < 1; i++) {
+            newRow.children[i].firstChild.value = row.children[i].innerText;
+        }
+
+        let itemID = row.firstChild.innerText;
+        newRow.querySelector(".delete-row").addEventListener("click", () => {
+            document.querySelector(".selection-table .table-body").removeChild(newRow);
+            let m = Array.prototype.filter.call(document.querySelectorAll(".search-table .table-body .table-row"), x => x.firstChild.innerText === itemID);
+            if (m.length > 0) m[0].querySelector(".select-row").disabled = false;
+            enableSubmit();
+        });
+
+        let inv = document.createElement("div");
+        inv.classList.add("original-id");
+        inv.innerHTML = row.children[0].innerHTML;
+        newRow.appendChild(inv);
+
+        let b = document.querySelector(".selection-table .table-body");
+        b.insertBefore(newRow, b.firstChild);
+        row.lastChild.querySelector("button").disabled = true;
+        enableSubmit();
+    }
+
+    function disableButtons () {
+        if (document.querySelector(".selection-table .table-body").childElementCount > 0) {
+            let codes = Array.prototype.map.call(document.querySelectorAll(".selection-table .table-body .table-row > .original-id"), x => x.innerText);
+            Array.prototype.filter.call(document.querySelectorAll(".search-table .table-body .table-row"), x => codes.includes(x.firstChild.innerText)).forEach(x => x.querySelector(".select-row").disabled = true);
+        }
+    }
+
+    function enableSubmit () {
+        document.querySelector("#submit-form [type=submit]").disabled = document.querySelector(".selection-table .table-body").childElementCount === 0;
+    }
+
+    document.querySelector("#search").addEventListener("submit", async e => {
+        e.preventDefault();
+        for (let row of await populateSources(document.querySelector(".search-table .table-body"), document.querySelector("#search-box").value, { stock: false, buttons: true })) {
+            row.querySelector(".select-row").addEventListener("click", () => selectItem(row));
+        }
+    });
+
+    window.addEventListener("load", async () => {
+        for (let row of await populateSources(document.querySelector(".search-table .table-body"), "", { stock: false, buttons: true })) {
+            row.querySelector(".select-row").addEventListener("click", () => selectItem(row));
+        }
+    });
+
+    document.addEventListener("tablerefresh", () => {
+        enableSubmit();
+        disableButtons();
+    });
+
+    document.querySelector("#submit-form").addEventListener("submit", e => {
+        e.preventDefault();
+
+        let values = {};
+
+        for (let row of Array.from(document.querySelectorAll(".selection-table .table-body .table-row"))) {
+            let children = row.children;
+
+            values[row.querySelector(".original-id").innerText] = {
+                "SourceName": children[0].firstChild.value,
+            }
+        }
+
+        fetch("{{ url_for('bp_sources.update_sources') }}", {
+            "method": "POST",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": JSON.stringify({ "values": values })
+        }).then(async d => {
+            if (d.status === 200) window.location = "{{ url_for('bp_sources.sources') }}";
+            if (d.status === 500) {
+                let res = await d.json();
+
+                document.querySelector(".form-bottom .form-msg").innerHTML = `<b>ERROR:</b> ${res['error']}`;
+                document.querySelector(".form-bottom .form-msg").classList.add("error");
+
+                if ('item' in res) Array.prototype.filter.call(document.querySelectorAll(".selection-table .table-body .table-row:not(#add-row)"), x => x.firstChild.firstChild.value === res['item'])[0].classList.add("error");
+            }
+        });
+    })
+</script>
+
+{% endblock %}

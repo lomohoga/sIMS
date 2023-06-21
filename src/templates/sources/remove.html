@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block main %}
+
+<div id="content-top">
+    <h1 class="main-header">Source Removal</h1>
+
+    <form id="search">
+        <input type="search" id="search-box" placeholder="Search sources&hellip;" name="keyword">
+        <input type="submit" id="search-btn" value="Search" name="search-btn">
+    </form>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-main search-table sources">
+        <div class="table-header">
+            <div class="table-row">
+                <div>Source Name</div>
+                <div></div>
+            </div>
+        </div>
+        <div class="table-body">
+            <div class="table-row table-loading hide">
+                <div>Please wait&hellip;</div>
+            </div>
+            <div class="table-row table-empty hide">
+                <div>No sources found.</div>
+            </div>
+            <div class="table-error table-row hide">
+                <div>An error occurred in the database. Please try again later.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-main selection-table sources">
+        <div class="table-header">
+            <div class="table-row">
+                <div>Source Name</div>
+                <div></div>
+            </div>
+        </div>
+        <div class="table-body"> </div>
+    </div>
+</div>
+
+<div class="form-bottom">
+    <span class="form-msg"></span>
+    <form id="submit-form">
+        <input type="submit" class="btn-red" value="Remove selected sources" disabled>
+    </form>
+</div>
+
+<script>
+    function selectItem (row) {
+        let clone = row.cloneNode(true);
+        clone.lastChild.innerHTML = clone.lastChild.innerHTML.replaceAll("plus", "dash");
+        clone.querySelector(".select-row").classList.add("delete-row");
+        clone.querySelector(".select-row").classList.remove("select-row");
+        
+        clone.lastChild.querySelector("button").addEventListener("click", () => {
+            clone.parentElement.removeChild(clone);
+            let r = Array.from(document.querySelectorAll(".search-table .table-body .table-row")).filter(x => x.firstChild.innerHTML === clone.firstChild.innerHTML);
+            if (r.length > 0) r[0].lastChild.querySelector("button").disabled = false;
+            enableSubmit();
+        });
+
+        let b = document.querySelector(".selection-table .table-body");
+        b.insertBefore(clone, b.firstChild);
+        row.lastChild.querySelector("button").disabled = true;
+        enableSubmit();
+    }
+
+    function disableButtons () {
+        if (document.querySelector(".selection-table .table-body").childElementCount > 0) {
+            let codes = Array.from(document.querySelectorAll(".selection-table .table-body .table-row > :first-child")).map(x => x.innerHTML);
+            Array.prototype.filter.call(document.querySelectorAll(".search-table .table-body .table-row"), x => codes.includes(x.firstChild.innerHTML)).forEach(x => x.lastChild.querySelector("button").disabled = true);
+        }
+    }
+
+    function enableSubmit () {
+        document.querySelector("#submit-form [type=submit]").disabled = document.querySelector(".selection-table .table-body").childElementCount === 0;
+    }
+
+    document.querySelector("#search").addEventListener("submit", async e => {
+        e.preventDefault();
+
+        for (let row of await populateSources(document.querySelector(".search-table .table-body"), document.querySelector("#search-box").value, { buttons: true })) {
+            row.querySelector(".select-row").addEventListener("click", () => selectItem(row));
+        }
+    });
+
+    window.addEventListener("load", async () => {
+        for (let row of await populateSources(document.querySelector(".search-table .table-body"), "", { buttons: true })) {
+            row.querySelector(".select-row").addEventListener("click", () => selectItem(row));
+        }
+    });
+
+    document.addEventListener("tablerefresh", () => {
+        enableSubmit();
+        disableButtons();
+    });
+
+    document.querySelector("#submit-form").addEventListener("submit", e => {
+        e.preventDefault();
+
+        document.querySelector(".form-bottom .form-msg").innerText = "Please wait\u2026";
+        document.querySelector(".form-bottom .form-msg").classList.remove("error");
+
+        fetch("{{ url_for('bp_sources.remove_sources') }}", {
+            "method": "POST",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": JSON.stringify({ "sources": Array.from(document.querySelectorAll(".selection-table .table-body .table-row > :first-child")).map(x => x.innerHTML) })
+        }).then(async d => {
+            if (d.status === 200) window.location = "{{ url_for('bp_sources.sources') }}";
+            if (d.status === 500) {
+                let res = await d.json();
+
+                document.querySelector(".form-bottom .form-msg").innerHTML = `<b>ERROR:</b> ${res['error']}`;
+                document.querySelector(".form-bottom .form-msg").classList.add("error");
+            }
+        });
+    })
+</script>
+
+{% endblock %}

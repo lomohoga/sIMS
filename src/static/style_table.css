@@ -84,6 +84,12 @@
     grid-template-columns: 1fr 2fr 3rem;
 }
 
+.add-table.sources .table-row,
+.search-table.sources .table-row,
+.selection-table.sources .table-row {
+    grid-template-columns: 1fr 3rem;
+}
+
 .search-table .table-row {
     grid-template-columns: 0.625fr 0.75fr 2fr 0.5fr 0.75fr 0.5fr 0.5fr 3rem;
 }

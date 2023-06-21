@@ -1,28 +1,27 @@
 from flask import Blueprint, Response, render_template, request, session, current_app
 
-from src.blueprints.format_data import format_categories
 from src.blueprints.auth import login_required
 from src.blueprints.database import connect_db
 from src.blueprints.decode_keyword import decode_keyword, escape
-from src.blueprints.exceptions import CategoryNotFoundError, ExistingCategoryError, SelfNotFoundError, SelfRoleError
+from src.blueprints.exceptions import SourceNotFoundError, ExistingSourceError, SelfNotFoundError, SelfRoleError
 
-bp_categories = Blueprint('bp_categories', __name__, url_prefix = "/categories")
+bp_sources = Blueprint('bp_sources', __name__, url_prefix = "/sources")
 
 # route for inventory
-@bp_categories.route('/')
+@bp_sources.route('/')
 @login_required
-def categories ():
-    return render_template("categories/categories.html", active = "inventory")
+def sources ():
+    return render_template("sources/sources.html", active = "deliveries")
 
 # route for item search
-@bp_categories.route('/search')
+@bp_sources.route('/search')
 @login_required
-def search_categories ():
+def search_sources ():
     keywords = [] if "keywords" not in request.args else [decode_keyword(x).lower() for x in request.args.get("keywords").split(" ")]
     conditions = []
     for x in keywords:
-        conditions.append(f"(CategoryName LIKE '%{x}%' OR CategoryDescription LIKE '%{x}%')")
-    query = f"SELECT * from categories {'' if len(conditions) == 0 else 'WHERE (' + ' AND '.join(conditions) + ')'};"
+        conditions.append(f"(SourceName LIKE '%{x}%')")
+    query = f"SELECT * from sources {'' if len(conditions) == 0 else 'WHERE (' + ' AND '.join(conditions) + ')'};"
 
     cxn = None
 
@@ -31,24 +30,28 @@ def search_categories ():
         db = cxn.cursor()
 
         db.execute(query)
-        categories = db.fetchall()
+        sources = db.fetchall()
     except Exception as e:
         current_app.logger.error(str(e))
         return { "error": str(e) }, 500
     finally:
         if cxn is not None: cxn.close()
 
-    return { "categories": format_categories(categories) }
+    return { "sources": [
+        {
+            "SourceName": d[0],
+        } for d in sources
+    ]}
 
 # route for item addition
-@bp_categories.route('/add', methods = ["GET", "POST"])
+@bp_sources.route('/add', methods = ["GET", "POST"])
 @login_required
-def add_categories ():
+def add_sources ():
     if request.method == 'GET':
         if session['user']['RoleID'] != 1: 
-            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to add items to the database."), 403
+            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to add sources to the database."), 403
         else:
-            return render_template("categories/add.html")
+            return render_template("sources/add.html")
 
     if request.method == 'POST':        
         cxn = None
@@ -63,10 +66,10 @@ def add_categories ():
             if f[0] == 2 and f[0] != session['user']['RoleID']: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
             for v in values['values']:
-                db.execute(f"SELECT * FROM categories WHERE CategoryName = '{v['CategoryName']}'")
-                if db.fetchone() is not None: raise ExistingCategoryError(category = v['CategoryName'])
+                db.execute(f"SELECT * FROM sources WHERE SourceName = '{v['SourceName']}'")
+                if db.fetchone() is not None: raise ExistingSourceError(source = v['SourceName'])
 
-                db.execute(f"INSERT INTO categories VALUES ('{escape(v['CategoryName'])}', '{escape(v['CategoryDescription'])}')")
+                db.execute(f"INSERT INTO sources VALUES ('{escape(v['SourceName'])}')")
             cxn.commit()
         except Exception as e:
             current_app.logger.error(str(e))
@@ -77,17 +80,17 @@ def add_categories ():
         return Response(status = 200)
 
 # route for item removal
-@bp_categories.route('/remove', methods = ["GET", "POST"])
+@bp_sources.route('/remove', methods = ["GET", "POST"])
 @login_required
-def remove_categories ():
+def remove_sources ():
     if request.method == "GET":
         if session['user']['RoleID'] != 1: 
-            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to remove items from the database."), 403
+            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to remove sources from the database."), 403
         else: 
-            return render_template("categories/remove.html")
+            return render_template("sources/remove.html")
 
     if request.method == "POST":
-        categories = request.get_json()["categories"]
+        sources = request.get_json()["sources"]
         cxn = None
         try:
             cxn = connect_db()
@@ -98,11 +101,11 @@ def remove_categories ():
             if f is None: raise SelfNotFoundError(username = session['user']['Username'])
             if f[0] == 2 and f[0] != session['user']['RoleID']: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
-            for x in categories:
-                db.execute(f"SELECT * FROM categories WHERE CategoryName = '{x}'")
-                if db.fetchone() is None: raise CategoryNotFoundError(category = x)
+            for x in sources:
+                db.execute(f"SELECT * FROM sources WHERE SourceName = '{x}'")
+                if db.fetchone() is None: raise SourceNotFoundError(source = x)
 
-                db.execute(f"DELETE FROM categories WHERE CategoryName = '{x}'")
+                db.execute(f"DELETE FROM sources WHERE SourceName = '{x}'")
             cxn.commit()
         except Exception as e:
             current_app.logger.error(str(e))
@@ -113,14 +116,14 @@ def remove_categories ():
         return Response(status = 200)
 
 # route for item update
-@bp_categories.route('/update', methods = ["GET", "POST"])
+@bp_sources.route('/update', methods = ["GET", "POST"])
 @login_required
-def update_categories ():
+def update_sources ():
     if request.method == "GET":
         if session['user']['RoleID'] != 1: 
-            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to update items in the database."), 403
+            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to update sources in the database."), 403
         else: 
-            return render_template("categories/update.html")
+            return render_template("sources/update.html")
 
     if request.method == "POST":
         values = request.get_json()["values"]
@@ -135,13 +138,13 @@ def update_categories ():
             if f[0] == 2 and f[0] != session['user']['RoleID']: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
             for v in values:
-                db.execute(f"SELECT * FROM categories WHERE CategoryName = '{v}'")
-                if db.fetchone() is None: raise CategoryNotFoundError(category = v)
+                db.execute(f"SELECT * FROM sources WHERE SourceName = '{v}'")
+                if db.fetchone() is None: raise SourceNotFoundError(bp_sources = v)
 
-                db.execute(f"SELECT * FROM categories WHERE CategoryName = '{values[v]['CategoryName']}'")
-                if db.fetchone() is not None and v != values[v]['CategoryName']: raise ExistingCategoryError(category= values[v]['CategoryName'])
+                db.execute(f"SELECT * FROM sources WHERE SourceName = '{values[v]['SourceName']}'")
+                if db.fetchone() is not None and v != values[v]['SourceName']: raise ExistingSourceError(source= values[v]['SourceName'])
 
-                db.execute(f"UPDATE categories SET CategoryName = '{escape(values[v]['CategoryName'])}', CategoryDescription = '{escape(values[v]['CategoryDescription'])}' WHERE CategoryName = '{v}'")
+                db.execute(f"UPDATE sources SET SourceName = '{escape(values[v]['SourceName'])}' WHERE SourceName = '{v}'")
             cxn.commit()
         except Exception as e:
             current_app.logger.error(str(e))
