@@ -81,6 +81,7 @@
                 <div>Unit Price</div>
                 <div>Unit</div>
                 <div>Delivery Date</div>
+                <div>Source</div>
                 <div>Delivery Quantity</div>
                 <div></div>
             </div>
@@ -98,6 +99,7 @@
 
 <script>
     let currentSortSearch = [0, true];
+    let sources;
 
     document.querySelectorAll(".search-table .sort-btn").forEach(x => {
         const p = x.parentElement;
@@ -116,6 +118,22 @@
         date.value = `${v.getFullYear()}-${(v.getMonth() + 1).toString().padStart(2, "0")}-${(v.getDate()).toString().padStart(2, "0")}`;
         d1.appendChild(date);
         clone.insertBefore(d1, clone.lastChild);
+
+        let d3 = document.createElement("div");
+        let src = document.createElement("select");
+        console.log(sources)
+        for (let x in sources) {
+            let op = document.createElement("option");
+            console.log(sources[x])
+            op.value = sources[x];
+            op.innerHTML = sources[x];
+            if(x === 0){
+                op.selected = true;
+            }
+            src.appendChild(op);
+        }
+        d3.appendChild(src)
+        clone.insertBefore(d3, clone.lastChild);
         
         let d2 = document.createElement("div");
         let quantity = document.createElement("input");
@@ -140,7 +158,7 @@
     }
 
     function enableSubmit () {
-        document.querySelector("#submit-form [type=submit]").disabled = document.querySelector(".selection-table .table-body").childElementCount === 0 || Array.prototype.some.call(document.querySelectorAll(".selection-table input"), x => x.value === '' || !x.checkValidity());
+        document.querySelector("#submit-form [type=submit]").disabled = document.querySelector(".selection-table .table-body").childElementCount === 0 || Array.prototype.some.call(document.querySelectorAll(".selection-table input"), x => x.value === '' || !x.checkValidity()) || document.querySelector(".selection-table select").value === '';
     }
 
     document.querySelector("#search").addEventListener("submit", async e => {
@@ -177,7 +195,8 @@
             values.push({
                 "ItemID": children[0].innerText,
                 "DeliveryDate": children[7].firstChild.value,
-                "DeliveryQuantity": +children[8].firstChild.value,
+                "Source": children[8].firstChild.value,
+                "DeliveryQuantity": +children[9].firstChild.value,
             });
         }
         
@@ -201,6 +220,9 @@
         for (let row of await populateItems(document.querySelector(".search-table .table-body"), "", { stock: false, buttons: true })) {
             row.querySelector(".select-row").addEventListener("click", () => selectItem(row));
         }
+
+        let x = await getSources();
+        sources = x["sources"].map(y => y["SourceName"]);
     });
 </script>
 

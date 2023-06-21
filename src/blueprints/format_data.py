@@ -61,8 +61,9 @@ def format_deliveries (deliveries):
             "Unit": d[5],
             "ShelfLife": locale.format_string("%d", d[6], grouping = True) if d[6] is not None else "\u2014",
             "DeliveryDate": d[7],
-            "ReceivedBy": d[8],
-            "IsExpired": bool(d[9])
+            "Source": d[8],
+            "ReceivedBy": d[9],
+            "IsExpired": bool(d[10])
         } for d in deliveries
     ]
 
