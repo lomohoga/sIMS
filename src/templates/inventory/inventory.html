@@ -71,6 +71,10 @@
     </div>
 </div>
 
+{% if session['user']['RoleID'] == 1 %}
+<button id="manage-categories" type="button" role="button">Manage categories</button>
+{% endif %}
+
 <script>
     let currentSort = [0, true];
 
@@ -107,5 +111,13 @@
         document.querySelector(".inventory-table .bi-chevron-expand").classList.remove("bi-chevron-expand");
     });
 </script>
+
+{% if session['user']['RoleID'] == 1 %}
+<script>
+    document.querySelector("#manage-categories").addEventListener("click", () => {
+        window.location.href = "/categories";
+    })
+</script>
+{% endif %}
 
 {% endblock %}

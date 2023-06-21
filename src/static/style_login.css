@@ -76,7 +76,7 @@
     width: clamp(25%, 15rem, 50%);
 }
 
-#forgot-password {
+#forgot-password, #manage-categories {
     width: fit-content;
     background: none;
     box-shadow: none;
@@ -89,7 +89,9 @@
 }
 
 #forgot-password:hover,
-#forgot-password:focus {
+#forgot-password:focus,
+#manage-categories:focus,
+#manage-categories:hover {
     cursor: pointer;
     text-decoration: underline;
     color: var(--dark-blue);

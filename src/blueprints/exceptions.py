@@ -15,6 +15,15 @@ class ItemNotFoundError (Exception):
 
     def __str__ (self) -> str:
         return f"Item {self.args[0]} not found in database."
+    
+# exception for categories not in database
+class CategoryNotFoundError (Exception):
+    def __init__ (self, *args, **kwargs):
+        super().__init__(*args)
+        self.args = (kwargs['category'],)
+
+    def __str__ (self) -> str:
+        return f"Category {self.args[0]} not found in database."
 
 # exception thrown when trying to add item with already existing item ID
 class ExistingItemError (Exception):
@@ -24,6 +33,15 @@ class ExistingItemError (Exception):
 
     def __str__ (self):
         return f"Item {self.args[0]} already exists in the database."
+    
+# exception thrown when trying to add category with already existing name
+class ExistingCategoryError (Exception):
+    def __init__ (self, *args, **kwargs):
+        super().__init__(*args)
+        self.args = (kwargs['category'],)
+
+    def __str__ (self):
+        return f"Category {self.args[0]} already exists in the database."
 
 # exception thrown when trying to remove item that appears in an ongoing request
 class OngoingRequestItemError (Exception):

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block main %}
+<div id="content-top">
+    <h1 class="main-header">Categories</h1>
+
+    <div class="btn-group">
+        <a class="btn" href="{{ url_for('bp_categories.add_categories') }}">Add categories</a>
+        <a class="btn" href="{{ url_for('bp_categories.remove_categories') }}">Remove categories</a>
+        <a class="btn" href="{{ url_for('bp_categories.update_categories') }}">Update categories</a>
+    </div>
+
+    <form id="search">
+        <input type="search" id="search-box" placeholder="Search categories&hellip;" name="keyword" autofocus>
+        <input type="submit" id="search-btn" value="Search" name="search-btn">
+    </form>
+</div>
+
+<div class="table-wrapper">
+    <div class="table-main categories-table">
+        <div class="table-header">
+            <div class="table-row">
+                <div>Category Name</div>
+                <div>Description</div>
+            </div>
+        </div>
+        <div class="table-body">
+            <div class="table-loading table-row hide">
+                <div>Please wait&hellip;</div>
+            </div>
+            <div class="table-empty table-row hide">
+                <div>No categories found.</div>
+            </div>
+            <div class="table-error table-row hide">
+                <div>An error occurred in the database. Please try again later.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<button id="manage-categories" type="button" role="button">Go back to inventory</button>
+
+<script>
+    document.querySelector("#manage-categories").addEventListener("click", () => {
+        window.location.href = "/";
+    })
+
+    document.querySelector("#search").addEventListener("submit", e => {
+        e.preventDefault();
+        populateCategories(document.querySelector(".categories-table .table-body"), document.querySelector("#search-box").value);
+    });
+
+    window.addEventListener("load", () => populateCategories(document.querySelector(".categories-table .table-body")));
+</script>
+
+{% endblock %}

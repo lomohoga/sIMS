@@ -63,3 +63,11 @@ def format_deliveries (deliveries):
             "IsExpired": bool(d[9])
         } for d in deliveries
     ]
+
+def format_categories (categories):
+    return [
+        {
+            "CategoryName": d[0],
+            "CategoryDescription": d[1]
+        } for d in categories
+    ]
