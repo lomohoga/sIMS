@@ -107,6 +107,8 @@ CREATE TABLE `request` (
   `DateReceived` date DEFAULT NULL,
   `CancelledBy` varchar(30) DEFAULT NULL,
   `DateCancelled` date DEFAULT NULL,
+  `Purpose` varchar(50) NOT NULL,
+  `Remarks` varchar(70) DEFAULT NULL,
   PRIMARY KEY (`RequestID`),
   KEY `RequestedBy` (`RequestedBy`),
   KEY `ApprovedBy` (`ActingAdmin`),

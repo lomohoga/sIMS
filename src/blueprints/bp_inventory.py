@@ -161,6 +161,7 @@ def request_items ():
     if (request.method == "POST"):
         cxn = None
         req = request.get_json()["items"]
+        purpose = request.get_json()["purpose"]
         try:
             cxn = connect_db()
             db = cxn.cursor()
@@ -170,7 +171,7 @@ def request_items ():
             if f is None: raise SelfNotFoundError(username = session['user']['Username'])
             if f[0] == 1 and f[0] != session['user']['RoleID']: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
-            db.execute(f"INSERT INTO request (RequestedBy) VALUES ('{session['user']['Username']}')")
+            db.execute(f"INSERT INTO request (RequestedBy, Purpose) VALUES ('{session['user']['Username']}', '{purpose}')")
             db.execute("SELECT LAST_INSERT_ID()")
             requestID = db.fetchone()[0]
 

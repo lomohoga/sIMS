@@ -102,6 +102,11 @@
     </div>
 </div>
 
+<div id="purpose-box">
+    <label for="purpose" style="padding-left: 0.3rem"><b>Purpose:</b></label>
+    <input type="text" id="purpose" name="purpose" style="width: 100%" required>
+</div>
+
 <div class="form-bottom">
     <span class="form-msg"></span>
     <form id="submit-form">
@@ -156,6 +161,10 @@
         enableSubmit();
     }
 
+    document.querySelector("#purpose").addEventListener("input", () => {
+        enableSubmit();
+    })
+
     function disableButtons () {
         if (document.querySelector(".selection-table .table-body").childElementCount > 0) {
             let codes = Array.from(document.querySelectorAll(".selection-table .table-body .table-row > :first-child")).map(x => x.innerText);
@@ -164,7 +173,7 @@
     }
 
     function enableSubmit () {
-        document.querySelector("#submit-form [type=submit]").disabled = document.querySelector(".selection-table .table-body").childElementCount === 0 || Array.from(document.querySelectorAll(".selection-table .table-body > div :nth-child(8) input")).some(x => !x.checkValidity() || x.value === '');
+        document.querySelector("#submit-form [type=submit]").disabled = document.querySelector(".selection-table .table-body").childElementCount === 0 || Array.from(document.querySelectorAll(".selection-table .table-body > div :nth-child(8) input")).some(x => !x.checkValidity() || x.value === '') || !document.querySelector("#purpose").value != '';
     }
 
     document.querySelector("#search").addEventListener("submit", e => {
@@ -203,7 +212,8 @@
                         "ItemID": x.firstChild.innerHTML,
                         "RequestQuantity": +x.children[7].firstChild.value
                     }
-                })
+                }),
+                "purpose": document.querySelector("#purpose").value
             })
         }).then(async d => {
             if (d.status === 200) window.location = "{{ url_for('bp_inventory.inventory') }}";

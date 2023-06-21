@@ -115,12 +115,13 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
     let rows = [];
     
     for (let req of requests) {
+        console.log(req)
         let parent = document.createElement("div");
         parent.classList.add("request-parent");
 
         let anon = document.createElement("div");
         let remark = document.createElement("div");
-        remark.innerHTML = "<b>Purpose:</b> Science project kakakakakakakakakakakakaka"
+        remark.innerHTML = "<b>Purpose:</b> " + req["Purpose"]
         let reason = document.createElement("div");
         reason.innerHTML = "<b>Reason:</b> Science project kakakakakakakakakakakakaka"
         anon.appendChild(remark);
