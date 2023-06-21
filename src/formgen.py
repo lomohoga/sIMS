@@ -18,11 +18,9 @@ def form_58 (db, item):
     db.execute(f"SELECT * FROM item WHERE ItemID = '{item}'")
     data = db.fetchone()
     if data is None: raise ItemNotFoundError(item = item)
-    print(data)
 
     db.execute(f"SELECT * FROM (SELECT RequestID, RequestDate, DeliveryStock, QuantityIssued, UPPER(CONCAT(FirstName, ' ', LastName)) as RequestedBy, ShelfLife FROM request_item INNER JOIN (SELECT ItemID, ShelfLife, COALESCE(SUM(IF(ShelfLife IS NULL OR DATEDIFF(CURDATE(), ADDDATE(DeliveryDate, ShelfLife)) <= 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) GROUP BY ItemID) AS w USING (ItemID) INNER JOIN request USING (RequestID) INNER JOIN user ON RequestedBy = Username WHERE ItemID = '{item}' AND StatusID = 4 ORDER BY RequestID DESC LIMIT 30) AS x ORDER BY RequestID ASC")
     requests = db.fetchall()
-    print(requests)
 
     wb = load_workbook("./src/form_templates/template_58.xlsx", rich_text = True)
     ws = wb.active
@@ -56,6 +54,9 @@ def form_59 (db, request):
     db.execute(f"SELECT * FROM request WHERE RequestID = {request}")
     if db.fetchone() is None: raise RequestNotFoundError(request = request)
 
+    db.execute(f"SELECT COUNT(*) + 1 FROM request WHERE StatusID = 4 && hasPropertyApproved = 0 && RequestID < {request};")
+    ics_num = db.fetchone()[0]
+
     db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) FROM request INNER JOIN user ON RequestedBy = Username WHERE RequestID = {request}")
     (req_by,) = db.fetchone()
     db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) FROM request INNER JOIN user ON IssuedBy = Username WHERE RequestID = {request}")
@@ -63,13 +64,14 @@ def form_59 (db, request):
     db.execute(f"SELECT DateReceived, DateIssued FROM request WHERE RequestID = {request}")
     (date_rec, date_iss) = db.fetchone()
 
-    db.execute(f"SELECT RequestQuantity, Unit, Price, Price * RequestQuantity, ItemDescription, ItemID, ShelfLife FROM request_item INNER JOIN stock USING (ItemID) INNER JOIN request USING (RequestID) WHERE RequestID = '{request}' AND Price < 15000")
+    db.execute(f"SELECT QuantityIssued, Unit, Price, Price * QuantityIssued, ItemDescription, ItemID, ShelfLife FROM request_item INNER JOIN stock USING (ItemID) INNER JOIN request USING (RequestID) WHERE RequestID = '{request}';")
     items = db.fetchall()
 
     if len(items) == 0: return None
 
     wb = load_workbook("./src/form_templates/template_59.xlsx", rich_text = True)
     ws = wb.active
+    ws["H7"] = ics_num
 
     for i in range(len(items)):
         row = items[i]
@@ -101,7 +103,7 @@ def form_63 (db, request):
     db.execute(f"SELECT * FROM request WHERE RequestID = {request}")
     if db.fetchone() is None: raise RequestNotFoundError(request = request)
 
-    db.execute(f"SELECT RequestID, item.ItemID AS ItemID, item.ItemDescription AS ItemDescription, RequestQuantity, QuantityIssued FROM request_item INNER JOIN request USING (RequestID) INNER JOIN item USING (ItemID) INNER JOIN stock USING (ItemID) INNER JOIN user ON RequestedBy = Username WHERE RequestID = '{request}'")
+    db.execute(f"SELECT RequestID, item.ItemID AS ItemID, item.ItemDescription AS ItemDescription, RequestQuantity, QuantityIssued, Purpose, Remarks FROM request_item INNER JOIN request USING (RequestID) INNER JOIN item USING (ItemID) INNER JOIN stock USING (ItemID) INNER JOIN user ON RequestedBy = Username WHERE RequestID = '{request}'")
     data = db.fetchall()
 
     db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) AS RequestedBy, DateApproved FROM request INNER JOIN user ON (Username = RequestedBy)")
@@ -119,22 +121,25 @@ def form_63 (db, request):
     for i in range(len(data)):
         req = data[i]
 
+        ws["G9"] = req[0]
         ws[f"A{12 + i}"] = req[1]
         ws[f"C{12 + i}"] = req[2]
         ws[f"D{12 + i}"] = req[3]
-        if req[4] > 0:
+        if req[3] > 0:
             ws[f"E{12 + i}"] = "\u2714"
-            ws[f"G{12 + i}"] = req[4]
         else: ws[f"F{12 + i}"] = "\u2714"
+        ws[f"G{12 + i}"] = req[4]
+        ws[f"H{12 + i}"] = req[5]
+        ws["B32"] = req[6]
 
-        ws["C37"] = req_requested[0]
-        ws["C39"] = req_requested[1]
-        ws["D37"] = req_approved[0]
-        ws["D39"] = req_approved[1]
-        ws["F37"] = req_issued[0]
-        ws["F39"] = req_issued[1]
-        ws["H37"] = req_received[0]
-        ws["H39"] = req_received[1]
+    ws["C37"] = req_requested[0]
+    ws["C39"] = req_requested[1]
+    ws["D37"] = req_approved[0]
+    ws["D39"] = req_approved[1]
+    ws["F37"] = req_issued[0]
+    ws["F39"] = req_issued[1]
+    ws["H37"] = req_received[0]
+    ws["H39"] = req_received[1]
 
     file = NamedTemporaryFile(suffix = ".xlsx", delete = False)
 
@@ -185,6 +190,9 @@ def form_71 (db, request):
     db.execute(f"SELECT * FROM request WHERE RequestID = {request}")
     if db.fetchone() is None: raise RequestNotFoundError(request = request)
 
+    db.execute(f"SELECT COUNT(*) + 1 FROM request WHERE StatusID = 4 && hasPropertyApproved = 1 && RequestID < {request};")
+    par_num = db.fetchone()[0]
+
     db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) FROM request INNER JOIN user ON RequestedBy = Username WHERE RequestID = {request}")
     (req_by,) = db.fetchone()
     db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) FROM request INNER JOIN user ON IssuedBy = Username WHERE RequestID = {request}")
@@ -192,13 +200,14 @@ def form_71 (db, request):
     db.execute(f"SELECT DateReceived, DateIssued FROM request WHERE RequestID = {request}")
     (date_rec, date_iss) = db.fetchone()
 
-    db.execute(f"SELECT RequestQuantity, Unit, ItemDescription, ItemID, Price * RequestQuantity FROM request_item INNER JOIN stock USING (ItemID) INNER JOIN request USING (RequestID) WHERE RequestID = '{request}' AND Price >= 15000")
+    db.execute(f"SELECT QuantityIssued, Unit, ItemDescription, ItemID, Price * QuantityIssued FROM request_item INNER JOIN stock USING (ItemID) INNER JOIN request USING (RequestID) WHERE RequestID = '{request}';")
     items = db.fetchall()
 
     if len(items) == 0: return None
 
     wb = load_workbook("./src/form_templates/template_71.xlsx", rich_text = True)
     ws = wb.active
+    ws["F7"] = par_num
 
     for i in range(len(items)):
         row = items[i]

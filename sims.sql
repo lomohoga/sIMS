@@ -160,6 +160,7 @@ CREATE TABLE `request` (
   `DateCancelled` date DEFAULT NULL,
   `Purpose` varchar(50) NOT NULL,
   `Remarks` varchar(70) DEFAULT NULL,
+  `hasPropertyApproved` bit(1) DEFAULT 0,
   PRIMARY KEY (`RequestID`),
   KEY `RequestedBy` (`RequestedBy`),
   KEY `ApprovedBy` (`ActingAdmin`),
