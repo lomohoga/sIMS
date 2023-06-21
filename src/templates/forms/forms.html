@@ -203,6 +203,12 @@
                                 });
                             }
                         })
+                        .catch(() => {
+                            let x = document.querySelector("#snackbar");
+                            x.innerText = "Server unavailable. Please try again later.";
+                            x.classList.add("show");
+                            setTimeout(function(){ x.classList.remove("show") }, 3000);
+                        })
                     });
                 }
             });
@@ -275,6 +281,12 @@
                                         setTimeout(function(){ x.classList.remove("show") }, 3000);
                                     });
                                 }
+                            })
+                            .catch(() => {
+                                let x = document.querySelector("#snackbar");
+                                x.innerText = "Server unavailable. Please try again later.";
+                                x.classList.add("show");
+                                setTimeout(function(){ x.classList.remove("show") }, 3000);
                             })
                         }
                     });

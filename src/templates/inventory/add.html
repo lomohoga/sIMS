@@ -186,6 +186,10 @@
 
                 if ('item' in res) Array.prototype.filter.call(document.querySelectorAll(".add-table .table-body .table-row:not(#add-row)"), x => x.firstChild.firstChild.value === res['item'])[0].classList.add("error");
             }
+        })
+        .catch(() => {
+            document.querySelector('.form-bottom .form-msg').classList.add("error");
+            document.querySelector('.form-bottom .form-msg').innerHTML = "<b>ERROR:</b> Server unavailable. Please try again.";
         });
     });
 

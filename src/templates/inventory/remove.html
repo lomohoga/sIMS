@@ -208,6 +208,10 @@
                 document.querySelector(".form-bottom .form-msg").innerHTML = `<b>ERROR:</b> ${res['error']}`;
                 document.querySelector(".form-bottom .form-msg").classList.add("error");
             }
+        })
+        .catch(() => {
+            document.querySelector('.form-bottom .form-msg').classList.add("error");
+            document.querySelector('.form-bottom .form-msg').innerHTML = "<b>ERROR:</b> Server unavailable. Please try again.";
         });
     })
 </script>

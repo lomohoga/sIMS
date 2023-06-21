@@ -331,6 +331,10 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                                         modal.querySelector(".modal-msg").classList.add("error");
                                         modal.querySelector(".modal-msg").innerHTML = `<b>ERROR:</b> ${(await d.json())['error']}`;
                                     }
+                                })
+                                .catch(() => {
+                                    modal.querySelector(".modal-msg").classList.add("error");
+                                    modal.querySelector(".modal-msg").innerHTML = "<b>ERROR:</b> Server unavailable. Please try again.";
                                 });
                             });
                         });
@@ -395,6 +399,10 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                                     modal.querySelector(".modal-msg").classList.add("error");
                                     modal.querySelector(".modal-msg").innerHTML = `<b>ERROR:</b> ${(await d.json())['error']}`;
                                 }
+                            })
+                            .catch(() => {
+                                modal.querySelector(".modal-msg").classList.add("error");
+                                modal.querySelector(".modal-msg").innerHTML = "<b>ERROR:</b> Server unavailable. Please try again.";
                             });
                         });
                     });
@@ -447,6 +455,10 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                                 modal.querySelector(".modal-msg").classList.add("error");
                                 modal.querySelector(".modal-msg").innerHTML = `<b>ERROR:</b> ${(await d.json())['error']}`;
                             }
+                        })
+                        .catch(() => {
+                            modal.querySelector(".modal-msg").classList.add("error");
+                            modal.querySelector(".modal-msg").innerHTML = "<b>ERROR:</b> Server unavailable. Please try again.";
                         });
                     });
                 });
@@ -499,6 +511,10 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                                 modal.querySelector(".modal-msg").classList.add("error");
                                 modal.querySelector(".modal-msg").innerHTML = `<b>ERROR:</b> ${(await d.json())['error']}`;
                             }
+                        })
+                        .catch(() => {
+                            modal.querySelector(".modal-msg").classList.add("error");
+                            modal.querySelector(".modal-msg").innerHTML = "<b>ERROR:</b> Server unavailable. Please try again.";
                         });
                     });
                 });
@@ -549,6 +565,10 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                                 modal.querySelector(".modal-msg").classList.add("error");
                                 modal.querySelector(".modal-msg").innerHTML = `<b>ERROR:</b> ${(await d.json())['error']}`;
                             }
+                        })
+                        .catch(() => {
+                            modal.querySelector(".modal-msg").classList.add("error");
+                            modal.querySelector(".modal-msg").innerHTML = "<b>ERROR:</b> Server unavailable. Please try again.";
                         });
                     });
                 });
@@ -603,6 +623,10 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                                     modal.querySelector(".modal-msg").classList.add("error");
                                     modal.querySelector(".modal-msg").innerHTML = `<b>ERROR:</b> ${(await d.json())['error']}`;
                                 }
+                            })
+                            .catch(() => {
+                                modal.querySelector(".modal-msg").classList.add("error");
+                                modal.querySelector(".modal-msg").innerHTML = "<b>ERROR:</b> Server unavailable. Please try again.";
                             });
                         });
                     });
@@ -655,6 +679,10 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                                 modal.querySelector(".modal-msg").classList.add("error");
                                 modal.querySelector(".modal-msg").innerHTML = `<b>ERROR:</b> ${(await d.json())['error']}`;
                             }
+                        })
+                        .catch(() => {
+                            modal.querySelector(".modal-msg").classList.add("error");
+                            modal.querySelector(".modal-msg").innerHTML = "<b>ERROR:</b> Server unavailable. Please try again.";
                         });
                     });
                 });
@@ -831,6 +859,10 @@ async function populateUsers (tbody, keyword = "", { buttons = false } = {}) {
                                 modal.querySelector(".modal-msg").classList.add("error");
                                 modal.querySelector(".modal-msg").innerHTML = `<b>ERROR:</b> ${(await res.json())['error']}`;
                             }
+                        })
+                        .catch(() => {
+                            modal.querySelector(".modal-msg").classList.add("error");
+                            modal.querySelector(".modal-msg").innerHTML = "<b>ERROR:</b> Server unavailable. Please try again.";
                         });
                     });
                 });
@@ -873,6 +905,10 @@ async function populateUsers (tbody, keyword = "", { buttons = false } = {}) {
                                 modal.querySelector(".modal-msg").classList.add("error");
                                 modal.querySelector(".modal-msg").innerHTML = `<b>ERROR:</b> ${(await res.json())['error']}`;
                             }
+                        })
+                        .catch(() => {
+                            modal.querySelector(".modal-msg").classList.add("error");
+                            modal.querySelector(".modal-msg").innerHTML = "<b>ERROR:</b> Server unavailable. Please try again.";
                         });
                     });
                 });

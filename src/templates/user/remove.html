@@ -123,6 +123,10 @@
                 document.querySelector('.form-bottom .form-msg').classList.add("error");
                 document.querySelector('.form-bottom .form-msg').innerHTML = `<b>ERROR:</b> ${(await d.json())['error']}`;
             }
+        })
+        .catch(() => {
+            document.querySelector('.form-bottom .form-msg').classList.add("error");
+            document.querySelector('.form-bottom .form-msg').innerHTML = "<b>ERROR:</b> Server unavailable. Please try again.";
         });
     })
 

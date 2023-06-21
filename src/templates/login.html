@@ -157,6 +157,11 @@
                 document.querySelector('#modal-forgot-password-1 .form-msg').classList.add("error");
                 document.querySelector('#modal-forgot-password-1 .form-msg').innerHTML = `<b>ERROR:</b> ${(await d.json())['error']}`;
             }
+        })
+        .catch(() => {
+            document.querySelector("#modal-forgot-password-1 form").reset();
+            document.querySelector('#modal-forgot-password-1 .form-msg').classList.add("error");
+            document.querySelector('#modal-forgot-password-1 .form-msg').innerHTML = "<b>ERROR:</b> Server unavailable. Please try again.";
         });
     });
 
@@ -193,6 +198,11 @@
                 document.querySelector('#modal-forgot-password-2 .form-msg').classList.add("error");
                 document.querySelector('#modal-forgot-password-2 .form-msg').innerHTML = `<b>ERROR:</b> ${(await d.json())['error']}`;
             }
+        })
+        .catch(() => {
+            document.querySelector("#modal-forgot-password-2 form").reset();
+            document.querySelector('#modal-forgot-password-2 .form-msg').classList.add("error");
+            document.querySelector('#modal-forgot-password-2 .form-msg').innerHTML = "<b>ERROR:</b> Server unavailable. Please try again.";
         });
     });
 
@@ -229,6 +239,11 @@
                 document.querySelector('#modal-forgot-password-3 .form-msg').classList.add("error");
                 document.querySelector('#modal-forgot-password-3 .form-msg').innerHTML = `<b>ERROR:</b> ${(await d.json())['error']}`;
             }
+        })
+        .catch(() => {
+            document.querySelector("#modal-forgot-password-3 form").reset();
+            document.querySelector('#modal-forgot-password-3 .form-msg').classList.add("error");
+            document.querySelector('#modal-forgot-password-3 .form-msg').innerHTML = "<b>ERROR:</b> Server unavailable. Please try again.";
         });
 
         document.querySelector("#new-password-label").classList.remove("valid");
@@ -274,6 +289,10 @@
                 document.querySelector("#login-message").classList.add("error");
                 document.querySelector("#login-message").innerText = j['error'];
             }
+        })
+        .catch(() => {
+            document.querySelector('#login-message').classList.add("error");
+            document.querySelector('#login-message').innerHTML = "<b>ERROR:</b> Server unavailable. Please try again.";
         });
     });
 
