@@ -26,7 +26,7 @@ def search_requests ():
 
     conditions = []
     for x in keywords:
-        conditions.append(f"ItemID LIKE '%{x}%' OR ItemName LIKE '%{x}%' OR ItemDescription LIKE '%{x}%' OR RequestedBy LIKE '%{x}%'")
+        conditions.append(f"ItemID LIKE '%{x}%' OR ItemName LIKE '%{x}%' OR ItemDescription LIKE '%{x}%' OR RequestedBy LIKE '%{x}%' OR Purpose LIKE '%{x}%'")
     if len(filters) > 0: conditions.append(f'LOWER(StatusName) in {str(filters).replace("[", "(").replace("]", ")")}')
 
     w = f"({' AND '.join(conditions)})" if len(conditions) > 0 else ""
