@@ -127,47 +127,96 @@
     let currentSort = [0, true];
     let medianPrice = 50000;
 
-    document.querySelector("#choose-form").addEventListener("input", () => {
-        let v = document.querySelector("#choose-form select").value;
+    function loadGenerateButtons(rows, type, v){
+        if(type === "items"){
+            for (let row of rows) {
+                let price = parseFloat(row.querySelector('.tabnum').textContent.slice(1).replace(/,/g, ''));
+                if(v === '58' && price >= medianPrice){
+                    continue;
+                }
 
-        if (v !== '') {
-            document.querySelector("#search-box").removeAttribute("disabled");
-            document.querySelector("#search-btn").removeAttribute("disabled");
-        } else {
-            document.querySelector("#search-box").disabled = true;
-            document.querySelector("#search-btn").disabled = true;
+                if(v === '69' && price < medianPrice){
+                    continue;
+                }
+
+                let div = document.createElement("div");
+                let btn = document.createElement("button");
+                btn.role = "button";
+                btn.innerText = "Generate";
+                btn.title = `Generate Appendix ${v}`;
+                btn.classList.add("blue");
+                div.appendChild(btn);
+                row.appendChild(div);
+
+                btn.addEventListener("click", e => {
+                    e.preventDefault();
+                    let filename = `Appendix${v}_${row.firstChild.innerText}`;
+
+                    fetch(`./${v}?item=${row.firstChild.innerText}`)
+                    .then(res => {
+                        if(res.status === 500){
+                            res.json()
+                            .then(a => {
+                                let x = document.querySelector("#snackbar");
+                                x.innerText = a["error"];
+                                x.classList.add("show");
+                                setTimeout(function(){ x.classList.remove("show") }, 3000);
+                            })
+                        }
+                        else{
+                            res.body.getReader().read()
+                            .then(data => {
+                                if (!data.value) throw JSON.stringify({"error": "Item not found."});
+                        
+                                let link = window.URL.createObjectURL(new File([data.value], filename, {
+                                    "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                }));
+                                return link;
+                            })
+                            .then(link => {
+                                let a = document.createElement("a");
+                                a.href = link;
+                                a.download = filename;
+                                a.click();
+                            })
+                            .catch((error) => {
+                                let a = JSON.parse(error);
+                                let x = document.querySelector("#snackbar");
+                                x.innerText = a["error"];
+                                x.classList.add("show");
+                                setTimeout(function(){ x.classList.remove("show") }, 3000);
+                            });
+                        }
+                    })
+                    .catch(() => {
+                        let x = document.querySelector("#snackbar");
+                        x.innerText = "Server unavailable. Please try again later.";
+                        x.classList.add("show");
+                        setTimeout(function(){ x.classList.remove("show") }, 3000);
+                    })
+                });
+            }
         }
+        else{
+            for (let row of rows) {
+                if (row.children[3].innerText.toLowerCase() !== "completed") continue;
 
-        if (v === '58' || v === '69') {
-            document.querySelector(".inventory-table").parentElement.style.display = "";
-            document.querySelector(".request-table").parentElement.style.display = "none";
-            document.querySelector("#search-box").placeholder = "Search items\u2026";
+                let div = row.querySelector(".actions");
+                let btn = document.createElement("button");
+                btn.role = "button";
+                btn.innerText = "Generate";
+                btn.title = v === '63' ? "Generate Appendix 63" : "Generate Appendices 59 or 71";
+                btn.classList.add("blue");
+                div.appendChild(btn);
+                row.appendChild(div);
 
-            populateItems(document.querySelector(".inventory-table .table-body")).then(rows => {
-                for (let row of rows) {
-                    let price = parseFloat(row.querySelector('.tabnum').textContent.slice(1).replace(/,/g, ''));
-                    if(v === '58' && price >= medianPrice){
-                        continue;
-                    }
+                btn.addEventListener("click", e => {
+                    e.preventDefault();
 
-                    if(v === '69' && price < medianPrice){
-                        continue;
-                    }
+                    for (let w of v.split(",")) {
+                        let filename = `Appendix${w}_${row.firstChild.innerText}`;
 
-                    let div = document.createElement("div");
-                    let btn = document.createElement("button");
-                    btn.role = "button";
-                    btn.innerText = "Generate";
-                    btn.title = `Generate Appendix ${v}`;
-                    btn.classList.add("blue");
-                    div.appendChild(btn);
-                    row.appendChild(div);
-
-                    btn.addEventListener("click", e => {
-                        e.preventDefault();
-                        let filename = `Appendix${v}_${row.firstChild.innerText}`;
-
-                        fetch(`./${v}?item=${row.firstChild.innerText}`)
+                        fetch(`./${w}?item=${row.firstChild.innerText}`)
                         .then(res => {
                             if(res.status === 500){
                                 res.json()
@@ -209,109 +258,76 @@
                             x.classList.add("show");
                             setTimeout(function(){ x.classList.remove("show") }, 3000);
                         })
-                    });
-                }
+                    }
+                });
+            }
+        }
+    }
+
+    function loadRows(){
+        let v = document.querySelector("#choose-form select").value;
+
+        if (v !== '') {
+            document.querySelector("#search-box").removeAttribute("disabled");
+            document.querySelector("#search-btn").removeAttribute("disabled");
+        } else {
+            document.querySelector("#search-box").disabled = true;
+            document.querySelector("#search-btn").disabled = true;
+        }
+
+        if (v === '58' || v === '69') {
+            document.querySelector(".inventory-table").parentElement.style.display = "";
+            document.querySelector(".request-table").parentElement.style.display = "none";
+            document.querySelector("#search-box").placeholder = "Search items\u2026";
+
+            populateItems(document.querySelector(".inventory-table .table-body")).then(rows => {
+                loadGenerateButtons(rows, "items", v);   
             });
 
             let oldSym = document.querySelector(`.inventory-table .table-header .table-row > :nth-child(${currentSort[0] + 1}) .bi`);
             oldSym.classList.remove(`bi-chevron-${currentSort[1] ? "up" : "down"}`);
             oldSym.classList.add("bi-chevron-expand");
-    
+
             currentSort = [0, true];
-    
+
             let newSym = document.querySelector(".inventory-table .table-header .table-row > :nth-child(1) .bi");
             newSym.classList.remove("bi-chevron-expand");
             newSym.classList.add("bi-chevron-up");
-        } else {
+        } 
+        else {
             document.querySelector(".inventory-table").parentElement.style.display = "none";
             document.querySelector(".request-table").parentElement.style.display = "";
             document.querySelector("#search-box").placeholder = "Search requests\u2026";
 
             populateRequests(document.querySelector(".request-table .table-body"), undefined, undefined, undefined, { buttons: false }).then(rows => {
-                for (let row of rows) {
-                    if (row.children[3].innerText.toLowerCase() !== "completed") continue;
-
-                    let div = row.querySelector(".actions");
-                    let btn = document.createElement("button");
-                    btn.role = "button";
-                    btn.innerText = "Generate";
-                    btn.title = v === '63' ? "Generate Appendix 63" : "Generate Appendices 59 and 71";
-                    btn.classList.add("blue");
-                    div.appendChild(btn);
-                    row.appendChild(div);
-
-                    btn.addEventListener("click", e => {
-                        e.preventDefault();
-
-                        for (let w of v.split(",")) {
-                            let filename = `Appendix${w}_${row.firstChild.innerText}`;
-
-                            fetch(`./${w}?item=${row.firstChild.innerText}`)
-                            .then(res => {
-                                if(res.status === 500){
-                                    res.json()
-                                    .then(a => {
-                                        let x = document.querySelector("#snackbar");
-                                        x.innerText = a["error"];
-                                        x.classList.add("show");
-                                        setTimeout(function(){ x.classList.remove("show") }, 3000);
-                                    })
-                                }
-                                else{
-                                    res.body.getReader().read()
-                                    .then(data => {
-                                        if (!data.value) throw JSON.stringify({"error": "Item not found."});
-                                
-                                        let link = window.URL.createObjectURL(new File([data.value], filename, {
-                                            "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                        }));
-                                        return link;
-                                    })
-                                    .then(link => {
-                                        let a = document.createElement("a");
-                                        a.href = link;
-                                        a.download = filename;
-                                        a.click();
-                                    })
-                                    .catch((error) => {
-                                        let a = JSON.parse(error);
-                                        let x = document.querySelector("#snackbar");
-                                        x.innerText = a["error"];
-                                        x.classList.add("show");
-                                        setTimeout(function(){ x.classList.remove("show") }, 3000);
-                                    });
-                                }
-                            })
-                            .catch(() => {
-                                let x = document.querySelector("#snackbar");
-                                x.innerText = "Server unavailable. Please try again later.";
-                                x.classList.add("show");
-                                setTimeout(function(){ x.classList.remove("show") }, 3000);
-                            })
-                        }
-                    });
-                }
+                loadGenerateButtons(rows, "requests", v);
             });
 
             let oldSym = document.querySelector(`.request-table .table-header .table-row > :nth-child(${currentSort[0] + 1}) .bi`);
             oldSym.classList.remove(`bi-chevron-${currentSort[1] ? "up" : "down"}`);
             oldSym.classList.add("bi-chevron-expand");
-    
+
             currentSort = [0, true];
-    
+
             let newSym = document.querySelector(".request-table .table-header .table-row > :nth-child(1) .bi");
             newSym.classList.remove("bi-chevron-expand");
             newSym.classList.add("bi-chevron-up");
         }
 
         document.querySelector("#search").reset();
-    });
+    }
+
+    document.querySelector("#choose-form").addEventListener("input", loadRows);
+    window.addEventListener("load", loadRows);
 
     document.querySelector("#search").addEventListener("submit", e => {
         e.preventDefault();
+        let v = document.querySelector("#choose-form select").value;
 
-        if (["58", "69"].includes(document.querySelector("#choose-form select").value)) {
-            populateItems(document.querySelector(".inventory-table .table-body"), document.querySelector("#search-box").value);
+        if (["58", "69"].includes(v)) {
+            populateItems(document.querySelector(".inventory-table .table-body"), document.querySelector("#search-box").value).then(rows => {
+                loadGenerateButtons(rows, "items", v);
+            });
 
             let oldSym = document.querySelector(`.inventory-table .table-header .table-row > :nth-child(${currentSort[0] + 1}) .bi`);
             oldSym.classList.remove(`bi-chevron-${currentSort[1] ? "up" : "down"}`);
@@ -323,7 +339,9 @@
             newSym.classList.remove("bi-chevron-expand");
             newSym.classList.add("bi-chevron-up");
         } else {
-            populateRequests(document.querySelector(".request-table .table-body"), document.querySelector("#search-box").value);
+            populateRequests(document.querySelector(".request-table .table-body"), document.querySelector("#search-box").value).then(rows => {
+                loadGenerateButtons(rows, "requests", v);
+            });
 
             let oldSym = document.querySelector(`.request-table .table-header .table-row > :nth-child(${currentSort[0] + 1}) .bi`);
             oldSym.classList.remove(`bi-chevron-${currentSort[1] ? "up" : "down"}`);
