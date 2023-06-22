@@ -835,6 +835,8 @@ async function populateUsers (tbody, keyword = "", { buttons = false } = {}) {
                     modal.querySelector("input[type=submit]").style.transitionDuration = "0s";
                     modal.querySelector("input[type=submit]").clientHeight;
                     modal.querySelector("input[type=submit]").style.transitionDuration = "";
+                    modal.querySelector(".modal-msg").classList.remove("error");
+                    modal.querySelector(".modal-msg").innerHTML = '';
 
                     modal.querySelector("input[type=submit").addEventListener("click", f => {
                         f.preventDefault();
@@ -881,6 +883,8 @@ async function populateUsers (tbody, keyword = "", { buttons = false } = {}) {
                     modal.querySelector("input[type=submit]").style.transitionDuration = "0s";
                     modal.querySelector("input[type=submit]").clientHeight;
                     modal.querySelector("input[type=submit]").style.transitionDuration = "";
+                    modal.querySelector(".modal-msg").classList.remove("error");
+                    modal.querySelector(".modal-msg").innerHTML = '';
 
                     modal.querySelector("input[type=submit").addEventListener("click", f => {
                         f.preventDefault();
