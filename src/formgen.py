@@ -106,13 +106,13 @@ def form_63 (db, request):
     db.execute(f"SELECT RequestID, item.ItemID AS ItemID, item.ItemDescription AS ItemDescription, RequestQuantity, QuantityIssued, Purpose, Remarks FROM request_item INNER JOIN request USING (RequestID) INNER JOIN item USING (ItemID) INNER JOIN stock USING (ItemID) INNER JOIN user ON RequestedBy = Username WHERE RequestID = '{request}'")
     data = db.fetchall()
 
-    db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) AS RequestedBy, DateApproved FROM request INNER JOIN user ON (Username = RequestedBy)")
+    db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) AS RequestedBy, DateApproved FROM request INNER JOIN user ON (Username = RequestedBy) WHERE RequestID = {request}")
     req_requested = db.fetchone()
-    db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) AS ActingAdmin, DateApproved FROM request INNER JOIN user ON (Username = ActingAdmin)")
+    db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) AS ActingAdmin, DateApproved FROM request INNER JOIN user ON (Username = ActingAdmin) WHERE RequestID = {request}")
     req_approved = db.fetchone()
-    db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) AS IssuedBy, DateApproved FROM request INNER JOIN user ON (Username = IssuedBy)")
+    db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) AS IssuedBy, DateApproved FROM request INNER JOIN user ON (Username = IssuedBy) WHERE RequestID = {request}")
     req_issued = db.fetchone()
-    db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) AS ReceivedBy, DateApproved FROM request INNER JOIN user ON (Username = ReceivedBy)")
+    db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) AS ReceivedBy, DateApproved FROM request INNER JOIN user ON (Username = ReceivedBy) WHERE RequestID = {request}")
     req_received = db.fetchone()
 
     wb = load_workbook("./src/form_templates/template_63.xlsx", rich_text = True)
@@ -129,8 +129,9 @@ def form_63 (db, request):
             ws[f"E{12 + i}"] = "\u2714"
         else: ws[f"F{12 + i}"] = "\u2714"
         ws[f"G{12 + i}"] = req[4]
-        ws[f"H{12 + i}"] = req[5]
-        ws["B32"] = req[6]
+        if req[6] is not None:
+            ws[f"H{12 + i}"] = req[6]
+        ws["B32"] = req[5]
 
     ws["C37"] = req_requested[0]
     ws["C39"] = req_requested[1]

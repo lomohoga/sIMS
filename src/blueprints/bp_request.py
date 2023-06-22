@@ -26,7 +26,7 @@ def search_requests ():
 
     conditions = []
     for x in keywords:
-        conditions.append(f"ItemID LIKE '%{x}%' OR ItemName LIKE '%{x}%' OR ItemDescription LIKE '%{x}%' OR RequestedBy LIKE '%{x}%' OR Purpose LIKE '%{x}%'")
+        conditions.append(f"ItemID LIKE '%{x}%' OR ItemName LIKE '%{x}%' OR ItemDescription LIKE '%{x}%' OR RequestedBy LIKE '%{x}%' OR Purpose LIKE '%{x}%' OR Category LIKE '%{x}%'")
     if len(filters) > 0: conditions.append(f'LOWER(StatusName) in {str(filters).replace("[", "(").replace("]", ")")}')
 
     w = f"({' AND '.join(conditions)})" if len(conditions) > 0 else ""
@@ -85,7 +85,10 @@ def deny_request ():
         if f is None: raise RequestNotFoundError(request = req)
         if f[0] != 1: raise RequestStatusError(from_status = f[0], to_status = 5)
         
-        db.execute(f"UPDATE request SET StatusID = 5, ActingAdmin = '{session['user']['Username']}', DateCancelled = CURDATE(), Remarks = '{remarks}' WHERE RequestID = {req}")
+        if remarks is None:
+            db.execute(f"UPDATE request SET StatusID = 5, ActingAdmin = '{session['user']['Username']}', DateCancelled = CURDATE() WHERE RequestID = {req}")
+        else:
+            db.execute(f"UPDATE request SET StatusID = 5, ActingAdmin = '{session['user']['Username']}', DateCancelled = CURDATE(), Remarks = '{remarks}' WHERE RequestID = {req}")
         cxn.commit()
     except Exception  as e:
         current_app.logger.error(str(e))
@@ -110,8 +113,12 @@ def cancel_request ():
         f = db.fetchone()
         if f is None: raise RequestNotFoundError(request = req)
         if f[0] in [4, 5, 6]: raise RequestStatusError(from_status = f[0], to_status = 6)
+
+        if remarks is None:
+            db.execute(f"UPDATE request SET StatusID = 6, CancelledBy = '{session['user']['Username']}', DateCancelled = CURDATE() WHERE RequestID = {req}")
+        else:
+            db.execute(f"UPDATE request SET StatusID = 6, CancelledBy = '{session['user']['Username']}', DateCancelled = CURDATE(), Remarks = '{remarks}' WHERE RequestID = {req}")
         
-        db.execute(f"UPDATE request SET StatusID = 6, CancelledBy = '{session['user']['Username']}', DateCancelled = CURDATE(), Remarks = '{remarks}' WHERE RequestID = {req}")
         cxn.commit()
     except Exception as e:
         current_app.logger.error(str(e))
@@ -219,7 +226,11 @@ def issue_request ():
         g = all([x[0] is not None for x in db.fetchall()])
         if not g: raise IncompleteIssueError(request = req)
         
-        db.execute(f"UPDATE request SET StatusID = 3, IssuedBy = '{session['user']['Username']}', DateIssued = CURDATE(), Remarks = '{remarks}' WHERE RequestID = {req}")
+        if remarks is None:
+            db.execute(f"UPDATE request SET StatusID = 3, IssuedBy = '{session['user']['Username']}', DateIssued = CURDATE() WHERE RequestID = {req}")
+        else:
+            db.execute(f"UPDATE request SET StatusID = 3, IssuedBy = '{session['user']['Username']}', DateIssued = CURDATE(), Remarks = '{remarks}' WHERE RequestID = {req}")
+        
         cxn.commit()
     except Exception as e:
         current_app.logger.error(str(e))
