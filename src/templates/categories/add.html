@@ -40,7 +40,8 @@
             // Disable if any inputs are invalid
             || Array.from(document.querySelectorAll(".add-table input")).some(x => x.value === '' && !x.classList.contains('hide'))
             // Disable if at least one input box is invalid
-            || Array.from(document.querySelectorAll(".add-table input")).some(x => !x.checkValidity());
+            || Array.from(document.querySelectorAll(".add-table input")).some(x => !x.checkValidity())
+            || document.querySelector(".add-table textarea").value === '';
     }
 
     function addRow () {
@@ -53,6 +54,7 @@
             if (i === 1) {
                 el = document.createElement("textarea");
                 el.rows = 1;
+                el.maxLength = 100;
             } else {
                 el = document.createElement("input");
 
