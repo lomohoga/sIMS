@@ -50,7 +50,8 @@
             // Disable if any inputs are invalid
             || Array.from(document.querySelectorAll(".add-table input")).some(x => x.value === '' && !x.classList.contains('hide'))
             // Disable if at least one input box is invalid
-            || Array.from(document.querySelectorAll(".add-table input")).some(x => !x.checkValidity());
+            || Array.from(document.querySelectorAll(".add-table input")).some(x => !x.checkValidity())
+            || document.querySelector(".add-table textarea").value === '';
     }
 
     function addRow () {
@@ -164,7 +165,7 @@
                 "ItemName": children[1].firstChild.value,
                 "Category": children[2].firstChild.value === "None" ? null : children[2].firstChild.value,
                 "ItemDescription": children[3].firstChild.value,
-                "ShelfLife": children[4].lastChild.value === "-1" ? null : +children[3].firstChild.value * +children[3].lastChild.value,
+                "ShelfLife": children[4].lastChild.value === "-1" ? null : +children[4].firstChild.value * +children[4].lastChild.value,
                 "Price": +children[5].firstChild.value,
                 "Unit": children[6].firstChild.value.toLowerCase(),
             })
