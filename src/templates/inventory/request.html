@@ -56,6 +56,9 @@
             <div class="table-row table-empty hide">
                 <div>No items found.</div>
             </div>
+            <div class="table-error table-row hide">
+                <div>An error occurred in the database. Please try again later.</div>
+            </div>
         </div>
     </div>
 </div>
@@ -106,7 +109,7 @@
 
 <div id="purpose-box">
     <label for="purpose" style="padding-left: 0.3rem"><b>Purpose:</b></label>
-    <input type="text" id="purpose" name="purpose" style="width: 100%" required>
+    <input type="text" id="purpose" name="purpose" style="width: 100%" maxlength="50" required>
 </div>
 
 <div class="form-bottom">
@@ -163,9 +166,7 @@
         enableSubmit();
     }
 
-    document.querySelector("#purpose").addEventListener("input", () => {
-        enableSubmit();
-    })
+    document.querySelector("#purpose").addEventListener("input",  enableSubmit);
 
     function disableButtons () {
         if (document.querySelector(".selection-table .table-body").childElementCount > 0) {
@@ -175,7 +176,7 @@
     }
 
     function enableSubmit () {
-        document.querySelector("#submit-form [type=submit]").disabled = document.querySelector(".selection-table .table-body").childElementCount === 0 || Array.from(document.querySelectorAll(".selection-table .table-body > div :nth-child(8) input")).some(x => !x.checkValidity() || x.value === '') || !document.querySelector("#purpose").value != '';
+        document.querySelector("#submit-form [type=submit]").disabled = document.querySelector(".selection-table .table-body").childElementCount === 0 || Array.from(document.querySelectorAll(".selection-table .table-body > div :nth-child(9) input")).some(x => !x.checkValidity() || x.value === '') || !document.querySelector("#purpose").value != '';
     }
 
     document.querySelector("#search").addEventListener("submit", e => {
