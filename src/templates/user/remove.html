@@ -93,7 +93,7 @@
 
     document.querySelector("#search").addEventListener("submit", e => {
         e.preventDefault();
-        populateUsers(document.querySelector("#item-search .table-body"), document.querySelector("#search-box").value, "user-search");
+        populateUsers(document.querySelector(".search-table .table-body"), document.querySelector("#search-box").value, { buttons: true });
     });
 
     document.addEventListener("tablerefresh", () => {
