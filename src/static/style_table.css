@@ -60,8 +60,12 @@
 
 /* table column widths */
 
-.inventory-table .table-row {
+.inventory-table.custodian .table-row {
     grid-template-columns: 0.625fr 0.75fr 0.70fr 2fr 0.5fr 0.75fr 0.5fr 0.5fr;
+}
+
+.inventory-table.user .table-row {
+    grid-template-columns: 0.625fr 0.75fr 0.70fr 2fr 0.5fr 0.75fr 0.5fr;
 }
 
 .inventory-table.forms .table-row {
@@ -90,8 +94,12 @@
     grid-template-columns: 1fr 3rem;
 }
 
-.search-table .table-row {
+.search-table.custodian .table-row {
     grid-template-columns: 0.625fr 0.75fr 0.70fr 2fr 0.5fr 0.75fr 0.5fr 0.5fr 3rem;
+}
+
+.search-table.user .table-row {
+    grid-template-columns: 0.625fr 0.75fr 0.70fr 2fr 0.5fr 0.75fr 0.5fr 3rem;
 }
 
 .search-table.update .table-row {
@@ -115,7 +123,7 @@
 }
 
 .selection-table.request .table-row {
-    grid-template-columns: 0.625fr 0.75fr 0.7fr 2fr 0.5fr 0.75fr 0.5fr 0.5fr 0.5fr 3rem;
+    grid-template-columns: 0.625fr 0.75fr 0.7fr 2fr 0.5fr 0.75fr 0.5fr 0.5fr 3rem;
 }
 
 .selection-table.update .table-row {
@@ -139,7 +147,7 @@
 }
 
 .request-table.user .table-row {
-    grid-template-columns: 0.375fr 0.75fr 0.5fr 0.625fr 0.75fr 0.7fr 1.5fr 0.5fr 0.5fr 0.5fr 0.5fr 0.75fr;
+    grid-template-columns: 0.375fr 0.75fr 0.5fr 0.625fr 0.75fr 0.7fr 1.5fr 0.5fr 0.5fr 0.5fr 0.75fr;
 }
 
 .request-table.forms .table-row {

@@ -79,7 +79,9 @@
                 <div>Item Description</div>
                 <div>Request Quantity</div>
                 <div>Quantity Issued</div>
+                {% if session['user']['RoleID'] == 1 %}
                 <div>Available Stock</div>
+                {% endif %}
                 <div>Unit</div>
                 {% if session['user']['RoleID'] == 1 %}
                     <div style="grid-column: -1 / -3;">Actions</div>

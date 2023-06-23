@@ -49,6 +49,10 @@ async function populateItems (tbody, keyword = "", { stock = true, buttons = fal
 
             let y = x[i];
             let td = document.createElement("div");
+
+            if(i === "AvailableStock" && y === null){
+                continue;
+            }
             
             if (i === "Price") {
                 let t0 = document.createElement("div");

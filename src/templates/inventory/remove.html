@@ -12,7 +12,7 @@
 </div>
 
 <div class="table-wrapper">
-    <div class="table-main search-table">
+    <div class="table-main search-table {{ 'custodian' if session['user']['RoleID'] == 1 else 'user' }}">
         <div class="table-header">
             <div class="table-row">
                 <div class="table-sortable">
