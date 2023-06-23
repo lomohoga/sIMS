@@ -149,7 +149,7 @@ def receive_request ():
         if f is None: raise RequestNotFoundError(request = req)
         if f[0] != 3: raise RequestStatusError(from_status = f[0], to_status = 4)
         
-        db.execute(f"UPDATE request SET StatusID = 4, ReceivedBy = '{session['user']['Username']}', DateReceived = CURDATE() WHERE RequestID = {req}")
+        db.execute(f"UPDATE request SET StatusID = 4, ReceivedBy = '{session['user']['Username']}', DateReceived = CURDATE(), TimeReceived = CURTIME() WHERE RequestID = {req}")
         db.execute(f"SELECT COUNT(*) FROM request_item LEFT JOIN item USING (ItemID) WHERE RequestID = {req} && Price >= 50000 && QuantityIssued > 0;")
         g = db.fetchone()
         if(f[0] > 0):

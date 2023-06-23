@@ -1,4 +1,5 @@
 from mysql.connector import Error as MySQLError
+from datetime import datetime
 
 # to save the file as a stream
 from tempfile import NamedTemporaryFile
@@ -15,30 +16,67 @@ from src.blueprints.database import connect_db
 from src.blueprints.exceptions import ItemNotFoundError, RequestNotFoundError
 
 def form_58 (db, item):
-    db.execute(f"SELECT * FROM item WHERE ItemID = '{item}'")
+    # TODO: Case where overflows happens
+    db.execute(f"SELECT ItemName, Category, ItemDescription, Unit FROM item WHERE ItemID = '{item}'")
     data = db.fetchone()
     if data is None: raise ItemNotFoundError(item = item)
 
-    db.execute(f"SELECT * FROM (SELECT RequestID, RequestDate, DeliveryStock, QuantityIssued, UPPER(CONCAT(FirstName, ' ', LastName)) as RequestedBy, ShelfLife FROM request_item INNER JOIN (SELECT ItemID, ShelfLife, COALESCE(SUM(IF(ShelfLife IS NULL OR DATEDIFF(CURDATE(), ADDDATE(DeliveryDate, ShelfLife)) <= 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) GROUP BY ItemID) AS w USING (ItemID) INNER JOIN request USING (RequestID) INNER JOIN user ON RequestedBy = Username WHERE ItemID = '{item}' AND StatusID = 4 ORDER BY RequestID DESC LIMIT 30) AS x ORDER BY RequestID ASC")
+    #get deliveries
+    db.execute(f"SELECT DeliveryDate, DeliveryID, DeliveryQuantity, Time FROM delivery WHERE ItemID = '{item}' ORDER BY DeliveryID ASC")
+    deliveries = db.fetchall()
+
+    #get request items
+    db.execute(f"SELECT * FROM (SELECT RequestID, DateReceived, TimeReceived, DeliveryStock, QuantityIssued, UPPER(CONCAT(FirstName, ' ', LastName)) as RequestedBy, ShelfLife FROM request_item INNER JOIN (SELECT ItemID, ShelfLife, COALESCE(SUM(IF(ShelfLife IS NULL OR DATEDIFF(CURDATE(), ADDDATE(DeliveryDate, ShelfLife)) <= 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) GROUP BY ItemID) AS w USING (ItemID) INNER JOIN request USING (RequestID) INNER JOIN user ON RequestedBy = Username WHERE ItemID = '{item}' AND StatusID = 4 ORDER BY RequestID DESC) AS x ORDER BY RequestID ASC")
     requests = db.fetchall()
 
     wb = load_workbook("./src/form_templates/template_58.xlsx", rich_text = True)
     ws = wb.active
 
-    ws["F8"] = CellRichText(ws["F8"].value, TextBlock(InlineFont(b = True), data[0]))
-    ws["A8"] = CellRichText(ws["A8"].value, TextBlock(InlineFont(b = True), data[1].upper()))
-    ws["A9"] = CellRichText(ws["A9"].value, TextBlock(InlineFont(b = True), data[3]))
-    ws["A10"] = CellRichText(ws["A10"].value, TextBlock(InlineFont(b = True), data[6]))
+    ws["A8"] = CellRichText(ws["A8"].value, TextBlock(InlineFont(b = True), f"{data[0].upper()} {(data[1]) if data[1] is not None else ''}"))
+    ws["A9"] = CellRichText(ws["A9"].value, TextBlock(InlineFont(b = True), data[2]))
+    ws["A10"] = CellRichText(ws["A10"].value, TextBlock(InlineFont(b = True), data[3]))
+    ws["F8"] = CellRichText(ws["F8"].value, TextBlock(InlineFont(b = True), item))
 
-    for i in range(len(requests)):
-        req = requests[i]
+    i = 0
+    j = 0
+    while(i + j != len(requests) + len(deliveries)):
+        if(i == len(deliveries)):
+            ws[f"A{13 + i + j}"] = requests[j][1]
+            ws[f"B{13 + i + j}"] = f"RIS-{requests[j][0]}"
+            if i + j == 0: ws[f"C{13 + i + j}"] = requests[j][3]
+            ws[f"D{13 + i + j}"] = requests[j][4]
+            ws[f"E{13 + i + j}"] = requests[j][5]
+            ws[f"F{13 + i + j}"] = ws[f"C{13 + i + j}"].value - ws[f"D{13 + i + j}"].value if i + j == 0 else ws[f"F{12 + i + j}"].value - ws[f"D{13 + i + j}"].value
+            if i + j == 0: ws[f"G{13 + i + j}"] = requests[j][6]
+            j = j + 1
+            continue
 
-        ws[f"A{13 + i}"] = req[1]
-        if i == 0: ws[f"C{13 + i}"] = req[2]
-        ws[f"D{13 + i}"] = req[3]
-        ws[f"E{13 + i}"] = req[4]
-        ws[f"F{13 + i}"] = ws[f"C{13 + i}"].value - ws[f"D{13 + i}"].value if i == 0 else ws[f"F{12 + i}"].value - ws[f"D{13 + i}"].value
-        if i == 0: ws[f"G{13 + i}"] = req[5]
+        if(j == len(requests)):
+            ws[f"A{13 + i + j}"] = deliveries[i][0]
+            ws[f"B{13 + i + j}"] = f"D-{deliveries[i][1]}"
+            ws[f"C{13 + i + j}"] = deliveries[i][2]
+            ws[f"F{13 + i + j}"] = ws[f"C{13 + i + j}"].value if i + j == 0 else ws[f"F{12 + i + j}"].value + ws[f"C{13 + i + j}"].value
+            i = i + 1
+            continue
+        
+        d = f"{deliveries[i][0]} {deliveries[i][3]}"
+        r = f"{requests[j][1]} {requests[j][2]}"
+
+        if d > r:
+            ws[f"A{13 + i + j}"] = requests[j][1]
+            ws[f"B{13 + i + j}"] = f"RIS-{requests[j][0]}"
+            if i + j == 0: ws[f"C{13 + i + j}"] = requests[j][3]
+            ws[f"D{13 + i + j}"] = requests[j][4]
+            ws[f"E{13 + i + j}"] = requests[j][5]
+            ws[f"F{13 + i + j}"] = ws[f"C{13 + i + j}"].value - ws[f"D{13 + i + j}"].value if i + j == 0 else ws[f"F{12 + i + j}"].value - ws[f"D{13 + i + j}"].value
+            if i + j == 0: ws[f"G{13 + i + j}"] = requests[j][6]
+            j = j + 1
+        else:
+            ws[f"A{13 + i + j}"] = deliveries[i][0]
+            ws[f"B{13 + i + j}"] = f"D-{deliveries[i][1]}"
+            ws[f"C{13 + i + j}"] = deliveries[i][2]
+            ws[f"F{13 + i + j}"] = ws[f"C{13 + i + j}"].value if i + j == 0 else ws[f"F{12 + i + j}"].value + ws[f"C{13 + i + j}"].value
+            i = i + 1
 
     file = NamedTemporaryFile(suffix = ".xlsx", delete = False)
 
@@ -55,7 +93,7 @@ def form_59 (db, request):
     if db.fetchone() is None: raise RequestNotFoundError(request = request)
 
     db.execute(f"SELECT COUNT(*) + 1 FROM request WHERE StatusID = 4 && hasPropertyApproved = 0 && RequestID < {request};")
-    ics_num = db.fetchone()[0]
+    ics_num = str(db.fetchone()[0])
 
     db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) FROM request INNER JOIN user ON RequestedBy = Username WHERE RequestID = {request}")
     (req_by,) = db.fetchone()
@@ -71,7 +109,7 @@ def form_59 (db, request):
 
     wb = load_workbook("./src/form_templates/template_59.xlsx", rich_text = True)
     ws = wb.active
-    ws["H7"] = ics_num
+    ws["G7"] = CellRichText(ws["G7"].value, TextBlock(InlineFont(b = True), ics_num))
 
     for i in range(len(items)):
         row = items[i]
@@ -121,7 +159,7 @@ def form_63 (db, request):
     for i in range(len(data)):
         req = data[i]
 
-        ws["G9"] = req[0]
+        ws["G9"] = request
         ws[f"A{12 + i}"] = req[1]
         ws[f"C{12 + i}"] = req[2]
         ws[f"D{12 + i}"] = req[3]
@@ -153,29 +191,68 @@ def form_63 (db, request):
         remove(file.name)
 
 def form_69 (db, item):
-    db.execute(f"SELECT * FROM item WHERE ItemID = '{item}'")
+    db.execute(f"SELECT ItemName, Category, ItemDescription FROM item WHERE ItemID = '{item}'")
     data = db.fetchone()
     if data is None: raise ItemNotFoundError(item = item)
 
-    db.execute(f"SELECT * FROM (SELECT RequestID, RequestDate, DeliveryStock, QuantityIssued, UPPER(CONCAT(FirstName, ' ', LastName)) as RequestedBy, Price FROM request_item INNER JOIN (SELECT ItemID, Price, COALESCE(SUM(IF(ShelfLife IS NULL OR DATEDIFF(CURDATE(), ADDDATE(DeliveryDate, ShelfLife)) <= 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) GROUP BY ItemID) AS w USING (ItemID) INNER JOIN request USING (RequestID) INNER JOIN user ON RequestedBy = Username WHERE ItemID = '{item}' AND StatusID = 4 ORDER BY RequestID DESC LIMIT 30) AS x ORDER BY RequestID ASC")
+    #get deliveries
+    db.execute(f"SELECT DeliveryDate, DeliveryID, DeliveryQuantity, Time FROM delivery WHERE ItemID = '{item}' ORDER BY DeliveryID ASC")
+    deliveries = db.fetchall()
+
+    #get request items
+    db.execute(f"SELECT * FROM (SELECT RequestID, DateReceived, TimeReceived, DeliveryStock, QuantityIssued, UPPER(CONCAT(FirstName, ' ', LastName)) as RequestedBy, Price * QuantityIssued FROM request_item INNER JOIN (SELECT ItemID, Price, COALESCE(SUM(IF(ShelfLife IS NULL OR DATEDIFF(CURDATE(), ADDDATE(DeliveryDate, ShelfLife)) <= 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) GROUP BY ItemID) AS w USING (ItemID) INNER JOIN request USING (RequestID) INNER JOIN user ON RequestedBy = Username WHERE ItemID = '{item}' AND StatusID = 4 ORDER BY RequestID DESC) AS x ORDER BY RequestID ASC")
     requests = db.fetchall()
+    print(requests)
 
     wb = load_workbook("./src/form_templates/template_69.xlsx", rich_text = True)
     ws = wb.active
 
-    ws["B8"] = CellRichText(ws["B8"].value, TextBlock(InlineFont(b = True), data[1].upper()))
-    ws["B10"] = CellRichText(ws["B10"].value, TextBlock(InlineFont(b = True), data[3]))
-    ws["I9"] = CellRichText(ws["I9"].value, TextBlock(InlineFont(b = True), data[0]))
+    ws["B8"] = CellRichText(ws["B8"].value, TextBlock(InlineFont(b = True), f"{data[0].upper()} {(data[1]) if data[1] is not None else ''}"))
+    ws["B10"] = CellRichText(ws["B10"].value, TextBlock(InlineFont(b = True), data[2]))
+    ws["I9"] = CellRichText(ws["I9"].value, TextBlock(InlineFont(b = True), item))
 
-    for i in range(len(requests)):
-        req = requests[i]
+    i = 0
+    j = 0
+    while(i + j != len(requests) + len(deliveries)):
+        if(i == len(deliveries)):
+            ws[f"B{13 + i + j}"] = requests[j][1]
+            db.execute(f"SELECT COUNT(*) + 1 FROM request WHERE hasPropertyApproved = 1 && RequestID < {requests[j][0]}")
+            ws[f"C{13 + i + j}"] = f"PAR-{db.fetchone()[0]}"
+            if i + j == 0: ws[f"D{13 + i + j}"] = requests[j][3]
+            ws[f"E{13 + i + j}"] = requests[j][4]
+            ws[f"F{13 + i + j}"] = requests[j][5]
+            ws[f"H{13 + i + j}"] = ws[f"D{13 + i + j}"].value - ws[f"E{13 + i + j}"].value if i + j == 0 else ws[f"H{12 + i + j}"].value - ws[f"E{13 + i + j}"].value
+            ws[f"I{13 + i + j}"] = requests[j][6]
+            j = j + 1
+            continue
 
-        ws[f"B{13 + i}"] = req[1]
-        if i == 0: ws[f"D{13 + i}"] = req[2]
-        ws[f"E{13 + i}"] = req[3]
-        ws[f"F{13 + i}"] = req[4]
-        ws[f"H{13 + i}"] = ws[f"D{13 + i}"].value - ws[f"E{13 + i}"].value if i == 0 else ws[f"H{12 + i}"].value - ws[f"E{13 + i}"].value
-        ws[f"I{13 + i}"] = req[5]
+        if(j == len(requests)):
+            ws[f"B{13 + i + j}"] = deliveries[i][0]
+            ws[f"C{13 + i + j}"] = f"D-{deliveries[i][1]}"
+            ws[f"D{13 + i + j}"] = deliveries[i][2]
+            ws[f"H{13 + i + j}"] = ws[f"D{13 + i + j}"].value if i + j == 0 else ws[f"H{12 + i + j}"].value + ws[f"D{13 + i + j}"].value
+            i = i + 1
+            continue
+        
+        d = f"{deliveries[i][0]} {deliveries[i][3]}"
+        r = f"{requests[j][1]} {requests[j][2]}"
+
+        if d > r:
+            ws[f"B{13 + i + j}"] = requests[j][1]
+            db.execute(f"SELECT COUNT(*) + 1 FROM request WHERE hasPropertyApproved = 1 && RequestID < {requests[j][0]}")
+            ws[f"C{13 + i + j}"] = f"PAR-{db.fetchone()[0]}"
+            if i + j == 0: ws[f"D{13 + i + j}"] = requests[j][3]
+            ws[f"E{13 + i + j}"] = requests[j][4]
+            ws[f"F{13 + i + j}"] = requests[j][5]
+            ws[f"H{13 + i + j}"] = ws[f"D{13 + i + j}"].value - ws[f"E{13 + i + j}"].value if i + j == 0 else ws[f"H{12 + i + j}"].value - ws[f"E{13 + i + j}"].value
+            ws[f"I{13 + i + j}"] = requests[j][6]
+            j = j + 1
+        else:
+            ws[f"B{13 + i + j}"] = deliveries[i][0]
+            ws[f"C{13 + i + j}"] = f"D-{deliveries[i][1]}"
+            ws[f"D{13 + i + j}"] = deliveries[i][2]
+            ws[f"H{13 + i + j}"] = ws[f"D{13 + i + j}"].value if i + j == 0 else ws[f"H{12 + i + j}"].value + ws[f"D{13 + i + j}"].value
+            i = i + 1
 
     file = NamedTemporaryFile(suffix = ".xlsx", delete = False)
 
@@ -192,7 +269,7 @@ def form_71 (db, request):
     if db.fetchone() is None: raise RequestNotFoundError(request = request)
 
     db.execute(f"SELECT COUNT(*) + 1 FROM request WHERE StatusID = 4 && hasPropertyApproved = 1 && RequestID < {request};")
-    par_num = db.fetchone()[0]
+    par_num = str(db.fetchone()[0])
 
     db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) FROM request INNER JOIN user ON RequestedBy = Username WHERE RequestID = {request}")
     (req_by,) = db.fetchone()
@@ -208,7 +285,7 @@ def form_71 (db, request):
 
     wb = load_workbook("./src/form_templates/template_71.xlsx", rich_text = True)
     ws = wb.active
-    ws["F7"] = par_num
+    ws["E7"] = CellRichText(ws["E7"].value, TextBlock(InlineFont(b = True), par_num))
 
     for i in range(len(items)):
         row = items[i]
