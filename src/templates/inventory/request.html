@@ -217,7 +217,7 @@
                 "items": Array.from(document.querySelectorAll(".selection-table .table-body .table-row")).map(x => {
                     return {
                         "ItemID": x.firstChild.innerHTML,
-                        "RequestQuantity": +x.children[8].firstChild.value
+                        "RequestQuantity": +x.children[7].firstChild.value
                     }
                 }),
                 "purpose": document.querySelector("#purpose").value

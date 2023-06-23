@@ -274,6 +274,7 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
         for (let j of req["Items"]) {
             for (let k of requestColumns.slice(4)) {
                 if (k === 'RequestedBy' && privileges === 2) continue;
+                if (k === 'AvailableStock' && privileges !== 1) continue;
 
                 let td = document.createElement("div");
                 if (k === 'ItemID') td.classList.add("mono");
@@ -284,7 +285,7 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                 tr.appendChild(td)
             }
             
-            if (privileges === 1 && req['Status'] === 'Approved' && req['Items'].map(x => x['QuantityIssued']).some(x => x === '\u2014')) {
+            if (privileges === 1 && req['Status'] === 'Pending' && req['Items'].map(x => x['QuantityIssued']).some(x => x === '\u2014')) {
                 let div = document.createElement("div");
 
                 if (j['QuantityIssued'] === '\u2014') {
@@ -350,13 +351,16 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
             }
         }
         
-        let actions = document.createElement("div");
-        actions.classList.add("actions");
-        actions.style.gridRow = `1 / ${req["Items"].length + 1}`;
-        actions.style.gridColumn = `-1 / ${(privileges !== 1 || (req['Status'] === 'Approved' && req['Items'].map(x => x['QuantityIssued']).some(x => x === '\u2014'))) ? '-2' : '-3'}`;
+        let actions;
+        if(privileges != 0){
+            actions = document.createElement("div");
+            actions.classList.add("actions");
+            actions.style.gridRow = `1 / ${req["Items"].length + 1}`;
+            actions.style.gridColumn = `-1 / ${(privileges !== 1 || (req['Status'] === 'Pending' && req['Items'].map(x => x['QuantityIssued']).some(x => x === '\u2014'))) ? '-2' : '-3'}`;
+        }
         
         if (buttons) {
-            if (req['Status'] === 'Approved' && privileges === 1) {
+            if (req['Status'] === 'Pending' && privileges === 1) {
                 if (req["Items"].map(x => x['QuantityIssued']).every(x => x !== '\u2014')) {
                     let issueBtn = document.createElement("button");
                     issueBtn.type = "button";
@@ -470,116 +474,115 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                 actions.append(cancelBtn);
             }
             
-            if (req['Status'] === 'Pending' && privileges === 0) {
-                let approveBtn = document.createElement("button");
-                approveBtn.title = "Approve request";
-                approveBtn.type = "button";
-                approveBtn.role = "button";
-                approveBtn.value = req["RequestID"];
-                approveBtn.innerHTML = "<i class='bi bi-check-circle'></i>";
-                approveBtn.classList.add("green");
+            // if (req['Status'] === 'Pending' && privileges === 0) {
+            //     let approveBtn = document.createElement("button");
+            //     approveBtn.title = "Approve request";
+            //     approveBtn.type = "button";
+            //     approveBtn.role = "button";
+            //     approveBtn.value = req["RequestID"];
+            //     approveBtn.innerHTML = "<i class='bi bi-check-circle'></i>";
+            //     approveBtn.classList.add("green");
 
-                approveBtn.addEventListener("click", () => {
-                    let modal = document.querySelector("#modal-requests");
+            //     approveBtn.addEventListener("click", () => {
+            //         let modal = document.querySelector("#modal-requests");
 
-                    modal.showModal();
-                    modal.querySelector("p").style.display = "";
-                    modal.querySelector("#quantity-span").style.display = "none";
-                    modal.querySelector("#req-remarks").style.display = "none";
-                    modal.querySelector("h1").innerText = "Approve request";
-                    modal.querySelector("p").innerHTML = "Are you sure you want to approve this request?";
-                    modal.querySelector("input[type=submit]").value = "Approve request";
-                    modal.querySelector("input[type=submit]").classList.add("btn-green");
-                    modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
-                    modal.querySelector("input[type=submit]").offsetHeight;
-                    modal.querySelector("input[type=submit]").style.transitionDuration = '';
+            //         modal.showModal();
+            //         modal.querySelector("p").style.display = "";
+            //         modal.querySelector("#quantity-span").style.display = "none";
+            //         modal.querySelector("#req-remarks").style.display = "none";
+            //         modal.querySelector("h1").innerText = "Approve request";
+            //         modal.querySelector("p").innerHTML = "Are you sure you want to approve this request?";
+            //         modal.querySelector("input[type=submit]").value = "Approve request";
+            //         modal.querySelector("input[type=submit]").classList.add("btn-green");
+            //         modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
+            //         modal.querySelector("input[type=submit]").offsetHeight;
+            //         modal.querySelector("input[type=submit]").style.transitionDuration = '';
 
-                    modal.querySelector("input[type=submit]").addEventListener("click", e => {
-                        e.preventDefault();
+            //         modal.querySelector("input[type=submit]").addEventListener("click", e => {
+            //             e.preventDefault();
 
-                        fetch("./approve", {
-                            "method": "POST",
-                            "headers": {
-                                "Content-Type": "application/json"
-                            },
-                            "body": JSON.stringify({
-                                "RequestID": req['RequestID']
-                            })
-                        }).then(async d => {
-                            if (d.status === 200) {
-                                modal.close();
-                                populateRequests(tbody, keyword, privileges, filter);
-                            }
+            //             fetch("./approve", {
+            //                 "method": "POST",
+            //                 "headers": {
+            //                     "Content-Type": "application/json"
+            //                 },
+            //                 "body": JSON.stringify({
+            //                     "RequestID": req['RequestID']
+            //                 })
+            //             }).then(async d => {
+            //                 if (d.status === 200) {
+            //                     modal.close();
+            //                     populateRequests(tbody, keyword, privileges, filter);
+            //                 }
 
-                            if (d.status === 500) {
-                                modal.querySelector(".modal-msg").classList.add("error");
-                                modal.querySelector(".modal-msg").innerHTML = `<b>ERROR:</b> ${(await d.json())['error']}`;
-                            }
-                        })
-                        .catch(() => {
-                            modal.querySelector(".modal-msg").classList.add("error");
-                            modal.querySelector(".modal-msg").innerHTML = "<b>ERROR:</b> Server unavailable. Please try again.";
-                        });
-                    });
-                });
+            //                 if (d.status === 500) {
+            //                     modal.querySelector(".modal-msg").classList.add("error");
+            //                     modal.querySelector(".modal-msg").innerHTML = `<b>ERROR:</b> ${(await d.json())['error']}`;
+            //                 }
+            //             })
+            //             .catch(() => {
+            //                 modal.querySelector(".modal-msg").classList.add("error");
+            //                 modal.querySelector(".modal-msg").innerHTML = "<b>ERROR:</b> Server unavailable. Please try again.";
+            //             });
+            //         });
+            //     });
 
-                let denyBtn = document.createElement("button");
-                denyBtn.title = "Deny request";
-                denyBtn.type = "button";
-                denyBtn.role = "button";
-                denyBtn.value = req["RequestID"];
-                denyBtn.innerHTML = "<i class='bi bi-x-circle'></i>";
-                denyBtn.classList.add("red");
+                // let denyBtn = document.createElement("button");
+                // denyBtn.title = "Deny request";
+                // denyBtn.type = "button";
+                // denyBtn.role = "button";
+                // denyBtn.value = req["RequestID"];
+                // denyBtn.innerHTML = "<i class='bi bi-x-circle'></i>";
+                // denyBtn.classList.add("red");
 
-                denyBtn.addEventListener("click", () => {
-                    let modal = document.querySelector("#modal-requests");
+                // denyBtn.addEventListener("click", () => {
+                //     let modal = document.querySelector("#modal-requests");
 
-                    // PUT TEXT BOX HERE
-                    modal.showModal();
-                    modal.querySelector("p").style.display = "";
-                    modal.querySelector("#quantity-span").style.display = "none";
-                    modal.querySelector("#req-remarks").style.display = "flex";
-                    modal.querySelector("h1").innerText = "Deny request";
-                    modal.querySelector("p").innerHTML = "Are you sure you want to deny this request?";
-                    modal.querySelector("input[type=submit]").value = "Deny request";
-                    modal.querySelector("input[type=submit]").classList.add("btn-red");
-                    modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
-                    modal.querySelector("input[type=submit]").offsetHeight;
-                    modal.querySelector("input[type=submit]").style.transitionDuration = '';
+                //     // PUT TEXT BOX HERE
+                //     modal.showModal();
+                //     modal.querySelector("p").style.display = "";
+                //     modal.querySelector("#quantity-span").style.display = "none";
+                //     modal.querySelector("#req-remarks").style.display = "flex";
+                //     modal.querySelector("h1").innerText = "Deny request";
+                //     modal.querySelector("p").innerHTML = "Are you sure you want to deny this request?";
+                //     modal.querySelector("input[type=submit]").value = "Deny request";
+                //     modal.querySelector("input[type=submit]").classList.add("btn-red");
+                //     modal.querySelector("input[type=submit]").style.transitionDuration = '0s';
+                //     modal.querySelector("input[type=submit]").offsetHeight;
+                //     modal.querySelector("input[type=submit]").style.transitionDuration = '';
 
-                    modal.querySelector("input[type=submit]").addEventListener("click", e => {
-                        e.preventDefault();
+                //     modal.querySelector("input[type=submit]").addEventListener("click", e => {
+                //         e.preventDefault();
                         
-                        fetch("./deny", {
-                            "method": "POST",
-                            "headers": {
-                                "Content-Type": "application/json"
-                            },
-                            "body": JSON.stringify({
-                                "RequestID": req['RequestID'],
-                                "Remarks": document.querySelector("#remarks").value === '' ? null : document.querySelector("#remarks").value
-                            })
-                        }).then(async d => {
-                            if (d.status === 200) {
-                                modal.close();
-                                populateRequests(tbody, keyword, privileges, filter);
-                            }
+                //         fetch("./deny", {
+                //             "method": "POST",
+                //             "headers": {
+                //                 "Content-Type": "application/json"
+                //             },
+                //             "body": JSON.stringify({
+                //                 "RequestID": req['RequestID'],
+                //                 "Remarks": document.querySelector("#remarks").value === '' ? null : document.querySelector("#remarks").value
+                //             })
+                //         }).then(async d => {
+                //             if (d.status === 200) {
+                //                 modal.close();
+                //                 populateRequests(tbody, keyword, privileges, filter);
+                //             }
 
-                            if (d.status === 500) {
-                                modal.querySelector(".modal-msg").classList.add("error");
-                                modal.querySelector(".modal-msg").innerHTML = `<b>ERROR:</b> ${(await d.json())['error']}`;
-                            }
-                        })
-                        .catch(() => {
-                            modal.querySelector(".modal-msg").classList.add("error");
-                            modal.querySelector(".modal-msg").innerHTML = "<b>ERROR:</b> Server unavailable. Please try again.";
-                        });
-                    });
-                });
+                //             if (d.status === 500) {
+                //                 modal.querySelector(".modal-msg").classList.add("error");
+                //                 modal.querySelector(".modal-msg").innerHTML = `<b>ERROR:</b> ${(await d.json())['error']}`;
+                //             }
+                //         })
+                //         .catch(() => {
+                //             modal.querySelector(".modal-msg").classList.add("error");
+                //             modal.querySelector(".modal-msg").innerHTML = "<b>ERROR:</b> Server unavailable. Please try again.";
+                //         });
+                //     });
+                // });
                 
-                actions.appendChild(approveBtn);
-                actions.appendChild(denyBtn);
-            }
+                // actions.appendChild(approveBtn);
+                // actions.appendChild(denyBtn);
             
             if (privileges === 2 && ['Pending', 'Approved', 'Issued'].includes(req['Status'])) {
                 if (req['Status'] === 'Issued') {
@@ -696,7 +699,9 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
             
         }
         
-        tr.appendChild(actions);
+        if(privileges != 0){
+            tr.appendChild(actions);
+        }
         tbody.appendChild(parent);
         rows.push(tr);
     }

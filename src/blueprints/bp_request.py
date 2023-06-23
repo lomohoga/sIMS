@@ -183,7 +183,7 @@ def issue_item ():
         db.execute(f"SELECT StatusID FROM request WHERE RequestID = {body['RequestID']}")
         f = db.fetchone()
         if f is None: raise RequestNotFoundError(request = body['RequestID'])
-        if f[0] != 2: raise IllegalIssueError(request = body['RequestID'])
+        #if f[0] != 2: raise IllegalIssueError(request = body['RequestID'])
         
         db.execute(f"SELECT QuantityIssued FROM request_item WHERE RequestID = {body['RequestID']} AND ItemID = '{body['ItemID']}'")
         g = db.fetchone()
@@ -220,7 +220,7 @@ def issue_request ():
         db.execute(f"SELECT StatusID FROM request WHERE RequestID = {req}")
         f = db.fetchone()
         if f is None: raise RequestNotFoundError(request = req)
-        if f[0] != 2: raise RequestStatusError(from_status = f[0], to_status = 3)
+        #if f[0] != 2: raise RequestStatusError(from_status = f[0], to_status = 3)
 
         db.execute(f"SELECT QuantityIssued FROM request_item WHERE RequestID = {req}")
         g = all([x[0] is not None for x in db.fetchall()])
