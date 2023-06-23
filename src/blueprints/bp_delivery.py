@@ -25,7 +25,7 @@ def search_deliveries ():
     conditions = []
     for x in keywords:
         conditions.append(f"(ItemID LIKE '%{x}%' OR ItemName LIKE '%{x}%' OR ItemDescription LIKE '%{x}%')")
-    query = f"SELECT DeliveryID, ItemID, ItemName, ItemDescription, DeliveryQuantity, Unit, ShelfLife, DATE_FORMAT(delivery.DeliveryDate, '%d %b %Y') as DeliveryDate, Source, ReceivedBy, IsExpired FROM delivery INNER JOIN item USING (ItemID) INNER JOIN expiration USING (DeliveryID) {'' if len(conditions) == 0 else 'WHERE (' + ' AND '.join(conditions) + ')'} ORDER BY DeliveryID DESC"
+    query = f"SELECT DeliveryID, ItemID, ItemName, ItemDescription, DeliveryQuantity, Unit, ShelfLife, DATE_FORMAT(delivery.DeliveryDate, '%d %b %Y') as DeliveryDate, Source, ReceivedBy, IsExpired, Supplier FROM delivery INNER JOIN item USING (ItemID) INNER JOIN expiration USING (DeliveryID) {'' if len(conditions) == 0 else 'WHERE (' + ' AND '.join(conditions) + ')'} ORDER BY DeliveryID DESC"
     
     try:
         cxn = connect_db()
@@ -68,7 +68,7 @@ def add_deliveries ():
                 db.execute(f"SELECT * FROM item WHERE ItemID = '{v['ItemID']}'")
                 if db.fetchone() is None: raise ItemNotFoundError(item = v['ItemID'])
 
-                db.execute(f"INSERT INTO delivery (ItemID, DeliveryQuantity, DeliveryDate, ReceivedBy, Source) VALUES ('{v['ItemID']}', {v['DeliveryQuantity']}, '{v['DeliveryDate']}', '{session['user']['Username']}', '{v['Source']}')")
+                db.execute(f"INSERT INTO delivery (ItemID, DeliveryQuantity, DeliveryDate, ReceivedBy, Source, Supplier) VALUES ('{v['ItemID']}', {v['DeliveryQuantity']}, '{v['DeliveryDate']}', '{session['user']['Username']}', '{v['Source']}', '{v['Supplier']}')")
             cxn.commit()
         except Exception as e:
             current_app.logger.error(str(e))

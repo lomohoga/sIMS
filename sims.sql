@@ -30,6 +30,7 @@ CREATE TABLE `delivery` (
   `ReceivedBy` varchar(30) DEFAULT NULL,
   `Source` varchar(50) DEFAULT NULL,
   `Time` time NOT NULL DEFAULT (curtime()),
+  `Supplier` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`DeliveryID`),
   KEY `ItemID` (`ItemID`),
   KEY `ReceivedBy` (`ReceivedBy`),

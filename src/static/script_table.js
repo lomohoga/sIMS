@@ -10,7 +10,7 @@ const itemColumns = ["ItemID", "ItemName", "Category", "ItemDescription", "Shelf
 const categoriesColumns = ["CategoryName", "CategoryDescription"];
 const sourcesColumns = ["SourceName"];
 const requestColumns = ["RequestID", "RequestedBy", "RequestDate", "Status", "ItemID", "ItemName", "Category", "ItemDescription", "RequestQuantity", "QuantityIssued", "AvailableStock", "Unit"];
-const deliveryColumns = ["DeliveryID", "ItemID", "ItemName", "ItemDescription", "DeliveryQuantity", "Unit", "ShelfLife", "DeliveryDate", "Source", "ReceivedBy", "IsExpired"];
+const deliveryColumns = ["DeliveryID", "ItemID", "ItemName", "ItemDescription", "DeliveryQuantity", "Unit", "ShelfLife", "DeliveryDate", "Source", "Supplier", "IsExpired"];
 const userColumns = ["Username", "FirstName", "LastName", "Email", "Role"];
 
 // converts escaped characters in keywords

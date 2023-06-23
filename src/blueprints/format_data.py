@@ -63,7 +63,8 @@ def format_deliveries (deliveries):
             "DeliveryDate": d[7],
             "Source": d[8],
             "ReceivedBy": d[9],
-            "IsExpired": bool(d[10])
+            "IsExpired": bool(d[10]),
+            "Supplier": d[11]
         } for d in deliveries
     ]
 

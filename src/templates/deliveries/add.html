@@ -78,10 +78,9 @@
                         <span style="font-weight: initial; font-style: italic; font-size: 80%;">(days)</span>
                     </span>
                 </div>
-                <div>Unit Price</div>
-                <div>Unit</div>
                 <div>Delivery Date</div>
-                <div>Source</div>
+                <div>Source of Fund</div>
+                <div>Supplier</div>
                 <div>Delivery Quantity</div>
                 <div></div>
             </div>
@@ -110,6 +109,8 @@
 
     function selectItem (row) {
         let clone = row.cloneNode(true);
+        clone.removeChild(clone.querySelector(".tabnum ~ div"));
+        clone.removeChild(clone.querySelector(".tabnum"));
 
         let d1 = document.createElement("div");
         let date = document.createElement("input");
@@ -134,6 +135,13 @@
         }
         d3.appendChild(src)
         clone.insertBefore(d3, clone.lastChild);
+
+        let d4 = document.createElement("div");
+        let el = document.createElement("input");
+        el.type = "text";
+        el.max = 50;
+        d4.appendChild(el)
+        clone.insertBefore(d4, clone.lastChild);
         
         let d2 = document.createElement("div");
         let quantity = document.createElement("input");
@@ -194,9 +202,10 @@
 
             values.push({
                 "ItemID": children[0].innerText,
-                "DeliveryDate": children[7].firstChild.value,
-                "Source": children[8].firstChild.value,
-                "DeliveryQuantity": +children[9].firstChild.value,
+                "DeliveryDate": children[5].firstChild.value,
+                "Source": children[6].firstChild.value,
+                "Supplier": children[7].firstChild.value,
+                "DeliveryQuantity": +children[8].firstChild.value,
             });
         }
         
