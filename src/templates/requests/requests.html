@@ -171,8 +171,8 @@
         document.querySelector("#modal-requests input[type=submit]").classList.remove("btn-red", "btn-green");
         document.querySelector("#modal-requests input[type=submit]").replaceWith(document.querySelector("#modal-requests input[type=submit]").cloneNode());
 
-        document.querySelector(".modal-msg").classList.remove("error");
-        document.querySelector(".modal-msg").innerHTML = "";
+        document.querySelector("#modal-requests .modal-msg").classList.remove("error");
+        document.querySelector("#modal-requests .modal-msg").innerHTML = "";
     });
 
     document.querySelector("#modal-requests .modal-back").addEventListener("click", () => document.querySelector("#modal-requests").close());
