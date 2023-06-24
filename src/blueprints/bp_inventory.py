@@ -45,15 +45,13 @@ def search_items ():
 @login_required
 def add_items ():
     if request.method == 'GET':
-        if session['user']['RoleID'] != 1: 
-            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to add items to the database."), 403
-        else:
-            return render_template("inventory/add.html")
+        if session['user']['RoleID'] != 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to add items to the database."), 403
+        else: return render_template("inventory/add.html")
 
     if request.method == 'POST':        
         cxn = None
         values = request.get_json()
-        print(values['values'])
+
         try:
             cxn = connect_db()
             db = cxn.cursor()
@@ -85,10 +83,8 @@ def add_items ():
 @login_required
 def remove_items ():
     if request.method == "GET":
-        if session['user']['RoleID'] != 1: 
-            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to remove items from the database."), 403
-        else: 
-            return render_template("inventory/remove.html")
+        if session['user']['RoleID'] != 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to remove items from the database."), 403
+        else: return render_template("inventory/remove.html")
 
     if request.method == "POST":
         items = request.get_json()["items"]
@@ -121,10 +117,8 @@ def remove_items ():
 @login_required
 def update_items ():
     if request.method == "GET":
-        if session['user']['RoleID'] != 1: 
-            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to update items in the database."), 403
-        else: 
-            return render_template("inventory/update.html")
+        if session['user']['RoleID'] != 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to update items in the database."), 403
+        else: return render_template("inventory/update.html")
 
     if request.method == "POST":
         values = request.get_json()["values"]
@@ -163,8 +157,9 @@ def update_items ():
 @login_required
 def request_items ():
     if (request.method == "GET"):
-        return render_template("inventory/request.html")
-
+        if session['user']['RoleID'] == 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to request items in the database."), 403
+        else: return render_template("inventory/request.html")
+        
     if (request.method == "POST"):
         cxn = None
         req = request.get_json()["items"]
