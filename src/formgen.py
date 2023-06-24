@@ -311,3 +311,26 @@ def form_71 (db, request):
             return f.read()
     finally:
         remove(file.name)
+
+def form_73 (items):
+    # TODO: Case where overflows happens
+    wb = load_workbook("./src/form_templates/template_73.xlsx", rich_text = True)
+    ws = wb.active
+
+    for i in range(len(items)):
+        ws[f"C{15 + i}"] = items[i]["ItemName"]
+        ws[f"D{15 + i}"] = items[i]["ItemDescription"]
+        ws[f"E{15 + i}"] = items[i]["ItemID"]
+        ws[f"F{15 + i}"] = items[i]["Unit"]
+        ws[f"G{15 + i}"] = items[i]["Price"]
+        ws[f"H{15 + i}"] = items[i]["AvailableStock"]
+
+    file = NamedTemporaryFile(suffix = ".xlsx", delete = False)
+
+    try:
+        with file as f:
+            wb.save(f.name)
+            f.seek(0)
+            return f.read()
+    finally:
+        remove(file.name)

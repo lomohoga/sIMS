@@ -4,7 +4,7 @@ from src.blueprints.auth import login_required
 from src.blueprints.database import connect_db
 from src.blueprints.exceptions import SelfNotFoundError, SelfRoleError
 
-from src.formgen import form_58, form_59, form_63, form_69, form_71
+from src.formgen import form_58, form_59, form_63, form_69, form_71, form_73
 
 bp_form = Blueprint("bp_form", __name__, url_prefix = "/forms")
 
@@ -124,3 +124,19 @@ def generate_69 ():
         return { "error": str(e) }, 500
     finally:
         if cxn is not None: cxn.close()
+
+# route for generating appendix 63
+@bp_form.route('/73', methods = ["POST"])
+@login_required
+def generate_73 ():
+    if session['user']['RoleID'] != 1: 
+        return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
+
+    items = request.get_json()["items"]
+    print(items)
+
+    try:
+        return form_73(items)
+    except Exception as e:
+        current_app.logger.error(str(e))
+        return { "error": str(e) }, 500

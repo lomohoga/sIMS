@@ -76,10 +76,75 @@
 
 {% if session['user']['RoleID'] == 1 %}
 <button id="manage-categories" type="button" role="button">Manage categories</button>
+<button id="generate_73" type="button" role="button">Generate 73</button>
 {% endif %}
 
 <script>
     let currentSort = [0, true];
+
+    document.querySelector("#generate_73").addEventListener("click", () => {
+        let filename = `Appendix73${document.querySelector("#search-box").value === ''? '' : "-" + document.querySelector("#search-box").value}`;
+        fetch("/forms/73", {
+            "method": "POST",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": JSON.stringify({
+                "items": Array.from(document.querySelectorAll(".table-body .table-row:not(.hide)"))
+                .filter(row => +row.querySelector(".currency span:nth-child(2)").innerHTML.replaceAll(/[^0-9\.]/g, "") >= 15000)
+                .map(x => {
+                    return {
+                        "ItemID": x.querySelector("div:nth-child(1)").innerHTML,
+                        "ItemName": x.querySelector("div:nth-child(2)").innerHTML,
+                        "ItemDescription": x.querySelector("div:nth-child(4)").innerHTML,
+                        "Unit": x.querySelector("div:nth-child(8)").innerHTML,
+                        "Price": x.querySelector(".currency span:nth-child(2)").innerHTML,
+                        "AvailableStock": x.querySelector("div:nth-child(7)").innerHTML,
+                    }
+                })
+            })
+        })
+        .then(res => {
+            if(res.status === 500){
+                res.json()
+                .then(a => {
+                    let x = document.querySelector("#snackbar");
+                    x.innerText = a["error"];
+                    x.classList.add("show");
+                    setTimeout(function(){ x.classList.remove("show") }, 3000);
+                })
+            }
+            else{
+                res.body.getReader().read()
+                .then(data => {
+                    console.log(data.value)
+                    let link = window.URL.createObjectURL(new File([data.value], filename, {
+                        "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    }));
+                    console.log(link)
+                    return link;
+                })
+                .then(link => {
+                    let a = document.createElement("a");
+                    a.href = link;
+                    a.download = filename;
+                    a.click();
+                })
+                .catch((error) => {
+                    let x = document.querySelector("#snackbar");
+                    x.innerText = "Error";
+                    x.classList.add("show");
+                    setTimeout(function(){ x.classList.remove("show") }, 3000);
+                });
+            }}
+        )
+        .catch(() => {
+            let x = document.querySelector("#snackbar");
+            x.innerText = "Server unavailable. Please try again later.";
+            x.classList.add("show");
+            setTimeout(function(){ x.classList.remove("show") }, 3000);
+        });
+    })
 
     document.querySelectorAll(".inventory-table .sort-btn").forEach(x => {
         const p = x.parentElement;
