@@ -197,7 +197,7 @@ def form_69 (db, item):
     deliveries = db.fetchall()
 
     #get request items
-    db.execute(f"SELECT * FROM (SELECT RequestID, DateReceived, TimeReceived, DeliveryStock, QuantityIssued, UPPER(CONCAT(FirstName, ' ', LastName)) as RequestedBy, Price * QuantityIssued FROM request_item INNER JOIN (SELECT ItemID, Price, COALESCE(SUM(IF(ShelfLife IS NULL OR DATEDIFF(CURDATE(), ADDDATE(DeliveryDate, ShelfLife)) <= 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) GROUP BY ItemID) AS w USING (ItemID) INNER JOIN request USING (RequestID) INNER JOIN user ON RequestedBy = Username WHERE ItemID = '{item}' AND StatusID = 4 ORDER BY RequestID DESC) AS x ORDER BY RequestID ASC")
+    db.execute(f"SELECT * FROM (SELECT RequestID, DateReceived, TimeReceived, DeliveryStock, QuantityIssued, UPPER(CONCAT(FirstName, ' ', LastName)) as RequestedBy, Price * QuantityIssued, Remarks FROM request_item INNER JOIN (SELECT ItemID, Price, COALESCE(SUM(IF(ShelfLife IS NULL OR DATEDIFF(CURDATE(), ADDDATE(DeliveryDate, ShelfLife)) <= 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) GROUP BY ItemID) AS w USING (ItemID) INNER JOIN request USING (RequestID) INNER JOIN user ON RequestedBy = Username WHERE ItemID = '{item}' AND StatusID = 4 ORDER BY RequestID DESC) AS x ORDER BY RequestID ASC")
     requests = db.fetchall()
     print(requests)
 
@@ -220,6 +220,7 @@ def form_69 (db, item):
             ws[f"F{13 + i + j}"] = requests[j][5]
             ws[f"H{13 + i + j}"] = ws[f"D{13 + i + j}"].value - ws[f"E{13 + i + j}"].value if i + j == 0 else ws[f"H{12 + i + j}"].value - ws[f"E{13 + i + j}"].value
             ws[f"I{13 + i + j}"] = requests[j][6]
+            ws[f"J{13 + i + j}"] = requests[j][7]
             j = j + 1
             continue
 
@@ -243,6 +244,7 @@ def form_69 (db, item):
             ws[f"F{13 + i + j}"] = requests[j][5]
             ws[f"H{13 + i + j}"] = ws[f"D{13 + i + j}"].value - ws[f"E{13 + i + j}"].value if i + j == 0 else ws[f"H{12 + i + j}"].value - ws[f"E{13 + i + j}"].value
             ws[f"I{13 + i + j}"] = requests[j][6]
+            ws[f"J{13 + i + j}"] = requests[j][7]
             j = j + 1
         else:
             ws[f"B{13 + i + j}"] = deliveries[i][0]

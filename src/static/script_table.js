@@ -243,10 +243,13 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
         purpose.innerHTML = "<b>Purpose:</b> " + req["Purpose"]
         anon.appendChild(purpose);
 
-        if(req["Remarks"] !== null){
-            let remark = document.createElement("div");
-            remark.innerHTML = "<b>Remark:</b> " + req["Remarks"]
-            anon.appendChild(remark);
+        // Edit this
+        for(let x of req["Items"]){
+            if(x["Remarks"] !== null){
+                let remark = document.createElement("div");
+                remark.innerHTML = `<b>Remarks on item ${x["ItemID"]}</b>: ${x["Remarks"]}`
+                anon.appendChild(remark);
+            }
         }
         
         let tr = document.createElement("div");
@@ -272,9 +275,10 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
         }
 
         for (let j of req["Items"]) {
+            console.log(j)
             for (let k of requestColumns.slice(4)) {
                 if (k === 'RequestedBy' && privileges === 2) continue;
-                if (k === 'AvailableStock' && privileges !== 1) continue;
+                if (k === 'AvailableStock' && privileges === 2) continue;
 
                 let td = document.createElement("div");
                 if (k === 'ItemID') td.classList.add("mono");
@@ -352,11 +356,11 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
         }
         
         let actions;
-        if(privileges != 0){
+        if(privileges !== 0){
             actions = document.createElement("div");
             actions.classList.add("actions");
             actions.style.gridRow = `1 / ${req["Items"].length + 1}`;
-            actions.style.gridColumn = `-1 / ${(privileges !== 1 || (req['Status'] === 'Pending' && req['Items'].map(x => x['QuantityIssued']).some(x => x === '\u2014'))) ? '-2' : '-3'}`;
+            actions.style.gridColumn = `-1 / ${(privileges !== 1 || (req['Status'] === 'Pending' && req['Items'].map(x => x['QuantityIssued']).some(x => x === '\u2014'))) ? '-3' : '-2'}`;
         }
         
         if (buttons) {
@@ -376,7 +380,19 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                         modal.showModal();
                         modal.querySelector("p").style.display = "";
                         modal.querySelector("#quantity-span").style.display = "none";
-                        modal.querySelector("#req-remarks").style.display = "flex";
+                        modal.querySelector("#req-remarks").style.display = "block";
+                        for(let n of req["Items"]){
+                            let x = document.querySelector("#req-remarks ul :first-child").cloneNode(true);
+                            let y = document.querySelector("#req-remarks ul");
+                            y.appendChild(x);
+                            let last = y.lastChild;
+    
+                            last.style.display = "list-item";
+                            last.querySelector("label").htmlFor = n["ItemID"];
+                            last.querySelector("input[type=text]").id = n["ItemID"];
+                            last.querySelector("input[type=text]").name = n["ItemID"];
+                            last.querySelector("#item-id").textContent = n["ItemID"];
+                        }
                         modal.querySelector("h1").innerText = "Issue request";
                         modal.querySelector("p").innerHTML = "<span>Are you sure you want to issue <b>all</b> items in this request?</span>";
                         modal.querySelector("input[type=submit]").value = "Issue request";
@@ -395,7 +411,8 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                                 },
                                 "body": JSON.stringify({
                                     "RequestID": req['RequestID'],
-                                    "Remarks": document.querySelector("#remarks").value === '' ? null : document.querySelector("#remarks").value
+                                    "Remarks": Array.from(document.querySelectorAll("#req-remarks li:not([style*='display: none']) input[type=text]")).map(row => {return {"ItemID": row.id, "Remarks": row.value === '' ? null : row.value}}),
+                                    //"Remarks": document.querySelector("#remarks").value === '' ? null : document.querySelector("#remarks").value
                                 })
                             }).then(async d => {
                                 if (d.status === 200) {
@@ -432,7 +449,19 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                     modal.showModal();
                     modal.querySelector("p").style.display = "";
                     modal.querySelector("#quantity-span").style.display = "none";
-                    modal.querySelector("#req-remarks").style.display = "flex";
+                    modal.querySelector("#req-remarks").style.display = "block";
+                    for(let n of req["Items"]){
+                        let x = document.querySelector("#req-remarks ul :first-child").cloneNode(true);
+                        let y = document.querySelector("#req-remarks ul");
+                        y.appendChild(x);
+                        let last = y.lastChild;
+
+                        last.style.display = "list-item";
+                        last.querySelector("label").htmlFor = n["ItemID"];
+                        last.querySelector("input[type=text]").id = n["ItemID"];
+                        last.querySelector("input[type=text]").name = n["ItemID"];
+                        last.querySelector("#item-id").textContent = n["ItemID"];
+                    }
                     modal.querySelector("h1").innerText = "Cancel request";
                     modal.querySelector("p").innerHTML = "Are you sure you want to cancel this request?<br><i><b style='color: var(--red);'>WARNING:</b> This will forfeit <b>all</b> items in this request!</i>";
                     modal.querySelector("input[type=submit]").value = "Cancel request";
@@ -451,7 +480,7 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                             },
                             "body": JSON.stringify({
                                 "RequestID": req['RequestID'],
-                                "Remarks": document.querySelector("#remarks").value === '' ? null : document.querySelector("#remarks").value
+                                "Remarks": Array.from(document.querySelectorAll("#req-remarks li:not([style*='display: none']) input[type=text]")).map(row => {return {"ItemID": row.id, "Remarks": row.value === '' ? null : row.value}}),
                             })
                         }).then(async d => {
                             if (d.status === 200) {
@@ -655,7 +684,19 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                     modal.showModal();
                     modal.querySelector("p").style.display = "";
                     modal.querySelector("#quantity-span").style.display = "none";
-                    modal.querySelector("#req-remarks").style.display = "flex";
+                    modal.querySelector("#req-remarks").style.display = "block";
+                    for(let n of req["Items"]){
+                        let x = document.querySelector("#req-remarks ul :first-child").cloneNode(true);
+                        let y = document.querySelector("#req-remarks ul");
+                        y.appendChild(x);
+                        let last = y.lastChild;
+
+                        last.style.display = "list-item";
+                        last.querySelector("label").htmlFor = n["ItemID"];
+                        last.querySelector("input[type=text]").id = n["ItemID"];
+                        last.querySelector("input[type=text]").name = n["ItemID"];
+                        last.querySelector("#item-id").textContent = n["ItemID"];
+                    }
                     modal.querySelector("h1").innerText = "Cancel request";
                     modal.querySelector("p").innerHTML = "Are you sure you want to cancel this request?<br><i><b style='color: var(--red);'>WARNING:</b> This will forfeit <b>all</b> items in this request!</i>";
                     modal.querySelector("input[type=submit]").value = "Cancel request";
@@ -674,7 +715,8 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                             },
                             "body": JSON.stringify({
                                 "RequestID": req['RequestID'],
-                                "Remarks": document.querySelector("#remarks").value === '' ? null : document.querySelector("#remarks").value
+                                "Remarks": Array.from(document.querySelectorAll("#req-remarks li:not([style*='display: none']) input[type=text]")).map(row => {return {"ItemID": row.id, "Remarks": row.value === '' ? null : row.value}}),
+                                //"Remarks": document.querySelector("#remarks").value === '' ? null : document.querySelector("#remarks").value
                             })
                         }).then(async d => {
                             if (d.status === 200) {

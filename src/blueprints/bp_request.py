@@ -36,7 +36,7 @@ def search_requests ():
         cxn = connect_db()
         db = cxn.cursor()
 
-        db.execute(f"SELECT RequestID, RequestedBy, DATE_FORMAT(RequestDate, '%d %b %Y') AS RequestDate, StatusName as Status, Purpose, Remarks, ItemID, ItemName, Category, ItemDescription, RequestQuantity, QuantityIssued, AvailableStock, Unit FROM request INNER JOIN request_status USING (StatusID) INNER JOIN request_item USING (RequestID) INNER JOIN stock USING (ItemID){' WHERE RequestID IN (SELECT DISTINCT RequestID FROM request INNER JOIN request_item USING (RequestID) INNER JOIN item USING (ItemID) WHERE ' + w + ')' if w != '' else ''} ORDER BY RequestID DESC, ItemID")
+        db.execute(f"SELECT RequestID, RequestedBy, DATE_FORMAT(RequestDate, '%d %b %Y') AS RequestDate, StatusName as Status, Purpose, ItemID, ItemName, Category, ItemDescription, RequestQuantity, QuantityIssued, AvailableStock, Unit, Remarks FROM request INNER JOIN request_status USING (StatusID) INNER JOIN request_item USING (RequestID) INNER JOIN stock USING (ItemID){' WHERE RequestID IN (SELECT DISTINCT RequestID FROM request INNER JOIN request_item USING (RequestID) INNER JOIN item USING (ItemID) WHERE ' + w + ')' if w != '' else ''} ORDER BY RequestID DESC, ItemID")
         requests = db.fetchall()
     except Exception as e:
         current_app.logger.error(str(e))
@@ -84,11 +84,11 @@ def deny_request ():
         f = db.fetchone()
         if f is None: raise RequestNotFoundError(request = req)
         if f[0] != 1: raise RequestStatusError(from_status = f[0], to_status = 5)
-        
-        if remarks is None:
-            db.execute(f"UPDATE request SET StatusID = 5, ActingAdmin = '{session['user']['Username']}', DateCancelled = CURDATE() WHERE RequestID = {req}")
-        else:
-            db.execute(f"UPDATE request SET StatusID = 5, ActingAdmin = '{session['user']['Username']}', DateCancelled = CURDATE(), Remarks = '{remarks}' WHERE RequestID = {req}")
+
+        db.execute(f"UPDATE request SET StatusID = 5, ActingAdmin = '{session['user']['Username']}', DateCancelled = CURDATE() WHERE RequestID = {req}")
+        for x in remarks:
+            if x["Remarks"] is not None:
+                db.execute(f"UPDATE request_item SET Remarks = '{x['Remarks']}' WHERE RequestID = {req} && ItemID = '{x['ItemID']}'")
         cxn.commit()
     except Exception  as e:
         current_app.logger.error(str(e))
@@ -104,7 +104,9 @@ def deny_request ():
 def cancel_request ():
     req = request.get_json()['RequestID']
     remarks = request.get_json()['Remarks']
+    print(remarks)
     cxn = None
+    
     try:
         cxn = connect_db()
         db = cxn.cursor()
@@ -114,11 +116,10 @@ def cancel_request ():
         if f is None: raise RequestNotFoundError(request = req)
         if f[0] in [4, 5, 6]: raise RequestStatusError(from_status = f[0], to_status = 6)
 
-        if remarks is None:
-            db.execute(f"UPDATE request SET StatusID = 6, CancelledBy = '{session['user']['Username']}', DateCancelled = CURDATE() WHERE RequestID = {req}")
-        else:
-            db.execute(f"UPDATE request SET StatusID = 6, CancelledBy = '{session['user']['Username']}', DateCancelled = CURDATE(), Remarks = '{remarks}' WHERE RequestID = {req}")
-        
+        db.execute(f"UPDATE request SET StatusID = 6, CancelledBy = '{session['user']['Username']}', DateCancelled = CURDATE() WHERE RequestID = {req}")
+        for x in remarks:
+            if x["Remarks"] is not None:
+                db.execute(f"UPDATE request_item SET Remarks = '{x['Remarks']}' WHERE RequestID = {req} && ItemID = '{x['ItemID']}'")
         cxn.commit()
     except Exception as e:
         current_app.logger.error(str(e))
@@ -226,11 +227,10 @@ def issue_request ():
         g = all([x[0] is not None for x in db.fetchall()])
         if not g: raise IncompleteIssueError(request = req)
         
-        if remarks is None:
-            db.execute(f"UPDATE request SET StatusID = 3, IssuedBy = '{session['user']['Username']}', DateIssued = CURDATE() WHERE RequestID = {req}")
-        else:
-            db.execute(f"UPDATE request SET StatusID = 3, IssuedBy = '{session['user']['Username']}', DateIssued = CURDATE(), Remarks = '{remarks}' WHERE RequestID = {req}")
-        
+        db.execute(f"UPDATE request SET StatusID = 3, IssuedBy = '{session['user']['Username']}', DateIssued = CURDATE() WHERE RequestID = {req}")
+        for x in remarks:
+            if x["Remarks"] is not None:
+                db.execute(f"UPDATE request_item SET Remarks = '{x['Remarks']}' WHERE RequestID = {req} && ItemID = '{x['ItemID']}'")
         cxn.commit()
     except Exception as e:
         current_app.logger.error(str(e))

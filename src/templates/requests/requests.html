@@ -15,9 +15,16 @@
                     <span></span>
                 </span>
             </span>
-            <span id="req-remarks" style="display:none; flex-direction: row; column-gap: 0.3rem; align-items: center; justify-items: center;">
-                <label for="remarks">If you do, provide some remarks:</label>
-                <input id="remarks" type="text" placeholder="(optional)" style="flex-grow: 1;">
+            <span id="req-remarks" style="display:none">
+                <p>If you do, provide some remarks for each item in this request.</p>
+                <ul style="max-height: 300px; overflow: scroll">
+                    <li style="display: none;">
+                        <div class="remarks" style="display:flex; flex-direction: row; column-gap: 0.3rem; align-items: center; justify-items: center; margin-top: 0.3rem;">
+                        <label class="item-remark">Item <span id='item-id'></span>:</label>
+                        <input type="text" placeholder="(optional)" style="flex-grow: 1;">
+                        </div>
+                    </li>
+                </ul>
             </span>
             <span class="modal-bottom">
                 <p class="modal-msg"></p>
@@ -49,7 +56,7 @@
 </div>
 
 <div class="table-wrapper">
-    <div class="table-main request-table {{ 'custodian' if session['user']['RoleID'] != 0 else 'user' }}">
+    <div class="table-main request-table {{ 'custodian' if session['user']['RoleID'] == 1 else 'user' }}">
         <div class="table-header">
             <div class="table-row">
                 <div class="table-sortable">
@@ -79,7 +86,7 @@
                 <div>Item Description</div>
                 <div>Request Quantity</div>
                 <div>Quantity Issued</div>
-                {% if session['user']['RoleID'] == 1 %}
+                {% if session['user']['RoleID'] != 2 %}
                 <div>Available Stock</div>
                 {% endif %}
                 <div>Unit</div>

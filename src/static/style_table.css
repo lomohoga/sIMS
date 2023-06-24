@@ -123,6 +123,10 @@
 }
 
 .selection-table.request .table-row {
+    grid-template-columns: 0.625fr 0.75fr 0.7fr 2fr 0.5fr 0.75fr 0.5fr 0.5fr 0.5fr 3rem;
+}
+
+.selection-table.request.user .table-row {
     grid-template-columns: 0.625fr 0.75fr 0.7fr 2fr 0.5fr 0.75fr 0.5fr 0.5fr 3rem;
 }
 
@@ -143,11 +147,11 @@
 }
 
 .request-table.custodian .table-row {
-    grid-template-columns: 0.375fr 0.5fr 0.75fr 0.5fr 0.625fr 0.75fr 0.7fr 1.5fr 0.5fr 0.5fr 0.5fr 0.5fr 0.375fr 0.375fr;
+    grid-template-columns: 0.375fr 0.5fr 0.75fr 0.5fr 0.625fr 0.75fr 0.7fr 1.5fr 0.5fr 0.5fr 0.5fr 0.375fr 0.375fr;
 }
 
 .request-table.user .table-row {
-    grid-template-columns: 0.375fr 0.75fr 0.5fr 0.625fr 0.75fr 0.7fr 1.5fr 0.5fr 0.5fr 0.5fr;
+    grid-template-columns: 0.375fr 0.75fr 0.5fr 0.625fr 0.75fr 0.7fr 1.5fr 0.5fr 0.5fr 0.5fr 0.375fr;
 }
 
 .request-table.forms .table-row {

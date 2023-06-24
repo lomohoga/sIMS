@@ -21,7 +21,7 @@
 </div>
 
 <div class="table-wrapper">
-    <div class="table-main inventory-table {{ 'custodian' if session['user']['RoleID'] == 1 else 'user' }}">
+    <div class="table-main inventory-table {{ 'custodian' if session['user']['RoleID'] != 2 else 'user' }}">
         <div class="table-header">
             <div class="table-row">
                 <div class="table-sortable">
@@ -54,7 +54,7 @@
                     </button>
                 </div>
                 <div>Unit Price</div>
-                {% if session['user']['RoleID'] == 1 %}
+                {% if session['user']['RoleID'] != 2 %}
                 <div>Available Stock</div>
                 {% endif %}
                 <div>Unit</div>

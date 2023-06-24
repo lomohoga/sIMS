@@ -300,7 +300,7 @@
             document.querySelector(".request-table").parentElement.style.display = "";
             document.querySelector("#search-box").placeholder = "Search requests\u2026";
 
-            populateRequests(document.querySelector(".request-table .table-body"), undefined, undefined, undefined, { buttons: false }).then(rows => {
+            populateRequests(document.querySelector(".request-table .table-body"), undefined, 1, undefined, { buttons: false }).then(rows => {
                 loadGenerateButtons(rows, "requests", v);
             });
 
@@ -340,7 +340,7 @@
             newSym.classList.remove("bi-chevron-expand");
             newSym.classList.add("bi-chevron-up");
         } else {
-            populateRequests(document.querySelector(".request-table .table-body"), document.querySelector("#search-box").value).then(rows => {
+            populateRequests(document.querySelector(".request-table .table-body"), document.querySelector("#search-box").value, 1).then(rows => {
                 loadGenerateButtons(rows, "requests", v);
             });
 
