@@ -57,15 +57,16 @@ def format_deliveries (deliveries):
             "DeliveryID": d[0],
             "ItemID": d[1],
             "ItemName": d[2],
-            "ItemDescription": d[3],
-            "DeliveryQuantity": locale.format_string("%d", d[4], grouping = True),
-            "Unit": d[5],
-            "ShelfLife": locale.format_string("%d", d[6], grouping = True) if d[6] is not None else "\u2014",
-            "DeliveryDate": d[7],
-            "Source": d[8],
-            "ReceivedBy": d[9],
-            "IsExpired": bool(d[10]),
-            "Supplier": d[11]
+            "Category": d[3] if d[3] is not None else "\u2014",
+            "ItemDescription": d[4],
+            "DeliveryQuantity": locale.format_string("%d", d[5], grouping = True),
+            "Unit": d[6],
+            "ShelfLife": locale.format_string("%d", d[7], grouping = True) if d[7] is not None else "\u2014",
+            "DeliveryDate": d[8],
+            "Source": d[9],
+            "ReceivedBy": d[10],
+            "IsExpired": bool(d[11]),
+            "Supplier": d[12]
         } for d in deliveries
     ]
 

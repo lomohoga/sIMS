@@ -24,8 +24,8 @@ def search_deliveries ():
     keywords = [] if "keywords" not in request.args else [decode_keyword(x).lower() for x in request.args.get("keywords").split(" ")]
     conditions = []
     for x in keywords:
-        conditions.append(f"(ItemID LIKE '%{x}%' OR ItemName LIKE '%{x}%' OR ItemDescription LIKE '%{x}%')")
-    query = f"SELECT DeliveryID, ItemID, ItemName, ItemDescription, DeliveryQuantity, Unit, ShelfLife, DATE_FORMAT(delivery.DeliveryDate, '%d %b %Y') as DeliveryDate, Source, ReceivedBy, IsExpired, Supplier FROM delivery INNER JOIN item USING (ItemID) INNER JOIN expiration USING (DeliveryID) {'' if len(conditions) == 0 else 'WHERE (' + ' AND '.join(conditions) + ')'} ORDER BY DeliveryID DESC"
+        conditions.append(f"(ItemID LIKE '%{x}%' OR ItemName LIKE '%{x}%' OR ItemDescription LIKE '%{x}%' OR Source LIKE '%{x}%' OR Supplier LIKE '%{x}%' OR Category LIKE '%{x}%')")
+    query = f"SELECT DeliveryID, ItemID, ItemName, Category, ItemDescription, DeliveryQuantity, Unit, ShelfLife, DATE_FORMAT(delivery.DeliveryDate, '%d %b %Y') as DeliveryDate, Source, ReceivedBy, IsExpired, Supplier FROM delivery INNER JOIN item USING (ItemID) INNER JOIN expiration USING (DeliveryID) {'' if len(conditions) == 0 else 'WHERE (' + ' AND '.join(conditions) + ')'} ORDER BY DeliveryID DESC"
     
     try:
         cxn = connect_db()
@@ -37,8 +37,7 @@ def search_deliveries ():
         current_app.logger.error(str(e))
         return { "error": str(e) }, 500
     finally:
-        if cxn is not None:
-            cxn.close()
+        if cxn is not None: cxn.close()
 
     return { "deliveries": format_deliveries(deliveries) }
 
@@ -46,10 +45,8 @@ def search_deliveries ():
 @login_required
 def add_deliveries ():
     if request.method == 'GET':
-        if session['user']['RoleID'] != 1: 
-            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to add deliveries to the database."), 403
-        else:
-            return render_template("deliveries/add.html")
+        if session['user']['RoleID'] != 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to add deliveries to the database."), 403
+        else: return render_template("deliveries/add.html")
 
     if request.method == 'POST':
         values = request.get_json()

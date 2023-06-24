@@ -10,7 +10,7 @@ const itemColumns = ["ItemID", "ItemName", "Category", "ItemDescription", "Shelf
 const categoriesColumns = ["CategoryName", "CategoryDescription"];
 const sourcesColumns = ["SourceName"];
 const requestColumns = ["RequestID", "RequestedBy", "RequestDate", "Status", "ItemID", "ItemName", "Category", "ItemDescription", "RequestQuantity", "QuantityIssued", "AvailableStock", "Unit"];
-const deliveryColumns = ["DeliveryID", "ItemID", "ItemName", "ItemDescription", "DeliveryQuantity", "Unit", "ShelfLife", "DeliveryDate", "Source", "Supplier", "IsExpired"];
+const deliveryColumns = ["DeliveryID", "ItemID", "ItemName", "Category", "ItemDescription", "DeliveryQuantity", "Unit", "ShelfLife", "DeliveryDate", "Source", "Supplier", "IsExpired"];
 const userColumns = ["Username", "FirstName", "LastName", "Email", "Role"];
 
 // converts escaped characters in keywords
@@ -765,7 +765,7 @@ async function getDeliveries (keyword = "") {
             return d.json().then(j => j["deliveries"]);
         }
         else{
-            return -1;
+            return d.json();
         }
     });
 }
@@ -778,7 +778,7 @@ async function populateDeliveries (tbody, keyword = "") {
     tbody.querySelector(".table-empty").classList.add("hide");
 
     let items = await getDeliveries(keyword);
-    if(items == -1){
+    if("error" in items){
         tbody.querySelector(".table-error").classList.remove("hide");
         tbody.querySelector(".table-loading").classList.add("hide");
         return;
