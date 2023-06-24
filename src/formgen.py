@@ -188,6 +188,7 @@ def form_63 (db, request):
         remove(file.name)
 
 def form_69 (db, item):
+    # TODO: Case where overflows happens
     db.execute(f"SELECT ItemName, Category, ItemDescription FROM item WHERE ItemID = '{item}'")
     data = db.fetchone()
     if data is None: raise ItemNotFoundError(item = item)

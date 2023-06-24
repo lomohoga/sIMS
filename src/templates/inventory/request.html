@@ -142,6 +142,13 @@
     });
 
     function selectItem (row) {
+        if(document.querySelector(".selection-table .table-body").childElementCount === 15){
+            let x = document.querySelector("#snackbar");
+            x.innerText = "You can only requests up to 15 items";
+            x.classList.add("show");
+            setTimeout(function(){ x.classList.remove("show") }, 3000);
+            return;
+        }
         let clone = row.cloneNode(true);
         clone.lastChild.innerHTML = clone.lastChild.innerHTML.replaceAll("plus", "dash");
         clone.querySelector(".select-row").classList.add("delete-row");
