@@ -41,7 +41,6 @@
     let x = await getCategories();
     let cat = x["categories"].map(y => y["CategoryName"]);
     cat.push("None");
-    console.log(cat)
 
     function disableButton () {
         document.querySelector("#submit-form [type=submit]").disabled =

@@ -104,7 +104,6 @@ def deny_request ():
 def cancel_request ():
     req = request.get_json()['RequestID']
     remarks = request.get_json()['Remarks']
-    print(remarks)
     cxn = None
     
     try:

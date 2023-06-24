@@ -133,7 +133,6 @@ def generate_73 ():
         return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
 
     items = request.get_json()["items"]
-    print(items)
 
     try:
         return form_73(items)

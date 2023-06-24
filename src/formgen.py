@@ -200,7 +200,6 @@ def form_69 (db, item):
     #get request items
     db.execute(f"SELECT * FROM (SELECT RequestID, DateReceived, TimeReceived, DeliveryStock, QuantityIssued, UPPER(CONCAT(FirstName, ' ', LastName)) as RequestedBy, Price * QuantityIssued, Remarks FROM request_item INNER JOIN (SELECT ItemID, Price, COALESCE(SUM(IF(ShelfLife IS NULL OR DATEDIFF(CURDATE(), ADDDATE(DeliveryDate, ShelfLife)) <= 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) GROUP BY ItemID) AS w USING (ItemID) INNER JOIN request USING (RequestID) INNER JOIN user ON RequestedBy = Username WHERE ItemID = '{item}' AND StatusID = 4 ORDER BY RequestID DESC) AS x ORDER BY RequestID ASC")
     requests = db.fetchall()
-    print(requests)
 
     wb = load_workbook("./src/form_templates/template_69.xlsx", rich_text = True)
     ws = wb.active
@@ -316,6 +315,8 @@ def form_73 (items):
     # TODO: Case where overflows happens
     wb = load_workbook("./src/form_templates/template_73.xlsx", rich_text = True)
     ws = wb.active
+
+    ws["G6"] = datetime.today().strftime("%d/%m/%y %H:%M:%S")
 
     for i in range(len(items)):
         ws[f"C{15 + i}"] = items[i]["ItemName"]

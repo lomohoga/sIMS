@@ -122,10 +122,9 @@
 
         let d3 = document.createElement("div");
         let src = document.createElement("select");
-        console.log(sources)
+        
         for (let x in sources) {
             let op = document.createElement("option");
-            console.log(sources[x])
             op.value = sources[x];
             op.innerHTML = sources[x];
             if(x === 0){
