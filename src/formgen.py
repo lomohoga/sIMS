@@ -21,7 +21,7 @@ def form_58 (db, item):
     if data is None: raise ItemNotFoundError(item = item)
 
     #get deliveries
-    db.execute(f"SELECT DeliveryDate, DeliveryID, DeliveryQuantity, Time FROM delivery WHERE ItemID = '{item}' ORDER BY DeliveryID ASC")
+    db.execute(f"SELECT DeliveryDate, DeliveryID, DeliveryQuantity, Time FROM delivery WHERE ItemID = '{item}' ORDER BY DeliveryDate ASC, Time ASC")
     deliveries = db.fetchall()
 
     #get request items
