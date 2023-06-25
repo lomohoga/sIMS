@@ -16,7 +16,6 @@ from src.blueprints.database import connect_db
 from src.blueprints.exceptions import ItemNotFoundError, RequestNotFoundError
 
 def form_58 (db, item):
-    # TODO: Case where overflows happens
     db.execute(f"SELECT ItemName, Category, ItemDescription, Unit FROM item WHERE ItemID = '{item}'")
     data = db.fetchone()
     if data is None: raise ItemNotFoundError(item = item)
@@ -39,23 +38,35 @@ def form_58 (db, item):
 
     i = 0
     j = 0
+    ns = None
+    continuePage = False
+    numRows = 30
+    lastBalance = 0
+
+    # TODO: Continue numbers in second page
     while(i + j != len(requests) + len(deliveries)):
+        if((i + j) % numRows == 0):
+            #Clone worksheet
+            if(i + j > 0): continuePage = True
+            if continuePage: lastBalance = ns[f"F{13 + (numRows - 1)}"].value
+            ns = wb.copy_worksheet(ws)
+
         if(i == len(deliveries)):
-            ws[f"A{13 + i + j}"] = requests[j][1]
-            ws[f"B{13 + i + j}"] = f"RIS-{requests[j][0]}"
-            if i + j == 0: ws[f"C{13 + i + j}"] = requests[j][3]
-            ws[f"D{13 + i + j}"] = requests[j][4]
-            ws[f"E{13 + i + j}"] = requests[j][5]
-            ws[f"F{13 + i + j}"] = ws[f"C{13 + i + j}"].value - ws[f"D{13 + i + j}"].value if i + j == 0 else ws[f"F{12 + i + j}"].value - ws[f"D{13 + i + j}"].value
-            if i + j == 0: ws[f"G{13 + i + j}"] = requests[j][6]
+            ns[f"A{13 + ((i + j) % numRows)}"] = requests[j][1]
+            ns[f"B{13 + ((i + j) % numRows)}"] = f"RIS-{requests[j][0]}"
+            if ((i + j) % numRows) == 0: ns[f"C{13 + ((i + j) % numRows)}"] = lastBalance if continuePage else requests[j][3]
+            ns[f"D{13 + ((i + j) % numRows)}"] = requests[j][4]
+            ns[f"E{13 + ((i + j) % numRows)}"] = requests[j][5]
+            ns[f"F{13 + ((i + j) % numRows)}"] = (lastBalance - ns[f"D{13 + ((i + j) % numRows)}"].value if continuePage else ns[f"C{13 + ((i + j) % numRows)}"].value - ns[f"D{13 + ((i + j) % numRows)}"].value) if ((i + j) % numRows) == 0 else ns[f"F{12 + ((i + j) % numRows)}"].value - ns[f"D{13 + ((i + j) % numRows)}"].value
+            if ((i + j) % numRows) == 0: ns[f"G{13 + ((i + j) % numRows)}"] = requests[j][6]
             j = j + 1
             continue
 
         if(j == len(requests)):
-            ws[f"A{13 + i + j}"] = deliveries[i][0]
-            ws[f"B{13 + i + j}"] = f"D-{deliveries[i][1]}"
-            ws[f"C{13 + i + j}"] = deliveries[i][2]
-            ws[f"F{13 + i + j}"] = ws[f"C{13 + i + j}"].value if i + j == 0 else ws[f"F{12 + i + j}"].value + ws[f"C{13 + i + j}"].value
+            ns[f"A{13 + ((i + j) % numRows)}"] = deliveries[i][0]
+            ns[f"B{13 + ((i + j) % numRows)}"] = f"D-{deliveries[i][1]}"
+            ns[f"C{13 + ((i + j) % numRows)}"] = deliveries[i][2]
+            ns[f"F{13 + ((i + j) % numRows)}"] = (lastBalance + ns[f"C{13 + ((i + j) % numRows)}"].value if continuePage else ns[f"C{13 + ((i + j) % numRows)}"].value) if ((i + j) % numRows) == 0 else ns[f"F{12 + ((i + j) % numRows)}"].value + ns[f"C{13 + ((i + j) % numRows)}"].value
             i = i + 1
             continue
         
@@ -63,22 +74,23 @@ def form_58 (db, item):
         r = f"{requests[j][1]} {requests[j][2]}"
 
         if d > r:
-            ws[f"A{13 + i + j}"] = requests[j][1]
-            ws[f"B{13 + i + j}"] = f"RIS-{requests[j][0]}"
-            if i + j == 0: ws[f"C{13 + i + j}"] = requests[j][3]
-            ws[f"D{13 + i + j}"] = requests[j][4]
-            ws[f"E{13 + i + j}"] = requests[j][5]
-            ws[f"F{13 + i + j}"] = ws[f"C{13 + i + j}"].value - ws[f"D{13 + i + j}"].value if i + j == 0 else ws[f"F{12 + i + j}"].value - ws[f"D{13 + i + j}"].value
-            if i + j == 0: ws[f"G{13 + i + j}"] = requests[j][6]
+            ns[f"A{13 + ((i + j) % numRows)}"] = requests[j][1]
+            ns[f"B{13 + ((i + j) % numRows)}"] = f"RIS-{requests[j][0]}"
+            if ((i + j) % numRows) == 0: ns[f"C{13 + ((i + j) % numRows)}"] = lastBalance if continuePage else requests[j][3]
+            ns[f"D{13 + ((i + j) % numRows)}"] = requests[j][4]
+            ns[f"E{13 + ((i + j) % numRows)}"] = requests[j][5]
+            ns[f"F{13 + ((i + j) % numRows)}"] = (lastBalance - ns[f"D{13 + ((i + j) % numRows)}"].value if continuePage else ns[f"C{13 + ((i + j) % numRows)}"].value - ns[f"D{13 + ((i + j) % numRows)}"].value) if ((i + j) % numRows) == 0 else ns[f"F{12 + ((i + j) % numRows)}"].value - ns[f"D{13 + ((i + j) % numRows)}"].value
+            if ((i + j) % numRows) == 0: ns[f"G{13 + ((i + j) % numRows)}"] = requests[j][6]
             j = j + 1
         else:
-            ws[f"A{13 + i + j}"] = deliveries[i][0]
-            ws[f"B{13 + i + j}"] = f"D-{deliveries[i][1]}"
-            ws[f"C{13 + i + j}"] = deliveries[i][2]
-            ws[f"F{13 + i + j}"] = ws[f"C{13 + i + j}"].value if i + j == 0 else ws[f"F{12 + i + j}"].value + ws[f"C{13 + i + j}"].value
+            ns[f"A{13 + ((i + j) % numRows)}"] = deliveries[i][0]
+            ns[f"B{13 + ((i + j) % numRows)}"] = f"D-{deliveries[i][1]}"
+            ns[f"C{13 + ((i + j) % numRows)}"] = deliveries[i][2]
+            ns[f"F{13 + ((i + j) % numRows)}"] = (lastBalance + ns[f"C{13 + ((i + j) % numRows)}"].value if continuePage else ns[f"C{13 + ((i + j) % numRows)}"].value) if ((i + j) % numRows) == 0 else ns[f"F{12 + ((i + j) % numRows)}"].value + ns[f"C{13 + ((i + j) % numRows)}"].value
             i = i + 1
 
     file = NamedTemporaryFile(suffix = ".xlsx", delete = False)
+    if(len(requests) + len(deliveries) > 0): wb.remove(ws)
 
     try:
         with file as f:
@@ -122,10 +134,10 @@ def form_59 (db, request):
         ws[f"G{12 + i}"] = row[5]
         ws[f"H{12 + i}"] = row[6] if row[6] is not None else "\u2014"
 
-        ws["F46"] = req_by
-        ws["F50"] = date_rec
-        ws["A46"] = iss_by
-        ws["A50"] = date_iss
+    ws["F46"] = req_by
+    ws["F50"] = date_rec
+    ws["A46"] = iss_by
+    ws["A50"] = date_iss
 
     file = NamedTemporaryFile(suffix = ".xlsx", delete = False)
 
@@ -188,7 +200,6 @@ def form_63 (db, request):
         remove(file.name)
 
 def form_69 (db, item):
-    # TODO: Case where overflows happens
     db.execute(f"SELECT ItemName, Category, ItemDescription FROM item WHERE ItemID = '{item}'")
     data = db.fetchone()
     if data is None: raise ItemNotFoundError(item = item)
@@ -210,25 +221,36 @@ def form_69 (db, item):
 
     i = 0
     j = 0
+    ns = None
+    continuePage = False
+    numRows = 18
+    lastBalance = 0
+
     while(i + j != len(requests) + len(deliveries)):
+        if((i + j) % numRows == 0):
+            #Clone worksheet
+            if(i + j > 0): continuePage = True
+            if continuePage: lastBalance = ns[f"H{13 + (numRows - 1)}"].value
+            ns = wb.copy_worksheet(ws)
+
         if(i == len(deliveries)):
-            ws[f"B{13 + i + j}"] = requests[j][1]
+            ns[f"B{13 + ((i + j) % numRows)}"] = requests[j][1]
             db.execute(f"SELECT COUNT(*) + 1 FROM request WHERE hasPropertyApproved = 1 && RequestID < {requests[j][0]}")
-            ws[f"C{13 + i + j}"] = f"PAR-{db.fetchone()[0]}"
-            if i + j == 0: ws[f"D{13 + i + j}"] = requests[j][3]
-            ws[f"E{13 + i + j}"] = requests[j][4]
-            ws[f"F{13 + i + j}"] = requests[j][5]
-            ws[f"H{13 + i + j}"] = ws[f"D{13 + i + j}"].value - ws[f"E{13 + i + j}"].value if i + j == 0 else ws[f"H{12 + i + j}"].value - ws[f"E{13 + i + j}"].value
-            ws[f"I{13 + i + j}"] = requests[j][6]
-            ws[f"J{13 + i + j}"] = requests[j][7]
+            ns[f"C{13 + ((i + j) % numRows)}"] = f"PAR-{db.fetchone()[0]}"
+            if ((i + j) % numRows) == 0: ns[f"D{13 + ((i + j) % numRows)}"] = lastBalance if continuePage else requests[j][3]
+            ns[f"E{13 + ((i + j) % numRows)}"] = requests[j][4]
+            ns[f"F{13 + ((i + j) % numRows)}"] = requests[j][5]
+            ns[f"H{13 + ((i + j) % numRows)}"] = (lastBalance - ns[f"E{13 + ((i + j) % numRows)}"].value if continuePage else ns[f"D{13 + ((i + j) % numRows)}"].value - ns[f"E{13 + ((i + j) % numRows)}"].value) if ((i + j) % numRows) == 0 else ns[f"H{12 + ((i + j) % numRows)}"].value - ns[f"E{13 + ((i + j) % numRows)}"].value
+            ns[f"I{13 + ((i + j) % numRows)}"] = requests[j][6]
+            ns[f"J{13 + ((i + j) % numRows)}"] = requests[j][7]
             j = j + 1
             continue
 
         if(j == len(requests)):
-            ws[f"B{13 + i + j}"] = deliveries[i][0]
-            ws[f"C{13 + i + j}"] = f"D-{deliveries[i][1]}"
-            ws[f"D{13 + i + j}"] = deliveries[i][2]
-            ws[f"H{13 + i + j}"] = ws[f"D{13 + i + j}"].value if i + j == 0 else ws[f"H{12 + i + j}"].value + ws[f"D{13 + i + j}"].value
+            ns[f"B{13 + ((i + j) % numRows)}"] = deliveries[i][0]
+            ns[f"C{13 + ((i + j) % numRows)}"] = f"D-{deliveries[i][1]}"
+            ns[f"D{13 + ((i + j) % numRows)}"] = deliveries[i][2]
+            ns[f"H{13 + ((i + j) % numRows)}"] = (lastBalance + ns[f"D{13 + ((i + j) % numRows)}"].value if continuePage else ns[f"D{13 + ((i + j) % numRows)}"].value) if ((i + j) % numRows) == 0 else ns[f"H{12 + ((i + j) % numRows)}"].value + ns[f"D{13 + ((i + j) % numRows)}"].value
             i = i + 1
             continue
         
@@ -236,24 +258,25 @@ def form_69 (db, item):
         r = f"{requests[j][1]} {requests[j][2]}"
 
         if d > r:
-            ws[f"B{13 + i + j}"] = requests[j][1]
+            ns[f"B{13 + ((i + j) % numRows)}"] = requests[j][1]
             db.execute(f"SELECT COUNT(*) + 1 FROM request WHERE hasPropertyApproved = 1 && RequestID < {requests[j][0]}")
-            ws[f"C{13 + i + j}"] = f"PAR-{db.fetchone()[0]}"
-            if i + j == 0: ws[f"D{13 + i + j}"] = requests[j][3]
-            ws[f"E{13 + i + j}"] = requests[j][4]
-            ws[f"F{13 + i + j}"] = requests[j][5]
-            ws[f"H{13 + i + j}"] = ws[f"D{13 + i + j}"].value - ws[f"E{13 + i + j}"].value if i + j == 0 else ws[f"H{12 + i + j}"].value - ws[f"E{13 + i + j}"].value
-            ws[f"I{13 + i + j}"] = requests[j][6]
-            ws[f"J{13 + i + j}"] = requests[j][7]
+            ns[f"C{13 + ((i + j) % numRows)}"] = f"PAR-{db.fetchone()[0]}"
+            if ((i + j) % numRows) == 0: ns[f"D{13 + ((i + j) % numRows)}"] = lastBalance if continuePage else requests[j][3]
+            ns[f"E{13 + ((i + j) % numRows)}"] = requests[j][4]
+            ns[f"F{13 + ((i + j) % numRows)}"] = requests[j][5]
+            ns[f"H{13 + ((i + j) % numRows)}"] = (lastBalance - ns[f"E{13 + ((i + j) % numRows)}"].value if continuePage else ns[f"D{13 + ((i + j) % numRows)}"].value - ns[f"E{13 + ((i + j) % numRows)}"].value) if ((i + j) % numRows) == 0 else ns[f"H{12 + ((i + j) % numRows)}"].value - ns[f"E{13 + ((i + j) % numRows)}"].value
+            ns[f"I{13 + ((i + j) % numRows)}"] = requests[j][6]
+            ns[f"J{13 + ((i + j) % numRows)}"] = requests[j][7]
             j = j + 1
         else:
-            ws[f"B{13 + i + j}"] = deliveries[i][0]
-            ws[f"C{13 + i + j}"] = f"D-{deliveries[i][1]}"
-            ws[f"D{13 + i + j}"] = deliveries[i][2]
-            ws[f"H{13 + i + j}"] = ws[f"D{13 + i + j}"].value if i + j == 0 else ws[f"H{12 + i + j}"].value + ws[f"D{13 + i + j}"].value
+            ns[f"B{13 + ((i + j) % numRows)}"] = deliveries[i][0]
+            ns[f"C{13 + ((i + j) % numRows)}"] = f"D-{deliveries[i][1]}"
+            ns[f"D{13 + ((i + j) % numRows)}"] = deliveries[i][2]
+            ns[f"H{13 + ((i + j) % numRows)}"] = (lastBalance + ns[f"D{13 + ((i + j) % numRows)}"].value if continuePage else ns[f"D{13 + ((i + j) % numRows)}"].value) if ((i + j) % numRows) == 0 else ns[f"H{12 + ((i + j) % numRows)}"].value + ns[f"D{13 + ((i + j) % numRows)}"].value
             i = i + 1
 
     file = NamedTemporaryFile(suffix = ".xlsx", delete = False)
+    if(len(requests) + len(deliveries) > 0): wb.remove(ws)
 
     try:
         with file as f:
@@ -296,10 +319,10 @@ def form_71 (db, request):
         ws[f"E{11 + i}"] = date_rec
         ws[f"F{11 + i}"] = row[4]
 
-        ws["A45"] = req_by
-        ws["A49"] = date_rec
-        ws["D45"] = iss_by
-        ws["D49"] = date_iss
+    ws["A45"] = req_by
+    ws["A49"] = date_rec
+    ws["D45"] = iss_by
+    ws["D49"] = date_iss
 
     file = NamedTemporaryFile(suffix = ".xlsx", delete = False)
 
@@ -312,21 +335,26 @@ def form_71 (db, request):
         remove(file.name)
 
 def form_73 (items):
-    # TODO: Case where overflows happens
     wb = load_workbook("./src/form_templates/template_73.xlsx", rich_text = True)
     ws = wb.active
 
     ws["G6"] = datetime.today().strftime("%d/%m/%y %H:%M:%S")
 
+    ns = None
+    numRows = 20
+    
     for i in range(len(items)):
-        ws[f"C{15 + i}"] = items[i]["ItemName"]
-        ws[f"D{15 + i}"] = items[i]["ItemDescription"]
-        ws[f"E{15 + i}"] = items[i]["ItemID"]
-        ws[f"F{15 + i}"] = items[i]["Unit"]
-        ws[f"G{15 + i}"] = items[i]["Price"]
-        ws[f"H{15 + i}"] = items[i]["AvailableStock"]
+        if(i % numRows == 0): ns = wb.copy_worksheet(ws)
+
+        ns[f"C{15 + (i % numRows)}"] = items[i]["ItemName"]
+        ns[f"D{15 + (i % numRows)}"] = items[i]["ItemDescription"]
+        ns[f"E{15 + (i % numRows)}"] = items[i]["ItemID"]
+        ns[f"F{15 + (i % numRows)}"] = items[i]["Unit"]
+        ns[f"G{15 + (i % numRows)}"] = items[i]["Price"]
+        ns[f"H{15 + (i % numRows)}"] = items[i]["AvailableStock"]
 
     file = NamedTemporaryFile(suffix = ".xlsx", delete = False)
+    if(len(items) > 0): wb.remove(ws)
 
     try:
         with file as f:
