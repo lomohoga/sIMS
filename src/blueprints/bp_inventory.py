@@ -181,7 +181,7 @@ def request_items ():
                 db.execute(f"SELECT * FROM item WHERE ItemID = '{x['ItemID']}'")
                 if db.fetchone() is None: raise ItemNotFoundError(item = x['ItemID'])
 
-                db.execute(f"INSERT INTO request_item (RequestID, ItemID, RequestQuantity) VALUES ({requestID}, '{x['ItemID']}', {x['RequestQuantity']})")
+                db.execute(f"INSERT INTO request_item (RequestID, ItemID, RequestQuantity, RequestPrice) VALUES ({requestID}, '{x['ItemID']}', {x['RequestQuantity']}, {x['RequestPrice']})")
             cxn.commit()
         except Exception as e:
             current_app.logger.error(str(e))

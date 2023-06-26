@@ -224,6 +224,7 @@
                 "items": Array.from(document.querySelectorAll(".selection-table .table-body .table-row")).map(x => {
                     return {
                         "ItemID": x.firstChild.innerHTML,
+                        "RequestPrice": +x.children[5].querySelector("span:nth-child(2)").innerHTML.replaceAll(/[^0-9\.]/g, ""),
                         "RequestQuantity": +x.children[7].firstChild.value
                     }
                 }),

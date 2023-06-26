@@ -53,7 +53,9 @@ def form_58 (db, item):
 
         if(i == len(deliveries)):
             ns[f"A{13 + ((i + j) % numRows)}"] = requests[j][1]
-            ns[f"B{13 + ((i + j) % numRows)}"] = f"RIS-{requests[j][0]}"
+            db.execute(f"SELECT COUNT(*) + 1 FROM request WHERE RequestID < {requests[j][0]} && StatusID = 4")
+            ris = db.fetchone()[0]
+            ns[f"B{13 + ((i + j) % numRows)}"] = f"RIS-{ris}"
             if ((i + j) % numRows) == 0: ns[f"C{13 + ((i + j) % numRows)}"] = lastBalance if continuePage else requests[j][3]
             ns[f"D{13 + ((i + j) % numRows)}"] = requests[j][4]
             ns[f"E{13 + ((i + j) % numRows)}"] = requests[j][5]
@@ -75,7 +77,9 @@ def form_58 (db, item):
 
         if d > r:
             ns[f"A{13 + ((i + j) % numRows)}"] = requests[j][1]
-            ns[f"B{13 + ((i + j) % numRows)}"] = f"RIS-{requests[j][0]}"
+            db.execute(f"SELECT COUNT(*) + 1 FROM request WHERE RequestID < {requests[j][0]} && StatusID = 4")
+            ris = db.fetchone()[0]
+            ns[f"B{13 + ((i + j) % numRows)}"] = f"RIS-{ris}"
             if ((i + j) % numRows) == 0: ns[f"C{13 + ((i + j) % numRows)}"] = lastBalance if continuePage else requests[j][3]
             ns[f"D{13 + ((i + j) % numRows)}"] = requests[j][4]
             ns[f"E{13 + ((i + j) % numRows)}"] = requests[j][5]
@@ -114,7 +118,7 @@ def form_59 (db, request):
     db.execute(f"SELECT DateReceived, DateIssued FROM request WHERE RequestID = {request}")
     (date_rec, date_iss) = db.fetchone()
 
-    db.execute(f"SELECT QuantityIssued, Unit, Price, Price * QuantityIssued, ItemDescription, ItemID, ShelfLife FROM request_item INNER JOIN stock USING (ItemID) INNER JOIN request USING (RequestID) WHERE RequestID = '{request}';")
+    db.execute(f"SELECT QuantityIssued, Unit, RequestPrice, RequestPrice * QuantityIssued, ItemDescription, ItemID, ShelfLife FROM request_item INNER JOIN stock USING (ItemID) INNER JOIN request USING (RequestID) WHERE RequestID = '{request}';")
     items = db.fetchall()
 
     if len(items) == 0: return None
@@ -163,13 +167,16 @@ def form_63 (db, request):
     db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) AS ReceivedBy, DateReceived FROM request INNER JOIN user ON (Username = ReceivedBy) WHERE RequestID = {request}")
     req_received = db.fetchone()
 
+    db.execute(f"SELECT COUNT(*) + 1 FROM request WHERE RequestID < {request} && StatusID = 4")
+    ris = db.fetchone()[0]
+
     wb = load_workbook("./src/form_templates/template_63.xlsx", rich_text = True)
     ws = wb.active
+    ws["G9"] = ris
 
     for i in range(len(data)):
         req = data[i]
 
-        ws["G9"] = request
         ws[f"A{12 + i}"] = req[1]
         ws[f"C{12 + i}"] = req[2]
         ws[f"D{12 + i}"] = req[3]
@@ -209,7 +216,7 @@ def form_69 (db, item):
     deliveries = db.fetchall()
 
     #get request items
-    db.execute(f"SELECT * FROM (SELECT RequestID, DateReceived, TimeReceived, DeliveryStock, QuantityIssued, UPPER(CONCAT(FirstName, ' ', LastName)) as RequestedBy, Price * QuantityIssued, Remarks FROM request_item INNER JOIN (SELECT ItemID, Price, COALESCE(SUM(IF(ShelfLife IS NULL OR DATEDIFF(CURDATE(), ADDDATE(DeliveryDate, ShelfLife)) <= 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) GROUP BY ItemID) AS w USING (ItemID) INNER JOIN request USING (RequestID) INNER JOIN user ON RequestedBy = Username WHERE ItemID = '{item}' AND StatusID = 4 ORDER BY RequestID DESC) AS x ORDER BY RequestID ASC")
+    db.execute(f"SELECT * FROM (SELECT RequestID, DateReceived, TimeReceived, DeliveryStock, QuantityIssued, UPPER(CONCAT(FirstName, ' ', LastName)) as RequestedBy, RequestPrice * QuantityIssued, Remarks FROM request_item INNER JOIN (SELECT ItemID, Price, COALESCE(SUM(IF(ShelfLife IS NULL OR DATEDIFF(CURDATE(), ADDDATE(DeliveryDate, ShelfLife)) <= 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) GROUP BY ItemID) AS w USING (ItemID) INNER JOIN request USING (RequestID) INNER JOIN user ON RequestedBy = Username WHERE ItemID = '{item}' AND StatusID = 4 ORDER BY RequestID DESC) AS x ORDER BY RequestID ASC")
     requests = db.fetchall()
 
     wb = load_workbook("./src/form_templates/template_69.xlsx", rich_text = True)
@@ -300,7 +307,7 @@ def form_71 (db, request):
     db.execute(f"SELECT DateReceived, DateIssued FROM request WHERE RequestID = {request}")
     (date_rec, date_iss) = db.fetchone()
 
-    db.execute(f"SELECT QuantityIssued, Unit, ItemDescription, ItemID, Price * QuantityIssued FROM request_item INNER JOIN stock USING (ItemID) INNER JOIN request USING (RequestID) WHERE RequestID = '{request}';")
+    db.execute(f"SELECT QuantityIssued, Unit, ItemDescription, ItemID, RequestPrice * QuantityIssued FROM request_item INNER JOIN stock USING (ItemID) INNER JOIN request USING (RequestID) WHERE RequestID = '{request}';")
     items = db.fetchall()
 
     if len(items) == 0: return None
