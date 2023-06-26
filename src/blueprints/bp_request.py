@@ -31,11 +31,9 @@ def search_requests ():
 
     w = f"({' AND '.join(conditions)})" if len(conditions) > 0 else ""
     cxn = None
-
     try:
         cxn = connect_db()
         db = cxn.cursor()
-
         db.execute(f"SELECT RequestID, RequestedBy, DATE_FORMAT(RequestDate, '%d %b %Y') AS RequestDate, StatusName as Status, Purpose, ItemID, ItemName, Category, ItemDescription, RequestQuantity, QuantityIssued, AvailableStock, Unit, Remarks FROM request INNER JOIN request_status USING (StatusID) INNER JOIN request_item USING (RequestID) INNER JOIN stock USING (ItemID){' WHERE RequestID IN (SELECT DISTINCT RequestID FROM request INNER JOIN request_item USING (RequestID) INNER JOIN item USING (ItemID) WHERE ' + w + ')' if w != '' else ''} ORDER BY RequestID DESC, ItemID")
         requests = db.fetchall()
     except Exception as e:
@@ -87,8 +85,7 @@ def deny_request ():
 
         db.execute(f"UPDATE request SET StatusID = 5, ActingAdmin = '{session['user']['Username']}', DateCancelled = CURDATE() WHERE RequestID = {req}")
         for x in remarks:
-            if x["Remarks"] is not None:
-                db.execute(f"UPDATE request_item SET Remarks = '{x['Remarks']}' WHERE RequestID = {req} && ItemID = '{x['ItemID']}'")
+            if x["Remarks"] is not None: db.execute(f"UPDATE request_item SET Remarks = '{x['Remarks']}' WHERE RequestID = {req} && ItemID = '{x['ItemID']}'")
         cxn.commit()
     except Exception  as e:
         current_app.logger.error(str(e))
@@ -105,7 +102,6 @@ def cancel_request ():
     req = request.get_json()['RequestID']
     remarks = request.get_json()['Remarks']
     cxn = None
-    
     try:
         cxn = connect_db()
         db = cxn.cursor()
@@ -117,8 +113,7 @@ def cancel_request ():
 
         db.execute(f"UPDATE request SET StatusID = 6, CancelledBy = '{session['user']['Username']}', DateCancelled = CURDATE() WHERE RequestID = {req}")
         for x in remarks:
-            if x["Remarks"] is not None:
-                db.execute(f"UPDATE request_item SET Remarks = '{x['Remarks']}' WHERE RequestID = {req} && ItemID = '{x['ItemID']}'")
+            if x["Remarks"] is not None: db.execute(f"UPDATE request_item SET Remarks = '{x['Remarks']}' WHERE RequestID = {req} && ItemID = '{x['ItemID']}'")
         cxn.commit()
     except Exception as e:
         current_app.logger.error(str(e))
@@ -134,7 +129,6 @@ def cancel_request ():
 def receive_request ():
     req = request.get_json()['RequestID']
     cxn = None
-
     try:
         cxn = connect_db()
         db = cxn.cursor()
@@ -154,7 +148,6 @@ def receive_request ():
         g = db.fetchone()
         if(g[0] > 0):
             db.execute(f"UPDATE request SET hasPropertyApproved = 1 WHERE RequestID = {req};")
-            
         cxn.commit()
     except Exception as e:
         current_app.logger.error(str(e))
@@ -170,7 +163,6 @@ def receive_request ():
 def issue_item ():
     body = request.get_json()
     cxn = None
-
     try:
         cxn = connect_db()
         db = cxn.cursor()
@@ -207,7 +199,6 @@ def issue_request ():
     req = request.get_json()['RequestID']
     remarks = request.get_json()['Remarks']
     cxn = None
-    
     try:
         cxn = connect_db()
         db = cxn.cursor()
@@ -228,8 +219,7 @@ def issue_request ():
         
         db.execute(f"UPDATE request SET StatusID = 3, IssuedBy = '{session['user']['Username']}', DateIssued = CURDATE() WHERE RequestID = {req}")
         for x in remarks:
-            if x["Remarks"] is not None:
-                db.execute(f"UPDATE request_item SET Remarks = '{x['Remarks']}' WHERE RequestID = {req} && ItemID = '{x['ItemID']}'")
+            if x["Remarks"] is not None: db.execute(f"UPDATE request_item SET Remarks = '{x['Remarks']}' WHERE RequestID = {req} && ItemID = '{x['ItemID']}'")
         cxn.commit()
     except Exception as e:
         current_app.logger.error(str(e))

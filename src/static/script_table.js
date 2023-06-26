@@ -411,7 +411,7 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                                 },
                                 "body": JSON.stringify({
                                     "RequestID": req['RequestID'],
-                                    "Remarks": Array.from(document.querySelectorAll("#req-remarks li:not([style*='display: none']) input[type=text]")).map(row => {return {"ItemID": row.id, "Remarks": row.value === '' ? null : row.value}}),
+                                    "Remarks": Array.from(document.querySelectorAll("#req-remarks li:not([style*='display: none']) input[type=text]")).map(row => {return {"ItemID": row.id, "Remarks": row.value.trim() === '' ? null : row.value}}),
                                 })
                             }).then(async d => {
                                 if (d.status === 200) {
@@ -481,7 +481,7 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                             },
                             "body": JSON.stringify({
                                 "RequestID": req['RequestID'],
-                                "Remarks": Array.from(document.querySelectorAll("#req-remarks li:not([style*='display: none']) input[type=text]")).map(row => {return {"ItemID": row.id, "Remarks": row.value === '' ? null : row.value}}),
+                                "Remarks": Array.from(document.querySelectorAll("#req-remarks li:not([style*='display: none']) input[type=text]")).map(row => {return {"ItemID": row.id, "Remarks": row.value.trim() === '' ? null : row.value}}),
                             })
                         }).then(async d => {
                             if (d.status === 200) {
@@ -608,7 +608,7 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                             },
                             "body": JSON.stringify({
                                 "RequestID": req['RequestID'],
-                                "Remarks": Array.from(document.querySelectorAll("#req-remarks li:not([style*='display: none']) input[type=text]")).map(row => {return {"ItemID": row.id, "Remarks": row.value === '' ? null : row.value}}),
+                                "Remarks": Array.from(document.querySelectorAll("#req-remarks li:not([style*='display: none']) input[type=text]")).map(row => {return {"ItemID": row.id, "Remarks": row.value.trim() === '' ? null : row.value}}),
                                 //"Remarks": document.querySelector("#remarks").value === '' ? null : document.querySelector("#remarks").value
                             })
                         }).then(async d => {

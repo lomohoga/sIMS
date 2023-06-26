@@ -17,20 +17,18 @@ def deliveries ():
 @bp_delivery.route('/search')
 @login_required
 def search_deliveries ():
-    if session['user']['RoleID'] != 1: 
-        return render_template("error.html", errcode = 403, errmsg = "You do not have permission to search for deliveries."), 403
+    if session['user']['RoleID'] != 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to search for deliveries."), 403
 
-    cxn = None
     keywords = [] if "keywords" not in request.args else [decode_keyword(x).lower() for x in request.args.get("keywords").split(" ")]
     conditions = []
     for x in keywords:
         conditions.append(f"(ItemID LIKE '%{x}%' OR ItemName LIKE '%{x}%' OR ItemDescription LIKE '%{x}%' OR Source LIKE '%{x}%' OR Supplier LIKE '%{x}%' OR Category LIKE '%{x}%')")
     query = f"SELECT DeliveryID, ItemID, ItemName, Category, ItemDescription, DeliveryQuantity, Unit, DeliveryPrice, ShelfLife, DATE_FORMAT(delivery.DeliveryDate, '%d %b %Y') as DeliveryDate, Source, ReceivedBy, IsExpired, Supplier FROM delivery INNER JOIN item USING (ItemID) INNER JOIN expiration USING (DeliveryID) {'' if len(conditions) == 0 else 'WHERE (' + ' AND '.join(conditions) + ')'} ORDER BY DeliveryID DESC"
     
+    cxn = None
     try:
         cxn = connect_db()
         db = cxn.cursor()
-
         db.execute(query)
         deliveries = db.fetchall()
     except Exception as e:
@@ -51,7 +49,6 @@ def add_deliveries ():
     if request.method == 'POST':
         values = request.get_json()
         cxn = None
-
         try:
             cxn = connect_db()
             db = cxn.cursor()

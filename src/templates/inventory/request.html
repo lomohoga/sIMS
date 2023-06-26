@@ -228,7 +228,7 @@
                         "RequestQuantity": +x.children[7].firstChild.value
                     }
                 }),
-                "purpose": document.querySelector("#purpose").value
+                "purpose": document.querySelector("#purpose").value.trim()
             })
         }).then(async d => {
             if (d.status === 200) window.location = "{{ url_for('bp_inventory.inventory') }}";

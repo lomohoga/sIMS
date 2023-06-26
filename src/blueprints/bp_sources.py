@@ -7,16 +7,19 @@ from src.blueprints.exceptions import SourceNotFoundError, ExistingSourceError, 
 
 bp_sources = Blueprint('bp_sources', __name__, url_prefix = "/sources")
 
-# route for inventory
+# route for sources
 @bp_sources.route('/')
 @login_required
 def sources ():
-    return render_template("sources/sources.html", active = "deliveries")
+    if session['user']['RoleID'] != 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to view sources."), 403
+    else: return render_template("sources/sources.html", active = "deliveries")
 
-# route for item search
+# route for source search
 @bp_sources.route('/search')
 @login_required
 def search_sources ():
+    if session['user']['RoleID'] != 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to search for sources."), 403
+
     keywords = [] if "keywords" not in request.args else [decode_keyword(x).lower() for x in request.args.get("keywords").split(" ")]
     conditions = []
     for x in keywords:
@@ -24,11 +27,9 @@ def search_sources ():
     query = f"SELECT * from sources {'' if len(conditions) == 0 else 'WHERE (' + ' AND '.join(conditions) + ')'};"
 
     cxn = None
-
     try:
         cxn = connect_db()
         db = cxn.cursor()
-
         db.execute(query)
         sources = db.fetchall()
     except Exception as e:
@@ -38,24 +39,20 @@ def search_sources ():
         if cxn is not None: cxn.close()
 
     return { "sources": [
-        {
-            "SourceName": d[0],
-        } for d in sources
+        {"SourceName": d[0],} for d in sources
     ]}
 
-# route for item addition
+# route for source addition
 @bp_sources.route('/add', methods = ["GET", "POST"])
 @login_required
 def add_sources ():
     if request.method == 'GET':
-        if session['user']['RoleID'] != 1: 
-            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to add sources to the database."), 403
-        else:
-            return render_template("sources/add.html")
+        if session['user']['RoleID'] != 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to add sources to the database."), 403
+        else: return render_template("sources/add.html")
 
     if request.method == 'POST':        
-        cxn = None
         values = request.get_json()
+        cxn = None
         try:
             cxn = connect_db()
             db = cxn.cursor()
@@ -79,15 +76,13 @@ def add_sources ():
         
         return Response(status = 200)
 
-# route for item removal
+# route for source removal
 @bp_sources.route('/remove', methods = ["GET", "POST"])
 @login_required
 def remove_sources ():
     if request.method == "GET":
-        if session['user']['RoleID'] != 1: 
-            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to remove sources from the database."), 403
-        else: 
-            return render_template("sources/remove.html")
+        if session['user']['RoleID'] != 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to remove sources from the database."), 403
+        else: return render_template("sources/remove.html")
 
     if request.method == "POST":
         sources = request.get_json()["sources"]
@@ -115,15 +110,13 @@ def remove_sources ():
 
         return Response(status = 200)
 
-# route for item update
+# route for source update
 @bp_sources.route('/update', methods = ["GET", "POST"])
 @login_required
 def update_sources ():
     if request.method == "GET":
-        if session['user']['RoleID'] != 1: 
-            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to update sources in the database."), 403
-        else: 
-            return render_template("sources/update.html")
+        if session['user']['RoleID'] != 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to update sources in the database."), 403
+        else: return render_template("sources/update.html")
 
     if request.method == "POST":
         values = request.get_json()["values"]

@@ -12,20 +12,17 @@ bp_form = Blueprint("bp_form", __name__, url_prefix = "/forms")
 @bp_form.route('/')
 @login_required
 def forms ():
-    if session['user']['RoleID'] != 1: 
-        return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
-    else:
-        return render_template("forms/forms.html", active = "forms")
+    if session['user']['RoleID'] != 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
+    else: return render_template("forms/forms.html", active = "forms")
 
 # route for generating appendix 58
 @bp_form.route('/58')
 @login_required
 def generate_58 ():
-    if session['user']['RoleID'] != 1: 
-        return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
+    if session['user']['RoleID'] != 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
 
-    cxn = None
     item = request.args["item"]
+    cxn = None
     try:
         cxn = connect_db()
         db = cxn.cursor(buffered=True)
@@ -46,12 +43,11 @@ def generate_58 ():
 @bp_form.route('/5971')
 @login_required
 def generate_5971 ():
-    if session['user']['RoleID'] != 1: 
-        return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
+    if session['user']['RoleID'] != 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
 
+    item = request.args["item"]
     cxn = None
     form = None
-    item = request.args["item"]
     try:
         cxn = connect_db()
         db = cxn.cursor(buffered=True)
@@ -79,11 +75,10 @@ def generate_5971 ():
 @bp_form.route('/63')
 @login_required
 def generate_63 ():
-    if session['user']['RoleID'] != 1: 
-        return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
+    if session['user']['RoleID'] != 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
 
-    cxn = None
     item = request.args["item"]
+    cxn = None
     try:
         cxn = connect_db()
         db = cxn.cursor(buffered=True)
@@ -104,11 +99,10 @@ def generate_63 ():
 @bp_form.route('/69')
 @login_required
 def generate_69 ():
-    if session['user']['RoleID'] != 1: 
-        return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
+    if session['user']['RoleID'] != 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
 
-    cxn = None
     item = request.args["item"]
+    cxn = None
     try:
         cxn = connect_db()
         db = cxn.cursor(buffered=True)
@@ -129,11 +123,9 @@ def generate_69 ():
 @bp_form.route('/73', methods = ["POST"])
 @login_required
 def generate_73 ():
-    if session['user']['RoleID'] != 1: 
-        return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
+    if session['user']['RoleID'] != 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to generate forms."), 403
 
     items = request.get_json()["items"]
-
     try:
         return form_73(items)
     except Exception as e:

@@ -8,16 +8,19 @@ from src.blueprints.exceptions import CategoryNotFoundError, ExistingCategoryErr
 
 bp_categories = Blueprint('bp_categories', __name__, url_prefix = "/categories")
 
-# route for inventory
+# route for categories
 @bp_categories.route('/')
 @login_required
 def categories ():
-    return render_template("categories/categories.html", active = "inventory")
+    if session['user']['RoleID'] != 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to view categories."), 403
+    else: return render_template("categories/categories.html", active = "inventory")
 
-# route for item search
+# route for categories search
 @bp_categories.route('/search')
 @login_required
 def search_categories ():
+    if session['user']['RoleID'] != 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to search for categories."), 403
+
     keywords = [] if "keywords" not in request.args else [decode_keyword(x).lower() for x in request.args.get("keywords").split(" ")]
     conditions = []
     for x in keywords:
@@ -25,11 +28,9 @@ def search_categories ():
     query = f"SELECT * from categories {'' if len(conditions) == 0 else 'WHERE (' + ' AND '.join(conditions) + ')'};"
 
     cxn = None
-
     try:
         cxn = connect_db()
         db = cxn.cursor()
-
         db.execute(query)
         categories = db.fetchall()
     except Exception as e:
@@ -40,19 +41,17 @@ def search_categories ():
 
     return { "categories": format_categories(categories) }
 
-# route for item addition
+# route for category addition
 @bp_categories.route('/add', methods = ["GET", "POST"])
 @login_required
 def add_categories ():
     if request.method == 'GET':
-        if session['user']['RoleID'] != 1: 
-            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to add items to the database."), 403
-        else:
-            return render_template("categories/add.html")
+        if session['user']['RoleID'] != 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to add categories to the database."), 403
+        else: return render_template("categories/add.html")
 
     if request.method == 'POST':        
-        cxn = None
         values = request.get_json()
+        cxn = None
         try:
             cxn = connect_db()
             db = cxn.cursor()
@@ -76,15 +75,13 @@ def add_categories ():
         
         return Response(status = 200)
 
-# route for item removal
+# route for category removal
 @bp_categories.route('/remove', methods = ["GET", "POST"])
 @login_required
 def remove_categories ():
     if request.method == "GET":
-        if session['user']['RoleID'] != 1: 
-            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to remove items from the database."), 403
-        else: 
-            return render_template("categories/remove.html")
+        if session['user']['RoleID'] != 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to remove categories from the database."), 403
+        else: return render_template("categories/remove.html")
 
     if request.method == "POST":
         categories = request.get_json()["categories"]
@@ -112,15 +109,13 @@ def remove_categories ():
 
         return Response(status = 200)
 
-# route for item update
+# route for categories update
 @bp_categories.route('/update', methods = ["GET", "POST"])
 @login_required
 def update_categories ():
     if request.method == "GET":
-        if session['user']['RoleID'] != 1: 
-            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to update items in the database."), 403
-        else: 
-            return render_template("categories/update.html")
+        if session['user']['RoleID'] != 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to update categories in the database."), 403
+        else: return render_template("categories/update.html")
 
     if request.method == "POST":
         values = request.get_json()["values"]

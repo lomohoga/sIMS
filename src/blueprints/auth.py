@@ -1,9 +1,6 @@
 from hashlib import sha256
 from functools import wraps
-
 from flask import redirect, url_for, session
-
-from src.blueprints.database import connect_db
 
 # decorator for pages that require authentication
 def login_required (view):

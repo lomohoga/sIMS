@@ -87,10 +87,8 @@ bp_user = Blueprint("bp_user", __name__, url_prefix = "/users")
 @bp_user.route('/')
 @login_required
 def show_users ():
-    if session['user']['RoleID'] != 0: 
-        return render_template("error.html", errcode = 403, errmsg = "You do not have permission to see the users in the database."), 403
-    else: 
-        return render_template("user/users.html", active="users")
+    if session['user']['RoleID'] != 0: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to see the users in the database."), 403
+    else: return render_template("user/users.html", active="users")
 
 # TODO: Change this to other email address
 sender_address = 'iamjhin01@gmail.com'
@@ -101,15 +99,13 @@ sender_pass = 'qenmyutlantkdgap'
 @login_required
 def add_users ():
     if request.method == 'GET':
-        if session['user']['RoleID'] != 0: 
-            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to add users to the database."), 403
-        else: 
-            return render_template("user/add.html")
+        if session['user']['RoleID'] != 0: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to add users to the database."), 403
+        else: return render_template("user/add.html")
 
     if request.method == 'POST':
+        values = request.get_json()["values"]
         cxn = None
         mail_session = None
-        values = request.get_json()["values"]
         try:
             cxn = connect_db()
             db = cxn.cursor()
@@ -148,16 +144,13 @@ def add_users ():
 @login_required
 def remove_users ():
     if request.method == "GET":
-        if session['user']['RoleID'] != 0: 
-            return render_template("error.html", errcode = 403, errmsg = "You do not have permission to remove users from the database."), 403
-        else: 
-            return render_template("user/remove.html")
+        if session['user']['RoleID'] != 0: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to remove users from the database."), 403
+        else: return render_template("user/remove.html")
 
     if request.method == "POST":
         users = request.get_json()["users"]
         cxn = None
         mail_session = None
-
         try:
             cxn = connect_db()
             db = cxn.cursor()
@@ -257,17 +250,18 @@ def demote_user ():
 @bp_user.route('/search')
 @login_required
 def search_users ():
+    if session['user']['RoleID'] != 0: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to search for users from the database."), 403
+
     keywords = [] if "keywords" not in request.args else [decode_keyword(x).lower() for x in request.args.get("keywords").split(" ")]
     conditions = []
     for x in keywords:
         conditions.append(f"(Username LIKE '%{x}%' OR FirstName LIKE '%{x}%' OR LastName LIKE '%{x}%')")
     query = f"SELECT Username, FirstName, LastName, Email, RoleName as Role FROM user LEFT JOIN role USING (RoleID) {'' if len(conditions) == 0 else 'WHERE (' + ' AND '.join(conditions) + ')'} ORDER BY Username"
+    
     cxn = None
-
     try:
         cxn = connect_db()
         db = cxn.cursor()
-
         db.execute(query)
         users = db.fetchall()
     except Exception as e:
@@ -311,9 +305,9 @@ def check_email ():
 @bp_user.route('/generate_code', methods = ["POST"])
 def generate_code (email = ''):
     if (email == ''): email = request.get_json()["email"]
+    code_key = randbelow(9000) + 1000
     cxn = None
     mail_session = None
-    code_key = randbelow(9000) + 1000
     try:
         cxn = connect_db()
         db = cxn.cursor()
@@ -364,7 +358,6 @@ def check_code ():
 def forgot_password ():
     r = request.get_json()
     email, password = r['email'], r['new-password']
-    
     cxn = None
     mail_session = None
     try:

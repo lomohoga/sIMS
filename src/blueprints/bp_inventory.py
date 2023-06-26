@@ -25,11 +25,9 @@ def search_items ():
     query = f"SELECT * from stock {'' if len(conditions) == 0 else 'WHERE (' + ' AND '.join(conditions) + ')'} ORDER BY ItemID"
 
     cxn = None
-
     try:
         cxn = connect_db()
         db = cxn.cursor()
-
         db.execute(query)
         items = db.fetchall()
     except Exception as e:
@@ -51,7 +49,6 @@ def add_items ():
     if request.method == 'POST':        
         cxn = None
         values = request.get_json()
-
         try:
             cxn = connect_db()
             db = cxn.cursor()
@@ -161,9 +158,9 @@ def request_items ():
         else: return render_template("inventory/request.html")
         
     if (request.method == "POST"):
-        cxn = None
         req = request.get_json()["items"]
         purpose = request.get_json()["purpose"]
+        cxn = None
         try:
             cxn = connect_db()
             db = cxn.cursor()
