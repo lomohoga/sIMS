@@ -25,7 +25,7 @@ def search_deliveries ():
     conditions = []
     for x in keywords:
         conditions.append(f"(ItemID LIKE '%{x}%' OR ItemName LIKE '%{x}%' OR ItemDescription LIKE '%{x}%' OR Source LIKE '%{x}%' OR Supplier LIKE '%{x}%' OR Category LIKE '%{x}%')")
-    query = f"SELECT DeliveryID, ItemID, ItemName, Category, ItemDescription, DeliveryQuantity, Unit, ShelfLife, DATE_FORMAT(delivery.DeliveryDate, '%d %b %Y') as DeliveryDate, Source, ReceivedBy, IsExpired, Supplier FROM delivery INNER JOIN item USING (ItemID) INNER JOIN expiration USING (DeliveryID) {'' if len(conditions) == 0 else 'WHERE (' + ' AND '.join(conditions) + ')'} ORDER BY DeliveryID DESC"
+    query = f"SELECT DeliveryID, ItemID, ItemName, Category, ItemDescription, DeliveryQuantity, Unit, DeliveryPrice, ShelfLife, DATE_FORMAT(delivery.DeliveryDate, '%d %b %Y') as DeliveryDate, Source, ReceivedBy, IsExpired, Supplier FROM delivery INNER JOIN item USING (ItemID) INNER JOIN expiration USING (DeliveryID) {'' if len(conditions) == 0 else 'WHERE (' + ' AND '.join(conditions) + ')'} ORDER BY DeliveryID DESC"
     
     try:
         cxn = connect_db()
@@ -65,7 +65,8 @@ def add_deliveries ():
                 db.execute(f"SELECT * FROM item WHERE ItemID = '{v['ItemID']}'")
                 if db.fetchone() is None: raise ItemNotFoundError(item = v['ItemID'])
 
-                db.execute(f"INSERT INTO delivery (ItemID, DeliveryQuantity, DeliveryDate, ReceivedBy, Source, Supplier) VALUES ('{v['ItemID']}', {v['DeliveryQuantity']}, '{v['DeliveryDate']}', '{session['user']['Username']}', '{v['Source']}', '{v['Supplier']}')")
+                db.execute(f"INSERT INTO delivery (ItemID, DeliveryQuantity, DeliveryDate, ReceivedBy, Source, Supplier, DeliveryPrice) VALUES ('{v['ItemID']}', {v['DeliveryQuantity']}, '{v['DeliveryDate']}', '{session['user']['Username']}', '{v['Source']}', '{v['Supplier']}', '{v['DeliveryPrice']}')")
+                db.execute(f"UPDATE item SET Price = {v['DeliveryPrice']} WHERE ItemID = '{v['ItemID']}'")
             cxn.commit()
         except Exception as e:
             current_app.logger.error(str(e))

@@ -66,9 +66,9 @@ def add_items ():
                 if db.fetchone() is not None: raise ExistingItemError(item = v['ItemID'])
 
                 if(v['Category'] is None):
-                    db.execute(f"INSERT INTO item VALUES ('{v['ItemID']}', '{escape(v['ItemName'])}', {'NULL'}, '{escape(v['ItemDescription'])}', {'NULL' if v['ShelfLife'] is None else v['ShelfLife']}, {v['Price']}, '{v['Unit']}')")
+                    db.execute(f"INSERT INTO item (ItemID,ItemName,Category,ItemDescription,ShelfLife,Unit) VALUES ('{v['ItemID']}', '{escape(v['ItemName'])}', {'NULL'}, '{escape(v['ItemDescription'])}', {'NULL' if v['ShelfLife'] is None else v['ShelfLife']}, '{v['Unit']}')")
                 else:
-                    db.execute(f"INSERT INTO item VALUES ('{v['ItemID']}', '{escape(v['ItemName'])}', '{v['Category']}', '{escape(v['ItemDescription'])}', {'NULL' if v['ShelfLife'] is None else v['ShelfLife']}, {v['Price']}, '{v['Unit']}')")
+                    db.execute(f"INSERT INTO item (ItemID,ItemName,Category,ItemDescription,ShelfLife,Unit) VALUES ('{v['ItemID']}', '{escape(v['ItemName'])}', '{v['Category']}', '{escape(v['ItemDescription'])}', {'NULL' if v['ShelfLife'] is None else v['ShelfLife']}, '{v['Unit']}')")
             cxn.commit()
         except Exception as e:
             current_app.logger.error(str(e))

@@ -15,7 +15,6 @@
                 <div>Category</div>
                 <div>Description</div>
                 <div>Shelf Life</div>
-                <div>Unit Price</div>
                 <div>Unit</div>
                 <div></div>
             </div>
@@ -57,7 +56,7 @@
         let row = document.createElement("div");
         row.classList.add("table-row");
 
-        for (let i = 0; i < 7; i++) {
+        for (let i = 0; i < 6; i++) {
             let el;
 
             if (i === 3) {
@@ -84,16 +83,15 @@
                 if (i === 1) { el.type = "text"; el.maxLength = 20; }
                 if (i === 3) { el.type = "text"; el.maxLength = 100; }
                 if (i === 4) { el.type = "number"; el.min = 1; el.step = 1; }
-                if (i === 5) { el.type = "number"; el.min = 0; el.step = 0.01; }
-                if (i === 6) { el.type = "text"; el.maxLength = 20; }
+                if (i === 5) { el.type = "text"; el.maxLength = 20; }
             }
 
             let wrapper = document.createElement("div");
 
             if (i === 0) wrapper.classList.add("mono");
             if (i === 3) wrapper.classList.add("left");
-            if (i === 4 || i === 5) wrapper.classList.add("right");
-            if (i === 4 || i === 5) wrapper.classList.add("tabnum");
+            if (i === 4) wrapper.classList.add("right");
+            if (i === 4) wrapper.classList.add("tabnum");
 
             wrapper.appendChild(el);
             
@@ -165,8 +163,7 @@
                 "Category": children[2].firstChild.value === "None" ? null : children[2].firstChild.value,
                 "ItemDescription": children[3].firstChild.value,
                 "ShelfLife": children[4].lastChild.value === "-1" ? null : +children[4].firstChild.value * +children[4].lastChild.value,
-                "Price": +children[5].firstChild.value,
-                "Unit": children[6].firstChild.value.toLowerCase(),
+                "Unit": children[5].firstChild.value.toLowerCase(),
             })
         }
         

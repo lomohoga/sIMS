@@ -71,14 +71,15 @@
                 <div>Name</div>
                 <div>Category</div>
                 <div>Description</div>
-                <div>
+                <!-- <div>
                     <span>
                         Shelf Life
                         <br>
                         <span style="font-weight: initial; font-style: italic; font-size: 80%;">(days)</span>
                     </span>
-                </div>
+                </div> -->
                 <div>Delivery Date</div>
+                <div>Unit Price</div>
                 <div>Source of Fund</div>
                 <div>Supplier</div>
                 <div>Delivery Quantity</div>
@@ -110,7 +111,10 @@
     function selectItem (row) {
         let clone = row.cloneNode(true);
         clone.removeChild(clone.querySelector(".tabnum ~ div"));
+        let lastPrice = +clone.querySelector(".tabnum span:nth-child(2)").innerHTML.replaceAll(/[^0-9\.]/g, "");
+        console.log(lastPrice)
         clone.removeChild(clone.querySelector(".tabnum"));
+        clone.removeChild(clone.querySelector("div:nth-child(5)"));
 
         let d1 = document.createElement("div");
         let date = document.createElement("input");
@@ -119,6 +123,17 @@
         date.value = `${v.getFullYear()}-${(v.getMonth() + 1).toString().padStart(2, "0")}-${(v.getDate()).toString().padStart(2, "0")}`;
         d1.appendChild(date);
         clone.insertBefore(d1, clone.lastChild);
+
+        let d5 = document.createElement("div");
+        let w = document.createElement("input");
+        w.type = "number";
+        w.value = lastPrice;
+        w.min = 0;
+        w.step = 0.01
+        d5.classList.add("tabnum")
+        d5.classList.add("right")
+        d5.appendChild(w)
+        clone.insertBefore(d5, clone.lastChild);
 
         let d3 = document.createElement("div");
         let src = document.createElement("select");
@@ -201,7 +216,8 @@
 
             values.push({
                 "ItemID": children[0].innerText,
-                "DeliveryDate": children[5].firstChild.value,
+                "DeliveryDate": children[4].firstChild.value,
+                "DeliveryPrice": children[5].firstChild.value,
                 "Source": children[6].firstChild.value,
                 "Supplier": children[7].firstChild.value,
                 "DeliveryQuantity": +children[8].firstChild.value,

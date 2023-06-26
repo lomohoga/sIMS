@@ -10,7 +10,7 @@ const itemColumns = ["ItemID", "ItemName", "Category", "ItemDescription", "Shelf
 const categoriesColumns = ["CategoryName", "CategoryDescription"];
 const sourcesColumns = ["SourceName"];
 const requestColumns = ["RequestID", "RequestedBy", "RequestDate", "Status", "ItemID", "ItemName", "Category", "ItemDescription", "RequestQuantity", "QuantityIssued", "AvailableStock", "Unit"];
-const deliveryColumns = ["DeliveryID", "ItemID", "ItemName", "Category", "ItemDescription", "DeliveryQuantity", "Unit", "ShelfLife", "DeliveryDate", "Source", "Supplier", "IsExpired"];
+const deliveryColumns = ["DeliveryID", "ItemID", "ItemName", "Category", "ItemDescription", "DeliveryQuantity", "Unit", "DeliveryPrice", "ShelfLife", "DeliveryDate", "Source", "Supplier", "IsExpired"];
 const userColumns = ["Username", "FirstName", "LastName", "Email", "Role"];
 
 // converts escaped characters in keywords
@@ -687,10 +687,22 @@ async function populateDeliveries (tbody, keyword = "") {
                     span.innerText = "expired";
                     td.appendChild(span);
                 }
-            } else td.innerText = y;
+            } 
+            else if (i === "DeliveryPrice") {
+                let t0 = document.createElement("div");
+                t0.classList.add("currency");
+                let [t1, t2] = [document.createElement("span"), document.createElement("span")];
+                t1.innerHTML = y[0];
+                t2.innerHTML = y.slice(1);
+                t0.appendChild(t1);
+                t0.appendChild(t2);
+                td.appendChild(t0);
+            }
+            else td.innerText = y;
 
             if (i === "ItemID") td.classList.add("mono");
             if (i === "ItemDescription") td.classList.add("left");
+            if (i === "DeliveryPrice") td.classList.add("tabnum");
 
             tr.appendChild(td);
         }
