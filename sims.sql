@@ -32,6 +32,7 @@ CREATE TABLE `delivery` (
   `Time` time NOT NULL DEFAULT (curtime()),
   `Supplier` varchar(50) DEFAULT NULL,
   `DeliveryPrice` decimal(18,2) NOT NULL,
+  `AvailableUnit` int NOT NULL,
   PRIMARY KEY (`DeliveryID`),
   KEY `ItemID` (`ItemID`),
   KEY `ReceivedBy` (`ReceivedBy`),

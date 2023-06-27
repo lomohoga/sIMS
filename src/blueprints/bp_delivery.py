@@ -62,7 +62,7 @@ def add_deliveries ():
                 db.execute(f"SELECT * FROM item WHERE ItemID = '{v['ItemID']}'")
                 if db.fetchone() is None: raise ItemNotFoundError(item = v['ItemID'])
 
-                db.execute(f"INSERT INTO delivery (ItemID, DeliveryQuantity, DeliveryDate, ReceivedBy, Source, Supplier, DeliveryPrice) VALUES ('{v['ItemID']}', {v['DeliveryQuantity']}, '{v['DeliveryDate']}', '{session['user']['Username']}', '{v['Source']}', '{v['Supplier']}', '{v['DeliveryPrice']}')")
+                db.execute(f"INSERT INTO delivery (ItemID, DeliveryQuantity, DeliveryDate, ReceivedBy, Source, Supplier, DeliveryPrice, AvailableUnit) VALUES ('{v['ItemID']}', {v['DeliveryQuantity']}, '{v['DeliveryDate']}', '{session['user']['Username']}', '{v['Source']}', '{v['Supplier']}', '{v['DeliveryPrice']}', {v['DeliveryQuantity']})")
                 db.execute(f"UPDATE item SET Price = {v['DeliveryPrice']} WHERE ItemID = '{v['ItemID']}'")
             cxn.commit()
         except Exception as e:
