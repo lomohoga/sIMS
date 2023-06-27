@@ -34,7 +34,7 @@ def search_requests ():
     try:
         cxn = connect_db()
         db = cxn.cursor()
-        db.execute(f"SELECT RequestID, RequestedBy, DATE_FORMAT(RequestDate, '%d %b %Y') AS RequestDate, StatusName as Status, Purpose, ItemID, ItemName, Category, ItemDescription, RequestQuantity, QuantityIssued, AvailableStock, Unit, Remarks FROM request INNER JOIN request_status USING (StatusID) INNER JOIN request_item USING (RequestID) INNER JOIN stock USING (ItemID){' WHERE RequestID IN (SELECT DISTINCT RequestID FROM request INNER JOIN request_item USING (RequestID) INNER JOIN item USING (ItemID) WHERE ' + w + ')' if w != '' else ''} ORDER BY RequestID DESC, ItemID")
+        db.execute(f"SELECT RequestID, RequestedBy, DATE_FORMAT(RequestDate, '%d %b %Y') AS RequestDate, StatusName as Status, Purpose, ItemID, ItemName, Category, ItemDescription, RequestQuantity, SUM(QuantityIssued), AvailableStock, Unit, Remarks FROM request INNER JOIN request_status USING (StatusID) INNER JOIN request_item USING (RequestID) INNER JOIN stock USING (ItemID){' WHERE RequestID IN (SELECT DISTINCT RequestID FROM request INNER JOIN request_item USING (RequestID) INNER JOIN item USING (ItemID) WHERE ' + w + ')' if w != '' else ''} GROUP BY request_item.ItemID, RequestID ORDER BY RequestID DESC, ItemID")
         requests = db.fetchall()
     except Exception as e:
         current_app.logger.error(str(e))
@@ -144,6 +144,18 @@ def receive_request ():
         if f[0] != 3: raise RequestStatusError(from_status = f[0], to_status = 4)
         
         db.execute(f"UPDATE request SET StatusID = 4, ReceivedBy = '{session['user']['Username']}', DateReceived = CURDATE(), TimeReceived = CURTIME() WHERE RequestID = {req}")
+        db.execute(f"SELECT ItemID, QuantityIssued, RequestQuantity, Remarks FROM request_item WHERE RequestID = {req}")
+        items = db.fetchall()
+        for i in items:
+            toIssue = i[1]
+            db.execute(f"SELECT DeliveryID, AvailableUnit, DeliveryPrice FROM delivery LEFT JOIN expiration USING (DeliveryID) WHERE ItemID = '{i[0]}' && IsExpired = 0 && AvailableUnit > 0 ORDER BY delivery.DeliveryDate ASC, Time ASC;")
+            deliveries = db.fetchall()
+            while(toIssue > 0):
+                db.execute(f"UPDATE delivery SET AvailableUnit = {deliveries[0][1] - min(deliveries[0][1], toIssue)} WHERE DeliveryID = {deliveries[0][0]}")
+                if i[3] is None: db.execute(f"INSERT INTO request_item (RequestID, ItemID, RequestPrice, QuantityIssued, RequestQuantity) VALUES ({req}, '{i[0]}', {deliveries[0][2]}, {min(deliveries[0][1], toIssue)}, {i[2]}) ON DUPLICATE KEY UPDATE RequestPrice = {deliveries[0][2]}, QuantityIssued = {min(deliveries[0][1], toIssue)}")
+                else: db.execute(f"INSERT INTO request_item (RequestID, ItemID, RequestPrice, QuantityIssued, Remarks, RequestQuantity) VALUES ({req}, '{i[0]}', {deliveries[0][2]}, {min(deliveries[0][1], toIssue)}, '{i[3]}', {i[2]}) ON DUPLICATE KEY UPDATE RequestPrice = {deliveries[0][2]}, QuantityIssued = {min(deliveries[0][1], toIssue)}")
+                toIssue = toIssue - min(deliveries[0][1], toIssue)
+                deliveries = deliveries[1:]
         db.execute(f"SELECT COUNT(*) FROM request_item LEFT JOIN item USING (ItemID) WHERE RequestID = {req} && Price >= 15000 && QuantityIssued > 0;")
         g = db.fetchone()
         if(g[0] > 0):

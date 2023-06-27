@@ -204,7 +204,7 @@ CREATE TABLE `request_item` (
   `QuantityIssued` int DEFAULT NULL,
   `Remarks` varchar(70) DEFAULT NULL,
   `RequestPrice` decimal(18,2) NOT NULL,
-  PRIMARY KEY (`RequestID`,`ItemID`),
+  PRIMARY KEY (`RequestID`,`ItemID`, `RequestPrice`),
   KEY `ItemID` (`ItemID`),
   CONSTRAINT `request_item_ibfk_1` FOREIGN KEY (`ItemID`) REFERENCES `item` (`ItemID`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `request_item_ibfk_2` FOREIGN KEY (`RequestID`) REFERENCES `request` (`RequestID`) ON DELETE CASCADE ON UPDATE CASCADE

@@ -235,6 +235,7 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
     let rows = [];
     
     for (let req of requests) {
+        console.log(req)
         let parent = document.createElement("div");
         parent.classList.add("request-parent");
 
@@ -379,10 +380,9 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                         modal.querySelector("p").style.display = "";
                         modal.querySelector("#quantity-span").style.display = "none";
                         modal.querySelector("#req-remarks").style.display = "block";
+                        let y = document.querySelector("#req-remarks ul");
+                        while(y.childElementCount > 1) y.removeChild(y.lastChild);
                         for(let n of req["Items"]){
-                            let y = document.querySelector("#req-remarks ul");
-                            while(y.childElementCount > 1) y.removeChild(y.lastChild);
-
                             let x = document.querySelector("#req-remarks ul :first-child").cloneNode(true);
                             y.appendChild(x);
                             let last = y.lastChild;
@@ -449,10 +449,9 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                     modal.querySelector("p").style.display = "";
                     modal.querySelector("#quantity-span").style.display = "none";
                     modal.querySelector("#req-remarks").style.display = "block";
+                    let y = document.querySelector("#req-remarks ul");
+                    while(y.childElementCount > 1) y.removeChild(y.lastChild);
                     for(let n of req["Items"]){
-                        let y = document.querySelector("#req-remarks ul");
-                        while(y.childElementCount > 1) y.removeChild(y.lastChild);
-
                         let x = document.querySelector("#req-remarks ul :first-child").cloneNode(true);
                         y.appendChild(x);
                         let last = y.lastChild;
@@ -576,10 +575,9 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
                     modal.querySelector("p").style.display = "";
                     modal.querySelector("#quantity-span").style.display = "none";
                     modal.querySelector("#req-remarks").style.display = "block";
+                    let y = document.querySelector("#req-remarks ul");
+                    while(y.childElementCount > 1) y.removeChild(y.lastChild);
                     for(let n of req["Items"]){
-                        let y = document.querySelector("#req-remarks ul");
-                        while(y.childElementCount > 1) y.removeChild(y.lastChild);
-
                         let x = document.querySelector("#req-remarks ul :first-child").cloneNode(true);
                         y.appendChild(x);
                         let last = y.lastChild;

@@ -25,7 +25,7 @@ def form_58 (db, item):
     deliveries = db.fetchall()
 
     #get request items
-    db.execute(f"SELECT * FROM (SELECT RequestID, DateReceived, TimeReceived, DeliveryStock, QuantityIssued, UPPER(CONCAT(FirstName, ' ', LastName)) as RequestedBy, ShelfLife FROM request_item INNER JOIN (SELECT ItemID, ShelfLife, COALESCE(SUM(IF(ShelfLife IS NULL OR DATEDIFF(CURDATE(), ADDDATE(DeliveryDate, ShelfLife)) <= 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) GROUP BY ItemID) AS w USING (ItemID) INNER JOIN request USING (RequestID) INNER JOIN user ON RequestedBy = Username WHERE ItemID = '{item}' AND StatusID = 4 ORDER BY RequestID DESC) AS x ORDER BY RequestID ASC")
+    db.execute(f"SELECT * FROM (SELECT RequestID, DateReceived, TimeReceived, DeliveryStock, SUM(QuantityIssued), UPPER(CONCAT(FirstName, ' ', LastName)) as RequestedBy, ShelfLife FROM request_item INNER JOIN (SELECT ItemID, ShelfLife, COALESCE(SUM(IF(ShelfLife IS NULL OR DATEDIFF(CURDATE(), ADDDATE(DeliveryDate, ShelfLife)) <= 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) GROUP BY ItemID) AS w USING (ItemID) INNER JOIN request USING (RequestID) INNER JOIN user ON RequestedBy = Username WHERE ItemID = '{item}' AND StatusID = 4 GROUP BY ItemID, RequestID ORDER BY RequestID DESC) AS x ORDER BY RequestID ASC")
     requests = db.fetchall()
 
     wb = load_workbook("./src/form_templates/template_58.xlsx", rich_text = True)
@@ -157,7 +157,7 @@ def form_63 (db, request):
     db.execute(f"SELECT * FROM request WHERE RequestID = {request}")
     if db.fetchone() is None: raise RequestNotFoundError(request = request)
 
-    db.execute(f"SELECT RequestID, item.ItemID AS ItemID, item.ItemDescription AS ItemDescription, RequestQuantity, QuantityIssued, Purpose, Remarks FROM request_item INNER JOIN request USING (RequestID) INNER JOIN item USING (ItemID) INNER JOIN stock USING (ItemID) INNER JOIN user ON RequestedBy = Username WHERE RequestID = '{request}'")
+    db.execute(f"SELECT RequestID, item.ItemID AS ItemID, item.ItemDescription AS ItemDescription, RequestQuantity, SUM(QuantityIssued), Purpose, Remarks FROM request_item INNER JOIN request USING (RequestID) INNER JOIN item USING (ItemID) INNER JOIN stock USING (ItemID) INNER JOIN user ON RequestedBy = Username WHERE RequestID = '{request}' GROUP BY ItemID, RequestID")
     data = db.fetchall()
 
     db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) AS RequestedBy, RequestDate FROM request INNER JOIN user ON (Username = RequestedBy) WHERE RequestID = {request}")
