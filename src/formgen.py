@@ -41,14 +41,12 @@ def form_58 (db, item):
     ns = None
     continuePage = False
     numRows = 30
-    lastBalance = 0
 
     # TODO: Continue numbers in second page
     while(i + j != len(requests) + len(deliveries)):
         if((i + j) % numRows == 0):
             #Clone worksheet
             if(i + j > 0): continuePage = True
-            if continuePage: lastBalance = ns[f"F{13 + (numRows - 1)}"].value
             ns = wb.copy_worksheet(ws)
 
         if(i == len(deliveries)):
@@ -56,10 +54,11 @@ def form_58 (db, item):
             db.execute(f"SELECT COUNT(*) + 1 FROM request WHERE RequestID < {requests[j][0]} && StatusID = 4")
             ris = db.fetchone()[0]
             ns[f"B{13 + ((i + j) % numRows)}"] = f"RIS-{ris}"
-            if ((i + j) % numRows) == 0: ns[f"C{13 + ((i + j) % numRows)}"] = lastBalance if continuePage else requests[j][3]
             ns[f"D{13 + ((i + j) % numRows)}"] = requests[j][4]
             ns[f"E{13 + ((i + j) % numRows)}"] = requests[j][5]
-            ns[f"F{13 + ((i + j) % numRows)}"] = (lastBalance - ns[f"D{13 + ((i + j) % numRows)}"].value if continuePage else ns[f"C{13 + ((i + j) % numRows)}"].value - ns[f"D{13 + ((i + j) % numRows)}"].value) if ((i + j) % numRows) == 0 else ns[f"F{12 + ((i + j) % numRows)}"].value - ns[f"D{13 + ((i + j) % numRows)}"].value
+            db.execute(f"SELECT (SELECT COALESCE(SUM(IF(ShelfLife IS NULL OR TIMESTAMPDIFF(SECOND, CAST(CONCAT(DeliveryDate, ' ', Time) AS datetime), '{requests[j][1].strftime('%Y-%m-%d') + ' ' + str(requests[j][2])}') > 0 AND TIMESTAMPDIFF(SECOND, TIMESTAMPADD(DAY, ShelfLife, CAST(CONCAT(DeliveryDate, ' ', Time) AS datetime)), '{requests[j][1].strftime('%Y-%m-%d') + ' ' + str(requests[j][2])}') < 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) WHERE ItemID = '{item}') - (SELECT COALESCE(SUM(IF(TIMESTAMPDIFF(SECOND, CAST(CONCAT(DateReceived, ' ', TimeReceived) AS datetime), '{requests[j][1].strftime('%Y-%m-%d') + ' ' + str(requests[j][2])}') > 0, QuantityIssued, 0)), 0) FROM request_item LEFT JOIN request USING (RequestID) WHERE StatusID = 4 AND ItemID = '{item}') AS Stock")
+            lastBalance = db.fetchone()[0]
+            ns[f"F{13 + ((i + j) % numRows)}"] = lastBalance - ns[f"D{13 + ((i + j) % numRows)}"].value
             if ((i + j) % numRows) == 0: ns[f"G{13 + ((i + j) % numRows)}"] = requests[j][6]
             j = j + 1
             continue
@@ -68,7 +67,9 @@ def form_58 (db, item):
             ns[f"A{13 + ((i + j) % numRows)}"] = deliveries[i][0]
             ns[f"B{13 + ((i + j) % numRows)}"] = f"D-{deliveries[i][1]}"
             ns[f"C{13 + ((i + j) % numRows)}"] = deliveries[i][2]
-            ns[f"F{13 + ((i + j) % numRows)}"] = (lastBalance + ns[f"C{13 + ((i + j) % numRows)}"].value if continuePage else ns[f"C{13 + ((i + j) % numRows)}"].value) if ((i + j) % numRows) == 0 else ns[f"F{12 + ((i + j) % numRows)}"].value + ns[f"C{13 + ((i + j) % numRows)}"].value
+            db.execute(f"SELECT (SELECT COALESCE(SUM(IF(ShelfLife IS NULL OR TIMESTAMPDIFF(SECOND, CAST(CONCAT(DeliveryDate, ' ', Time) AS datetime), '{deliveries[i][0].strftime('%Y-%m-%d') + ' ' + str(deliveries[i][3])}') > 0 AND TIMESTAMPDIFF(SECOND, TIMESTAMPADD(DAY, ShelfLife, CAST(CONCAT(DeliveryDate, ' ', Time) AS datetime)), '{deliveries[i][0].strftime('%Y-%m-%d') + ' ' + str(deliveries[i][3])}') < 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) WHERE ItemID = '{item}') - (SELECT COALESCE(SUM(IF(TIMESTAMPDIFF(SECOND, CAST(CONCAT(DateReceived, ' ', TimeReceived) AS datetime), '{deliveries[i][0].strftime('%Y-%m-%d') + ' ' + str(deliveries[i][3])}') > 0, QuantityIssued, 0)), 0) FROM request_item LEFT JOIN request USING (RequestID) WHERE StatusID = 4 AND ItemID = '{item}') AS Stock")
+            lastBalance = db.fetchone()[0]
+            ns[f"F{13 + ((i + j) % numRows)}"] = lastBalance + ns[f"C{13 + ((i + j) % numRows)}"].value
             i = i + 1
             continue
         
@@ -80,17 +81,20 @@ def form_58 (db, item):
             db.execute(f"SELECT COUNT(*) + 1 FROM request WHERE RequestID < {requests[j][0]} && StatusID = 4")
             ris = db.fetchone()[0]
             ns[f"B{13 + ((i + j) % numRows)}"] = f"RIS-{ris}"
-            if ((i + j) % numRows) == 0: ns[f"C{13 + ((i + j) % numRows)}"] = lastBalance if continuePage else requests[j][3]
             ns[f"D{13 + ((i + j) % numRows)}"] = requests[j][4]
             ns[f"E{13 + ((i + j) % numRows)}"] = requests[j][5]
-            ns[f"F{13 + ((i + j) % numRows)}"] = (lastBalance - ns[f"D{13 + ((i + j) % numRows)}"].value if continuePage else ns[f"C{13 + ((i + j) % numRows)}"].value - ns[f"D{13 + ((i + j) % numRows)}"].value) if ((i + j) % numRows) == 0 else ns[f"F{12 + ((i + j) % numRows)}"].value - ns[f"D{13 + ((i + j) % numRows)}"].value
+            db.execute(f"SELECT (SELECT COALESCE(SUM(IF(ShelfLife IS NULL OR TIMESTAMPDIFF(SECOND, CAST(CONCAT(DeliveryDate, ' ', Time) AS datetime), '{requests[j][1].strftime('%Y-%m-%d') + ' ' + str(requests[j][2])}') > 0 AND TIMESTAMPDIFF(SECOND, TIMESTAMPADD(DAY, ShelfLife, CAST(CONCAT(DeliveryDate, ' ', Time) AS datetime)), '{requests[j][1].strftime('%Y-%m-%d') + ' ' + str(requests[j][2])}') < 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) WHERE ItemID = '{item}') - (SELECT COALESCE(SUM(IF(TIMESTAMPDIFF(SECOND, CAST(CONCAT(DateReceived, ' ', TimeReceived) AS datetime), '{requests[j][1].strftime('%Y-%m-%d') + ' ' + str(requests[j][2])}') > 0, QuantityIssued, 0)), 0) FROM request_item LEFT JOIN request USING (RequestID) WHERE StatusID = 4 AND ItemID = '{item}') AS Stock")
+            lastBalance = db.fetchone()[0]
+            ns[f"F{13 + ((i + j) % numRows)}"] = lastBalance - ns[f"D{13 + ((i + j) % numRows)}"].value
             if ((i + j) % numRows) == 0: ns[f"G{13 + ((i + j) % numRows)}"] = requests[j][6]
             j = j + 1
         else:
             ns[f"A{13 + ((i + j) % numRows)}"] = deliveries[i][0]
             ns[f"B{13 + ((i + j) % numRows)}"] = f"D-{deliveries[i][1]}"
             ns[f"C{13 + ((i + j) % numRows)}"] = deliveries[i][2]
-            ns[f"F{13 + ((i + j) % numRows)}"] = (lastBalance + ns[f"C{13 + ((i + j) % numRows)}"].value if continuePage else ns[f"C{13 + ((i + j) % numRows)}"].value) if ((i + j) % numRows) == 0 else ns[f"F{12 + ((i + j) % numRows)}"].value + ns[f"C{13 + ((i + j) % numRows)}"].value
+            db.execute(f"SELECT (SELECT COALESCE(SUM(IF(ShelfLife IS NULL OR TIMESTAMPDIFF(SECOND, CAST(CONCAT(DeliveryDate, ' ', Time) AS datetime), '{deliveries[i][0].strftime('%Y-%m-%d') + ' ' + str(deliveries[i][3])}') > 0 AND TIMESTAMPDIFF(SECOND, TIMESTAMPADD(DAY, ShelfLife, CAST(CONCAT(DeliveryDate, ' ', Time) AS datetime)), '{deliveries[i][0].strftime('%Y-%m-%d') + ' ' + str(deliveries[i][3])}') < 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) WHERE ItemID = '{item}') - (SELECT COALESCE(SUM(IF(TIMESTAMPDIFF(SECOND, CAST(CONCAT(DateReceived, ' ', TimeReceived) AS datetime), '{deliveries[i][0].strftime('%Y-%m-%d') + ' ' + str(deliveries[i][3])}') > 0, QuantityIssued, 0)), 0) FROM request_item LEFT JOIN request USING (RequestID) WHERE StatusID = 4 AND ItemID = '{item}') AS Stock")
+            lastBalance = db.fetchone()[0]
+            ns[f"F{13 + ((i + j) % numRows)}"] = lastBalance + ns[f"C{13 + ((i + j) % numRows)}"].value
             i = i + 1
 
     file = NamedTemporaryFile(suffix = ".xlsx", delete = False)
@@ -212,7 +216,7 @@ def form_69 (db, item):
     if data is None: raise ItemNotFoundError(item = item)
 
     #get deliveries
-    db.execute(f"SELECT DeliveryDate, DeliveryID, DeliveryQuantity, Time FROM delivery WHERE ItemID = '{item}' ORDER BY DeliveryID ASC")
+    db.execute(f"SELECT DeliveryDate, DeliveryID, DeliveryQuantity, Time, DeliveryQuantity * DeliveryPrice FROM delivery WHERE ItemID = '{item}' ORDER BY DeliveryID ASC")
     deliveries = db.fetchall()
 
     #get request items
@@ -231,23 +235,22 @@ def form_69 (db, item):
     ns = None
     continuePage = False
     numRows = 18
-    lastBalance = 0
 
     while(i + j != len(requests) + len(deliveries)):
         if((i + j) % numRows == 0):
             #Clone worksheet
             if(i + j > 0): continuePage = True
-            if continuePage: lastBalance = ns[f"H{13 + (numRows - 1)}"].value
             ns = wb.copy_worksheet(ws)
 
         if(i == len(deliveries)):
             ns[f"B{13 + ((i + j) % numRows)}"] = requests[j][1]
             db.execute(f"SELECT COUNT(*) + 1 FROM request WHERE hasPropertyApproved = 1 && RequestID < {requests[j][0]}")
             ns[f"C{13 + ((i + j) % numRows)}"] = f"PAR-{db.fetchone()[0]}"
-            if ((i + j) % numRows) == 0: ns[f"D{13 + ((i + j) % numRows)}"] = lastBalance if continuePage else requests[j][3]
             ns[f"E{13 + ((i + j) % numRows)}"] = requests[j][4]
             ns[f"F{13 + ((i + j) % numRows)}"] = requests[j][5]
-            ns[f"H{13 + ((i + j) % numRows)}"] = (lastBalance - ns[f"E{13 + ((i + j) % numRows)}"].value if continuePage else ns[f"D{13 + ((i + j) % numRows)}"].value - ns[f"E{13 + ((i + j) % numRows)}"].value) if ((i + j) % numRows) == 0 else ns[f"H{12 + ((i + j) % numRows)}"].value - ns[f"E{13 + ((i + j) % numRows)}"].value
+            db.execute(f"SELECT (SELECT COALESCE(SUM(IF(ShelfLife IS NULL OR TIMESTAMPDIFF(SECOND, CAST(CONCAT(DeliveryDate, ' ', Time) AS datetime), '{requests[j][1].strftime('%Y-%m-%d') + ' ' + str(requests[j][2])}') > 0 AND TIMESTAMPDIFF(SECOND, TIMESTAMPADD(DAY, ShelfLife, CAST(CONCAT(DeliveryDate, ' ', Time) AS datetime)), '{requests[j][1].strftime('%Y-%m-%d') + ' ' + str(requests[j][2])}') < 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) WHERE ItemID = '{item}') - (SELECT COALESCE(SUM(IF(TIMESTAMPDIFF(SECOND, CAST(CONCAT(DateReceived, ' ', TimeReceived) AS datetime), '{requests[j][1].strftime('%Y-%m-%d') + ' ' + str(requests[j][2])}') > 0, QuantityIssued, 0)), 0) FROM request_item LEFT JOIN request USING (RequestID) WHERE StatusID = 4 AND ItemID = '{item}') AS Stock")
+            lastBalance = db.fetchone()[0]
+            ns[f"H{13 + ((i + j) % numRows)}"] = lastBalance - ns[f"E{13 + ((i + j) % numRows)}"].value
             ns[f"I{13 + ((i + j) % numRows)}"] = requests[j][6]
             ns[f"J{13 + ((i + j) % numRows)}"] = requests[j][7]
             j = j + 1
@@ -257,7 +260,10 @@ def form_69 (db, item):
             ns[f"B{13 + ((i + j) % numRows)}"] = deliveries[i][0]
             ns[f"C{13 + ((i + j) % numRows)}"] = f"D-{deliveries[i][1]}"
             ns[f"D{13 + ((i + j) % numRows)}"] = deliveries[i][2]
-            ns[f"H{13 + ((i + j) % numRows)}"] = (lastBalance + ns[f"D{13 + ((i + j) % numRows)}"].value if continuePage else ns[f"D{13 + ((i + j) % numRows)}"].value) if ((i + j) % numRows) == 0 else ns[f"H{12 + ((i + j) % numRows)}"].value + ns[f"D{13 + ((i + j) % numRows)}"].value
+            db.execute(f"SELECT (SELECT COALESCE(SUM(IF(ShelfLife IS NULL OR TIMESTAMPDIFF(SECOND, CAST(CONCAT(DeliveryDate, ' ', Time) AS datetime), '{deliveries[i][0].strftime('%Y-%m-%d') + ' ' + str(deliveries[i][3])}') > 0 AND TIMESTAMPDIFF(SECOND, TIMESTAMPADD(DAY, ShelfLife, CAST(CONCAT(DeliveryDate, ' ', Time) AS datetime)), '{deliveries[i][0].strftime('%Y-%m-%d') + ' ' + str(deliveries[i][3])}') < 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) WHERE ItemID = '{item}') - (SELECT COALESCE(SUM(IF(TIMESTAMPDIFF(SECOND, CAST(CONCAT(DateReceived, ' ', TimeReceived) AS datetime), '{deliveries[i][0].strftime('%Y-%m-%d') + ' ' + str(deliveries[i][3])}') > 0, QuantityIssued, 0)), 0) FROM request_item LEFT JOIN request USING (RequestID) WHERE StatusID = 4 AND ItemID = '{item}') AS Stock")
+            lastBalance = db.fetchone()[0]
+            ns[f"H{13 + ((i + j) % numRows)}"] = lastBalance + ns[f"D{13 + ((i + j) % numRows)}"].value
+            ns[f"I{13 + ((i + j) % numRows)}"] = deliveries[i][4]
             i = i + 1
             continue
         
@@ -268,10 +274,11 @@ def form_69 (db, item):
             ns[f"B{13 + ((i + j) % numRows)}"] = requests[j][1]
             db.execute(f"SELECT COUNT(*) + 1 FROM request WHERE hasPropertyApproved = 1 && RequestID < {requests[j][0]}")
             ns[f"C{13 + ((i + j) % numRows)}"] = f"PAR-{db.fetchone()[0]}"
-            if ((i + j) % numRows) == 0: ns[f"D{13 + ((i + j) % numRows)}"] = lastBalance if continuePage else requests[j][3]
             ns[f"E{13 + ((i + j) % numRows)}"] = requests[j][4]
             ns[f"F{13 + ((i + j) % numRows)}"] = requests[j][5]
-            ns[f"H{13 + ((i + j) % numRows)}"] = (lastBalance - ns[f"E{13 + ((i + j) % numRows)}"].value if continuePage else ns[f"D{13 + ((i + j) % numRows)}"].value - ns[f"E{13 + ((i + j) % numRows)}"].value) if ((i + j) % numRows) == 0 else ns[f"H{12 + ((i + j) % numRows)}"].value - ns[f"E{13 + ((i + j) % numRows)}"].value
+            db.execute(f"SELECT (SELECT COALESCE(SUM(IF(ShelfLife IS NULL OR TIMESTAMPDIFF(SECOND, CAST(CONCAT(DeliveryDate, ' ', Time) AS datetime), '{requests[j][1].strftime('%Y-%m-%d') + ' ' + str(requests[j][2])}') > 0 AND TIMESTAMPDIFF(SECOND, TIMESTAMPADD(DAY, ShelfLife, CAST(CONCAT(DeliveryDate, ' ', Time) AS datetime)), '{requests[j][1].strftime('%Y-%m-%d') + ' ' + str(requests[j][2])}') < 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) WHERE ItemID = '{item}') - (SELECT COALESCE(SUM(IF(TIMESTAMPDIFF(SECOND, CAST(CONCAT(DateReceived, ' ', TimeReceived) AS datetime), '{requests[j][1].strftime('%Y-%m-%d') + ' ' + str(requests[j][2])}') > 0, QuantityIssued, 0)), 0) FROM request_item LEFT JOIN request USING (RequestID) WHERE StatusID = 4 AND ItemID = '{item}') AS Stock")
+            lastBalance = db.fetchone()[0]
+            ns[f"H{13 + ((i + j) % numRows)}"] = lastBalance - ns[f"E{13 + ((i + j) % numRows)}"].value
             ns[f"I{13 + ((i + j) % numRows)}"] = requests[j][6]
             ns[f"J{13 + ((i + j) % numRows)}"] = requests[j][7]
             j = j + 1
@@ -279,7 +286,10 @@ def form_69 (db, item):
             ns[f"B{13 + ((i + j) % numRows)}"] = deliveries[i][0]
             ns[f"C{13 + ((i + j) % numRows)}"] = f"D-{deliveries[i][1]}"
             ns[f"D{13 + ((i + j) % numRows)}"] = deliveries[i][2]
-            ns[f"H{13 + ((i + j) % numRows)}"] = (lastBalance + ns[f"D{13 + ((i + j) % numRows)}"].value if continuePage else ns[f"D{13 + ((i + j) % numRows)}"].value) if ((i + j) % numRows) == 0 else ns[f"H{12 + ((i + j) % numRows)}"].value + ns[f"D{13 + ((i + j) % numRows)}"].value
+            db.execute(f"SELECT (SELECT COALESCE(SUM(IF(ShelfLife IS NULL OR TIMESTAMPDIFF(SECOND, CAST(CONCAT(DeliveryDate, ' ', Time) AS datetime), '{deliveries[i][0].strftime('%Y-%m-%d') + ' ' + str(deliveries[i][3])}') > 0 AND TIMESTAMPDIFF(SECOND, TIMESTAMPADD(DAY, ShelfLife, CAST(CONCAT(DeliveryDate, ' ', Time) AS datetime)), '{deliveries[i][0].strftime('%Y-%m-%d') + ' ' + str(deliveries[i][3])}') < 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) WHERE ItemID = '{item}') - (SELECT COALESCE(SUM(IF(TIMESTAMPDIFF(SECOND, CAST(CONCAT(DateReceived, ' ', TimeReceived) AS datetime), '{deliveries[i][0].strftime('%Y-%m-%d') + ' ' + str(deliveries[i][3])}') > 0, QuantityIssued, 0)), 0) FROM request_item LEFT JOIN request USING (RequestID) WHERE StatusID = 4 AND ItemID = '{item}') AS Stock")
+            lastBalance = db.fetchone()[0]
+            ns[f"H{13 + ((i + j) % numRows)}"] = lastBalance + ns[f"D{13 + ((i + j) % numRows)}"].value
+            ns[f"I{13 + ((i + j) % numRows)}"] = deliveries[i][4]
             i = i + 1
 
     file = NamedTemporaryFile(suffix = ".xlsx", delete = False)

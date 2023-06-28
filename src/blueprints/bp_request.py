@@ -150,7 +150,7 @@ def receive_request ():
             toIssue = i[1]
             db.execute(f"SELECT DeliveryID, AvailableUnit, DeliveryPrice FROM delivery LEFT JOIN expiration USING (DeliveryID) WHERE ItemID = '{i[0]}' && IsExpired = 0 && AvailableUnit > 0 ORDER BY delivery.DeliveryDate ASC, Time ASC;")
             deliveries = db.fetchall()
-            while(toIssue > 0):
+            while(toIssue > 0 and len(deliveries) > 0):
                 db.execute(f"UPDATE delivery SET AvailableUnit = {deliveries[0][1] - min(deliveries[0][1], toIssue)} WHERE DeliveryID = {deliveries[0][0]}")
                 if i[3] is None: db.execute(f"INSERT INTO request_item (RequestID, ItemID, RequestPrice, QuantityIssued, RequestQuantity) VALUES ({req}, '{i[0]}', {deliveries[0][2]}, {min(deliveries[0][1], toIssue)}, {i[2]}) ON DUPLICATE KEY UPDATE RequestPrice = {deliveries[0][2]}, QuantityIssued = {min(deliveries[0][1], toIssue)}")
                 else: db.execute(f"INSERT INTO request_item (RequestID, ItemID, RequestPrice, QuantityIssued, Remarks, RequestQuantity) VALUES ({req}, '{i[0]}', {deliveries[0][2]}, {min(deliveries[0][1], toIssue)}, '{i[3]}', {i[2]}) ON DUPLICATE KEY UPDATE RequestPrice = {deliveries[0][2]}, QuantityIssued = {min(deliveries[0][1], toIssue)}")
