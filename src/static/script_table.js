@@ -654,7 +654,7 @@ async function getDeliveries (keyword = "") {
 }
 
 // populates delivery table with deliveries from getDeliveries()
-async function populateDeliveries (tbody, keyword = "") {
+async function populateDeliveries (tbody, keyword = "", {dispose = false, buttons = false} = {}) {
     while (tbody.childElementCount > 3) tbody.removeChild(tbody.lastChild);
 
     tbody.querySelector(".table-loading").classList.remove("hide");
@@ -668,8 +668,13 @@ async function populateDeliveries (tbody, keyword = "") {
     }
 
     let deliveries = response["deliveries"]
+    let rows = [];
 
     for (let x of deliveries) {
+        if(dispose){
+            if(x["AvailableUnit"] === 0 || x["IsExpired"]) continue;
+        }
+
         let tr = document.createElement("div");
         tr.classList.add("table-row");
 
@@ -678,12 +683,15 @@ async function populateDeliveries (tbody, keyword = "") {
             let td = document.createElement("div");
 
             if (i === 'IsExpired') {
-                if (y) {
+                if (y && !dispose) {
                     let span = document.createElement("span");
                     span.classList.add("status");
                     span.classList.add("expired");
                     span.innerText = "expired";
                     td.appendChild(span);
+                }
+                else{
+                    continue;
                 }
             } 
             else if (i === "DeliveryPrice") {
@@ -696,6 +704,10 @@ async function populateDeliveries (tbody, keyword = "") {
                 t0.appendChild(t2);
                 td.appendChild(t0);
             }
+            else if (i === "DeliveryQuantity"){
+                if(dispose) td.innerText = x["AvailableUnit"];
+                else td.innerText = x[i]  
+            }
             else td.innerText = y;
 
             if (i === "ItemID") td.classList.add("mono");
@@ -705,7 +717,19 @@ async function populateDeliveries (tbody, keyword = "") {
             tr.appendChild(td);
         }
 
+        if (buttons) {
+            let e = document.createElement("div");
+            let b = document.createElement("button");
+            b.type = "button";
+            b.role = "button";
+            b.innerHTML = "<i class='bi bi-plus-circle'></i><i class='bi bi-plus-circle-fill'></i>";
+            b.classList.add("select-row");
+            e.appendChild(b);
+            tr.appendChild(e);
+        }
+
         tbody.appendChild(tr);
+        rows.push(tr)
     }
 
     tbody.querySelector(".table-loading").classList.add("hide");
@@ -713,6 +737,8 @@ async function populateDeliveries (tbody, keyword = "") {
     else tbody.querySelector(".table-empty").classList.remove("hide");
 
     document.dispatchEvent(new Event("tablerefresh"));
+
+    return rows;
 }
 
 // fetches users from database
@@ -919,7 +945,7 @@ function sortTable (table, column, currentSort, { shelfLife = false, numerical =
         return s === 0 ? a.children[0].innerText.localeCompare(b.children[0].innerText) : s;
     });
 
-    while (tbody.childElementCount > 2) tbody.removeChild(tbody.lastChild);
+    while (tbody.childElementCount > 3) tbody.removeChild(tbody.lastChild);
     for (let row of rows) tbody.appendChild(row);
     
     let newSym = table.querySelector(`.table-header .table-row > :nth-child(${currentSort[0] + 1}) .bi`);

@@ -7,7 +7,7 @@
     <div class="btn-group">
         {% if session['user']['RoleID'] == 1 %}
             <a class="btn" href="{{ url_for('bp_inventory.add_items') }}">Add items</a>
-            <a class="btn" href="{{ url_for('bp_inventory.remove_items') }}">Remove items</a>
+            <a class="btn" href="{{ url_for('bp_inventory.dispose_items') }}">Dispose items</a>
             <a class="btn" href="{{ url_for('bp_inventory.update_items') }}">Update items</a>
         {% else %}
             <a class="btn" href="{{ url_for('bp_inventory.request_items') }}">Request items</a>
@@ -123,6 +123,8 @@
     document.querySelector("#manage-categories").addEventListener("click", () => {
         window.location.href = "/categories";
     })
+
+    document.querySelector("#generate_73").disabled = document.querySelector('.table-body').childElementCount <= 3;
 
     document.querySelector("#generate_73").addEventListener("click", () => {
         let filename = `Appendix73${document.querySelector("#search-box").value === ''? '' : "-" + document.querySelector("#search-box").value}`;

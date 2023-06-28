@@ -95,7 +95,7 @@
 }
 
 .search-table.custodian .table-row {
-    grid-template-columns: 0.625fr 0.75fr 0.70fr 2fr 0.5fr 0.75fr 0.5fr 0.5fr 3rem;
+    grid-template-columns: 0.375fr 0.625fr 0.75fr 0.75fr 1.5fr 0.5fr 0.75fr 0.75fr 0.5fr 0.75fr 0.75fr 0.75fr 3rem;
 }
 
 .search-table.user .table-row {
@@ -115,7 +115,7 @@
 }
 
 .selection-table.remove .table-row {
-    grid-template-columns: 0.625fr 0.75fr 0.7fr 2fr 0.5fr 0.75fr 0.5fr 0.5fr 3rem;
+    grid-template-columns: 0.375fr 0.625fr 0.75fr 0.75fr 1.5fr 0.5fr 0.75fr 2fr 3rem;
 }
 
 .selection-table.categories .table-row {

@@ -108,6 +108,57 @@ def remove_items ():
             if cxn is not None: cxn.close()
 
         return Response(status = 200)
+    
+# route for item disposal
+@bp_inventory.route('/dispose', methods = ["GET", "POST"])
+@login_required
+def dispose_items ():
+    if request.method == "GET":
+        if session['user']['RoleID'] != 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to dispose items from the database."), 403
+        else: return render_template("inventory/remove.html")
+
+    if request.method == "POST":
+        items = request.get_json()["items"]
+        cxn = None
+        try:
+            cxn = connect_db()
+            db = cxn.cursor()
+
+            db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
+            f = db.fetchone()
+            if f is None: raise SelfNotFoundError(username = session['user']['Username'])
+            if f[0] == 2 and f[0] != session['user']['RoleID']: raise SelfRoleError(username = session['user']['Username'], role = f[0])
+
+            #Create request here
+            db.execute(f"INSERT INTO request (RequestedBy, StatusID, ActingAdmin, IssuedBy, DateIssued, ReceivedBy, DateReceived, Purpose) VALUES ('{session['user']['Username']}', 4, '{session['user']['Username']}', '{session['user']['Username']}', CURDATE(), '{session['user']['Username']}', CURDATE(), 'For disposal')")
+            db.execute("SELECT LAST_INSERT_ID()")
+            requestID = db.fetchone()[0]
+            hasProperty = False
+            
+            for x in items:
+                db.execute(f"SELECT * FROM item WHERE ItemID = '{x['ItemID']}'")
+                if db.fetchone() is None: raise ItemNotFoundError(item = x)
+                
+                # Decrement from delivery
+                db.execute(f"SELECT AvailableUnit, DeliveryPrice FROM delivery WHERE DeliveryID = {int(x['DeliveryID'])}")
+                data = db.fetchone()
+
+                if int(data[1]) >= 15000: hasProperty = True
+
+                if int(data[0]) < int(x["ToDispose"]): raise Exception
+                db.execute(f"UPDATE delivery SET AvailableUnit = {int(data[0]) - int(x['ToDispose'])} WHERE DeliveryID = {int(x['DeliveryID'])}")
+
+                # Create request
+                db.execute(f"INSERT INTO request_item (RequestID, ItemID, RequestQuantity, QuantityIssued, Remarks, RequestPrice) VALUES ({requestID}, '{x['ItemID']}', {int(x['ToDispose'])}, {int(x['ToDispose'])}, '{x['Remarks']}', {data[1]})")
+            if(hasProperty): db.execute(f"UPDATE request SET hasPropertyApproved = 1 WHERE RequestID = {requestID}")
+            cxn.commit()
+        except Exception as e:
+            current_app.logger.error(str(e))
+            return { "error": str(e) }, 500
+        finally:
+            if cxn is not None: cxn.close()
+
+        return Response(status = 200)
 
 # route for item update
 @bp_inventory.route('/update', methods = ["GET", "POST"])

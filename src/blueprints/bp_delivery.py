@@ -23,7 +23,7 @@ def search_deliveries ():
     conditions = []
     for x in keywords:
         conditions.append(f"(ItemID LIKE '%{x}%' OR ItemName LIKE '%{x}%' OR ItemDescription LIKE '%{x}%' OR Source LIKE '%{x}%' OR Supplier LIKE '%{x}%' OR Category LIKE '%{x}%')")
-    query = f"SELECT DeliveryID, ItemID, ItemName, Category, ItemDescription, DeliveryQuantity, Unit, DeliveryPrice, ShelfLife, DATE_FORMAT(delivery.DeliveryDate, '%d %b %Y') as DeliveryDate, Source, ReceivedBy, IsExpired, Supplier FROM delivery INNER JOIN item USING (ItemID) INNER JOIN expiration USING (DeliveryID) {'' if len(conditions) == 0 else 'WHERE (' + ' AND '.join(conditions) + ')'} ORDER BY DeliveryID DESC"
+    query = f"SELECT DeliveryID, ItemID, ItemName, Category, ItemDescription, DeliveryQuantity, Unit, DeliveryPrice, ShelfLife, DATE_FORMAT(delivery.DeliveryDate, '%d %b %Y') as DeliveryDate, Source, ReceivedBy, IsExpired, Supplier, AvailableUnit FROM delivery INNER JOIN item USING (ItemID) INNER JOIN expiration USING (DeliveryID) {'' if len(conditions) == 0 else 'WHERE (' + ' AND '.join(conditions) + ')'} ORDER BY DeliveryID DESC"
     
     cxn = None
     try:
