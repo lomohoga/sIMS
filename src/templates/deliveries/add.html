@@ -112,7 +112,6 @@
         let clone = row.cloneNode(true);
         clone.removeChild(clone.querySelector(".tabnum ~ div"));
         let lastPrice = +clone.querySelector(".tabnum span:nth-child(2)").innerHTML.replaceAll(/[^0-9\.]/g, "");
-        console.log(lastPrice)
         clone.removeChild(clone.querySelector(".tabnum"));
         clone.removeChild(clone.querySelector("div:nth-child(5)"));
 

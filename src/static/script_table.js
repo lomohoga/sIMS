@@ -235,7 +235,6 @@ async function populateRequests (tbody, keyword = "", privileges = 2, filter = u
     let rows = [];
     
     for (let req of requests) {
-        console.log(req)
         let parent = document.createElement("div");
         parent.classList.add("request-parent");
 
