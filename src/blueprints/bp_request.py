@@ -150,10 +150,15 @@ def receive_request ():
             toIssue = i[1]
             db.execute(f"SELECT DeliveryID, AvailableUnit, DeliveryPrice FROM delivery LEFT JOIN expiration USING (DeliveryID) WHERE ItemID = '{i[0]}' && IsExpired = 0 && AvailableUnit > 0 ORDER BY delivery.DeliveryDate ASC, Time ASC;")
             deliveries = db.fetchall()
+            price = {}
             while(toIssue > 0 and len(deliveries) > 0):
                 db.execute(f"UPDATE delivery SET AvailableUnit = {deliveries[0][1] - min(deliveries[0][1], toIssue)} WHERE DeliveryID = {deliveries[0][0]}")
-                if i[3] is None: db.execute(f"INSERT INTO request_item (RequestID, ItemID, RequestPrice, QuantityIssued, RequestQuantity) VALUES ({req}, '{i[0]}', {deliveries[0][2]}, {min(deliveries[0][1], toIssue)}, {i[2]}) ON DUPLICATE KEY UPDATE RequestPrice = {deliveries[0][2]}, QuantityIssued = {min(deliveries[0][1], toIssue)}")
-                else: db.execute(f"INSERT INTO request_item (RequestID, ItemID, RequestPrice, QuantityIssued, Remarks, RequestQuantity) VALUES ({req}, '{i[0]}', {deliveries[0][2]}, {min(deliveries[0][1], toIssue)}, '{i[3]}', {i[2]}) ON DUPLICATE KEY UPDATE RequestPrice = {deliveries[0][2]}, QuantityIssued = {min(deliveries[0][1], toIssue)}")
+
+                if deliveries[0][2] in price: price[deliveries[0][2]] = price[deliveries[0][2]] + min(deliveries[0][1], toIssue)
+                else: price[deliveries[0][2]] = min(deliveries[0][1], toIssue)
+
+                if i[3] is None: db.execute(f"INSERT INTO request_item (RequestID, ItemID, RequestPrice, QuantityIssued, RequestQuantity) VALUES ({req}, '{i[0]}', {deliveries[0][2]}, {price[deliveries[0][2]]}, {i[2]}) ON DUPLICATE KEY UPDATE RequestPrice = {deliveries[0][2]}, QuantityIssued = {price[deliveries[0][2]]}")
+                else: db.execute(f"INSERT INTO request_item (RequestID, ItemID, RequestPrice, QuantityIssued, Remarks, RequestQuantity) VALUES ({req}, '{i[0]}', {deliveries[0][2]}, {price[deliveries[0][2]]}, '{i[3]}', {i[2]}) ON DUPLICATE KEY UPDATE RequestPrice = {deliveries[0][2]}, QuantityIssued = {price[deliveries[0][2]]}")
                 toIssue = toIssue - min(deliveries[0][1], toIssue)
                 deliveries = deliveries[1:]
         db.execute(f"SELECT COUNT(*) FROM request_item LEFT JOIN item USING (ItemID) WHERE RequestID = {req} && Price >= 15000 && QuantityIssued > 0;")

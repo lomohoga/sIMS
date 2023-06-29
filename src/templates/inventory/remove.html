@@ -219,7 +219,7 @@
                         "DeliveryID": x.children[0].innerHTML,
                         "ItemID": x.children[1].innerHTML,
                         "ToDispose": x.children[6].firstChild.value,
-                        "Remarks": x.children[7].firstChild.value,
+                        "Remarks": x.children[7].firstChild.value.trim(),
                     }
                 }) 
             })
