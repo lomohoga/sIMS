@@ -13,13 +13,11 @@ bp_request = Blueprint("bp_request", __name__, url_prefix = "/requests")
 
 # route for requests
 @bp_request.route('/', methods=["GET"])
-@login_required
 def requests ():
     return render_template("requests/requests.html", active = "requests")
 
 # route for request search
 @bp_request.route('/search', methods = ["GET"])
-@login_required
 def search_requests ():
     keywords = [] if "keywords" not in request.args else [decode_keyword(x).lower() for x in request.args.get("keywords").split(" ")]
     filters = [] if "filter" not in request.args else request.args.get("filter").split(",")
@@ -36,16 +34,18 @@ def search_requests ():
         db = cxn.cursor()
         db.execute(f"SELECT RequestID, RequestedBy, DATE_FORMAT(RequestDate, '%d %b %Y') AS RequestDate, StatusName as Status, Purpose, ItemID, ItemName, Category, ItemDescription, RequestQuantity, SUM(QuantityIssued), AvailableStock, Unit, Remarks FROM request INNER JOIN request_status USING (StatusID) INNER JOIN request_item USING (RequestID) INNER JOIN stock USING (ItemID){' WHERE RequestID IN (SELECT DISTINCT RequestID FROM request INNER JOIN request_item USING (RequestID) INNER JOIN item USING (ItemID) WHERE ' + w + ')' if w != '' else ''} GROUP BY request_item.ItemID, RequestID ORDER BY RequestID DESC, ItemID")
         requests = db.fetchall()
+        print(requests)
     except Exception as e:
         current_app.logger.error(str(e))
         return { "error": str(e) }, 500
     finally:
         if cxn is not None: cxn.close()
 
-    return { "requests": format_requests(requests, session['user']['RoleID'] == 1) }
+    return { "requests": format_requests(requests, "user" in session) }
 
 # route for request approval
 @bp_request.route('/approve', methods = ["POST"])
+@login_required
 def approve_request ():
     req = request.get_json()['RequestID']
     cxn = None
@@ -70,6 +70,7 @@ def approve_request ():
 
 # route for request denial
 @bp_request.route('/deny', methods = ["POST"])
+@login_required
 def deny_request ():
     req = request.get_json()['RequestID']
     remarks = request.get_json()['Remarks']
@@ -97,7 +98,6 @@ def deny_request ():
 
 # route for request cancellation
 @bp_request.route('/cancel', methods = ["POST"])
-@login_required
 def cancel_request ():
     req = request.get_json()['RequestID']
     remarks = request.get_json()['Remarks']
@@ -111,7 +111,7 @@ def cancel_request ():
         if f is None: raise RequestNotFoundError(request = req)
         if f[0] in [4, 5, 6]: raise RequestStatusError(from_status = f[0], to_status = 6)
 
-        db.execute(f"UPDATE request SET StatusID = 6, CancelledBy = '{session['user']['Username']}', DateCancelled = CURDATE() WHERE RequestID = {req}")
+        db.execute(f"UPDATE request SET StatusID = 6, DateCancelled = CURDATE() WHERE RequestID = {req}")
         for x in remarks:
             if x["Remarks"] is not None: db.execute(f"UPDATE request_item SET Remarks = '{x['Remarks']}' WHERE RequestID = {req} && ItemID = '{x['ItemID']}'")
         cxn.commit()
@@ -125,25 +125,19 @@ def cancel_request ():
 
 # route for request receipt
 @bp_request.route('/receive', methods = ["POST"])
-@login_required
 def receive_request ():
     req = request.get_json()['RequestID']
     cxn = None
     try:
         cxn = connect_db()
         db = cxn.cursor()
-
-        db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
-        f = db.fetchone()
-        if f is None: raise SelfNotFoundError(username = session['user']['Username'])
-        if f[0] == 1 and f[0] != session['user']['RoleID']: raise SelfRoleError(username = session['user']['Username'], role = f[0])
     
         db.execute(f"SELECT StatusID FROM request WHERE RequestID = {req}")
         f = db.fetchone()
         if f is None: raise RequestNotFoundError(request = req)
         if f[0] != 3: raise RequestStatusError(from_status = f[0], to_status = 4)
         
-        db.execute(f"UPDATE request SET StatusID = 4, ReceivedBy = '{session['user']['Username']}', DateReceived = CURDATE(), TimeReceived = CURTIME() WHERE RequestID = {req}")
+        db.execute(f"UPDATE request SET StatusID = 4, DateReceived = CURDATE(), TimeReceived = CURTIME() WHERE RequestID = {req}")
         db.execute(f"SELECT ItemID, QuantityIssued, RequestQuantity, Remarks FROM request_item WHERE RequestID = {req}")
         items = db.fetchall()
         for i in items:

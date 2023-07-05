@@ -11,7 +11,7 @@
 </div>
 
 <div class="table-wrapper">
-    <div class="table-main search-table {{ 'custodian' if session['user']['RoleID'] != 2 else 'user' }}">
+    <div class="table-main search-table {{ 'custodian' if session['user'] else 'user' }}">
         <div class="table-header">
             <div class="table-row">
                 <div class="table-sortable">
@@ -44,7 +44,7 @@
                     </button>
                 </div>
                 <div>Unit Price</div>
-                {% if session['user']['RoleID'] != 2 %}
+                {% if session['user'] %}
                 <div>Available Stock</div>
                 {% endif %}
                 <div>Unit</div>
@@ -66,7 +66,7 @@
 </div>
 
 <div class="table-wrapper">
-    <div class="table-main selection-table request {{ 'user' if session['user']['RoleID'] == 2 else '' }}">
+    <div class="table-main selection-table request {{ '' if session['user'] else 'user' }}">
         <div class="table-header">
             <div class="table-row">
                 <div class="table-sortable">
@@ -99,7 +99,7 @@
                     </button>
                 </div>
                 <div>Unit Price</div>
-                {% if session['user']['RoleID'] != 2 %}
+                {% if session['user'] %}
                 <div>Available Stock</div>
                 {% endif %}
                 <div>Unit</div>
@@ -112,6 +112,8 @@
 </div>
 
 <div id="purpose-box">
+    <label for="name" style="padding-left: 0.3rem"><b>Name of requestor:</b></label>
+    <input type="text" id="name" name="name" style="width: 100%" maxlength="50" required>
     <label for="purpose" style="padding-left: 0.3rem"><b>Purpose:</b></label>
     <input type="text" id="purpose" name="purpose" style="width: 100%" maxlength="50" required>
 </div>
@@ -228,7 +230,8 @@
                         "RequestQuantity": +x.children[7].firstChild.value
                     }
                 }),
-                "purpose": document.querySelector("#purpose").value.trim()
+                "purpose": document.querySelector("#purpose").value.trim(),
+                "name": document.querySelector("#name").value.trim()
             })
         }).then(async d => {
             if (d.status === 200) window.location = "{{ url_for('bp_inventory.inventory') }}";

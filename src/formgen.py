@@ -25,7 +25,7 @@ def form_58 (db, item):
     deliveries = db.fetchall()
 
     #get request items
-    db.execute(f"SELECT * FROM (SELECT RequestID, DateReceived, TimeReceived, DeliveryStock, SUM(QuantityIssued), UPPER(CONCAT(FirstName, ' ', LastName)) as RequestedBy, ShelfLife FROM request_item INNER JOIN (SELECT ItemID, ShelfLife, COALESCE(SUM(IF(ShelfLife IS NULL OR DATEDIFF(CURDATE(), ADDDATE(DeliveryDate, ShelfLife)) <= 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) GROUP BY ItemID) AS w USING (ItemID) INNER JOIN request USING (RequestID) INNER JOIN user ON RequestedBy = Username WHERE ItemID = '{item}' AND StatusID = 4 GROUP BY ItemID, RequestID ORDER BY RequestID DESC) AS x ORDER BY RequestID ASC")
+    db.execute(f"SELECT * FROM (SELECT RequestID, DateReceived, TimeReceived, DeliveryStock, SUM(QuantityIssued), UPPER(RequestedBy), ShelfLife FROM request_item INNER JOIN (SELECT ItemID, ShelfLife, COALESCE(SUM(IF(ShelfLife IS NULL OR DATEDIFF(CURDATE(), ADDDATE(DeliveryDate, ShelfLife)) <= 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) GROUP BY ItemID) AS w USING (ItemID) INNER JOIN request USING (RequestID) WHERE ItemID = '{item}' AND StatusID = 4 GROUP BY ItemID, RequestID ORDER BY RequestID DESC) AS x ORDER BY RequestID ASC")
     requests = db.fetchall()
 
     wb = load_workbook("./src/form_templates/template_58.xlsx", rich_text = True)
@@ -143,7 +143,7 @@ def form_59 (db, request):
     db.execute(f"SELECT COUNT(*) + 1 FROM request WHERE StatusID = 4 && hasPropertyApproved = 0 && RequestID < {request};")
     ics_num = str(db.fetchone()[0])
 
-    db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) FROM request INNER JOIN user ON RequestedBy = Username WHERE RequestID = {request}")
+    db.execute(f"SELECT UPPER(RequestedBy) FROM request WHERE RequestID = {request}")
     (req_by,) = db.fetchone()
     db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) FROM request INNER JOIN user ON IssuedBy = Username WHERE RequestID = {request}")
     (iss_by,) = db.fetchone()
@@ -189,14 +189,14 @@ def form_63 (db, request):
     db.execute(f"SELECT * FROM request WHERE RequestID = {request}")
     if db.fetchone() is None: raise RequestNotFoundError(request = request)
 
-    db.execute(f"SELECT RequestID, item.ItemID AS ItemID, item.ItemDescription AS ItemDescription, RequestQuantity, SUM(QuantityIssued), Purpose, Remarks FROM request_item INNER JOIN request USING (RequestID) INNER JOIN item USING (ItemID) INNER JOIN stock USING (ItemID) INNER JOIN user ON RequestedBy = Username WHERE RequestID = '{request}' GROUP BY ItemID, RequestID")
+    db.execute(f"SELECT RequestID, item.ItemID AS ItemID, item.ItemDescription AS ItemDescription, RequestQuantity, SUM(QuantityIssued), Purpose, Remarks FROM request_item INNER JOIN request USING (RequestID) INNER JOIN item USING (ItemID) INNER JOIN stock USING (ItemID) WHERE RequestID = '{request}' GROUP BY ItemID, RequestID")
     data = db.fetchall()
 
-    db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) AS RequestedBy, RequestDate FROM request INNER JOIN user ON (Username = RequestedBy) WHERE RequestID = {request}")
+    db.execute(f"SELECT UPPER(RequestedBy), RequestDate FROM request WHERE RequestID = {request}")
     req_requested = db.fetchone()
     db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) AS IssuedBy, DateIssued FROM request INNER JOIN user ON (Username = IssuedBy) WHERE RequestID = {request}")
     req_issued = db.fetchone()
-    db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) AS ReceivedBy, DateReceived FROM request INNER JOIN user ON (Username = ReceivedBy) WHERE RequestID = {request}")
+    db.execute(f"SELECT UPPER(RequestedBy), DateReceived FROM request WHERE RequestID = {request}")
     req_received = db.fetchone()
 
     db.execute(f"SELECT COUNT(*) + 1 FROM request WHERE RequestID < {request} && StatusID = 4")
@@ -248,7 +248,7 @@ def form_69 (db, item):
     deliveries = db.fetchall()
 
     #get request items
-    db.execute(f"SELECT * FROM (SELECT RequestID, DateReceived, TimeReceived, DeliveryStock, QuantityIssued, UPPER(CONCAT(FirstName, ' ', LastName)) as RequestedBy, RequestPrice * QuantityIssued, Remarks FROM request_item INNER JOIN (SELECT ItemID, Price, COALESCE(SUM(IF(ShelfLife IS NULL OR DATEDIFF(CURDATE(), ADDDATE(DeliveryDate, ShelfLife)) <= 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) GROUP BY ItemID) AS w USING (ItemID) INNER JOIN request USING (RequestID) INNER JOIN user ON RequestedBy = Username WHERE ItemID = '{item}' AND StatusID = 4 ORDER BY RequestID DESC) AS x ORDER BY RequestID ASC")
+    db.execute(f"SELECT * FROM (SELECT RequestID, DateReceived, TimeReceived, DeliveryStock, QuantityIssued, UPPER(RequestedBy), RequestPrice * QuantityIssued, Remarks FROM request_item INNER JOIN (SELECT ItemID, Price, COALESCE(SUM(IF(ShelfLife IS NULL OR DATEDIFF(CURDATE(), ADDDATE(DeliveryDate, ShelfLife)) <= 0, DeliveryQuantity, 0)), 0) AS DeliveryStock FROM item LEFT JOIN delivery USING (ItemID) GROUP BY ItemID) AS w USING (ItemID) INNER JOIN request USING (RequestID) WHERE ItemID = '{item}' AND StatusID = 4 ORDER BY RequestID DESC) AS x ORDER BY RequestID ASC")
     requests = db.fetchall()
 
     wb = load_workbook("./src/form_templates/template_69.xlsx", rich_text = True)
@@ -366,7 +366,7 @@ def form_71 (db, request):
     db.execute(f"SELECT COUNT(*) + 1 FROM request WHERE StatusID = 4 && hasPropertyApproved = 1 && RequestID < {request};")
     par_num = str(db.fetchone()[0])
 
-    db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) FROM request INNER JOIN user ON RequestedBy = Username WHERE RequestID = {request}")
+    db.execute(f"SELECT UPPER(RequestedBy) FROM request WHERE RequestID = {request}")
     (req_by,) = db.fetchone()
     db.execute(f"SELECT UPPER(CONCAT(FirstName, ' ', LastName)) FROM request INNER JOIN user ON IssuedBy = Username WHERE RequestID = {request}")
     (iss_by,) = db.fetchone()

@@ -36,7 +36,7 @@
 </dialog>
 
 <div id="content-top">
-    <h1 class="main-header">{{ 'My' if session['user']['RoleID'] == 2 else 'Item' }} Requests</h1>
+    <h1 class="main-header">Item Requests</h1>
 
     <form id="search">
         <input type="search" id="search-box" placeholder="Search requests&hellip;" name="keyword" autofocus>
@@ -56,7 +56,7 @@
 </div>
 
 <div class="table-wrapper">
-    <div class="table-main request-table {{ 'custodian' if session['user']['RoleID'] == 1 else 'user' }}">
+    <div class="table-main request-table {{ 'custodian' if session['user'] else 'user' }}">
         <div class="table-header">
             <div class="table-row">
                 <div class="table-sortable">
@@ -65,7 +65,7 @@
                         <i class="bi bi-chevron-expand"></i>
                     </button>
                 </div>
-                {% if session['user']['RoleID'] == 1 %}
+                {% if session['user'] %}
                     <div class="table-sortable">
                         <button role="button" class="sort-btn">
                             Requested By
@@ -86,14 +86,13 @@
                 <div>Item Description</div>
                 <div>Request Quantity</div>
                 <div>Quantity Issued</div>
-                {% if session['user']['RoleID'] != 2 %}
+                {% if session['user'] %}
                 <div>Available Stock</div>
                 {% endif %}
                 <div>Unit</div>
-                {% if session['user']['RoleID'] == 1 %}
+                {% if session['user'] %}
                     <div style="grid-column: -1 / -3;">Actions</div>
-                {% endif %}
-                {% if session['user']['RoleID'] == 2 %}
+                {% else %}
                     <div>Actions</div>
                 {% endif %}
             </div>
@@ -118,7 +117,8 @@
 
 <script>
     let currentSort = [0, true];
-    let privileges = +"{{ session['user']['RoleID'] }}";
+    let privileges = +"{{ 1 if 'user' in session else 2 }}";
+    console.log(privileges)
 
     document.querySelectorAll(".request-table .sort-btn").forEach(x => {
         const p = x.parentElement;

@@ -59,7 +59,6 @@ def create_app (test_config = None):
 
     # route for inventory (main page)
     @app.route('/')
-    @login_required
     def index ():
         return redirect(url_for('bp_inventory.inventory')), 303
 

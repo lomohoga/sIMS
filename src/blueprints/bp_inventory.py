@@ -10,13 +10,11 @@ bp_inventory = Blueprint('bp_inventory', __name__, url_prefix = "/inventory")
 
 # route for inventory
 @bp_inventory.route('/')
-@login_required
 def inventory ():
     return render_template("inventory/inventory.html", active = "inventory")
 
 # route for item search
 @bp_inventory.route('/search')
-@login_required
 def search_items ():
     keywords = [] if "keywords" not in request.args else [decode_keyword(x).lower() for x in request.args.get("keywords").split(" ")]
     conditions = []
@@ -202,26 +200,20 @@ def update_items ():
 
 # route for item request
 @bp_inventory.route('/request', methods = ["GET", "POST"])
-@login_required
 def request_items ():
     if (request.method == "GET"):
-        if session['user']['RoleID'] == 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to request items in the database."), 403
-        else: return render_template("inventory/request.html")
+        return render_template("inventory/request.html")
         
     if (request.method == "POST"):
         req = request.get_json()["items"]
         purpose = request.get_json()["purpose"]
+        name = request.get_json()["name"]
         cxn = None
         try:
             cxn = connect_db()
             db = cxn.cursor()
 
-            db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
-            f = db.fetchone()
-            if f is None: raise SelfNotFoundError(username = session['user']['Username'])
-            if f[0] == 1 and f[0] != session['user']['RoleID']: raise SelfRoleError(username = session['user']['Username'], role = f[0])
-
-            db.execute(f"INSERT INTO request (RequestedBy, Purpose) VALUES ('{session['user']['Username']}', '{purpose}')")
+            db.execute(f"INSERT INTO request (RequestedBy, Purpose) VALUES ('{name}', '{purpose}')")
             db.execute("SELECT LAST_INSERT_ID()")
             requestID = db.fetchone()[0]
 
