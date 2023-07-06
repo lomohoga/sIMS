@@ -34,39 +34,13 @@ def search_requests ():
         db = cxn.cursor()
         db.execute(f"SELECT RequestID, RequestedBy, DATE_FORMAT(RequestDate, '%d %b %Y') AS RequestDate, StatusName as Status, Purpose, ItemID, ItemName, Category, ItemDescription, RequestQuantity, SUM(QuantityIssued), AvailableStock, Unit, Remarks FROM request INNER JOIN request_status USING (StatusID) INNER JOIN request_item USING (RequestID) INNER JOIN stock USING (ItemID){' WHERE RequestID IN (SELECT DISTINCT RequestID FROM request INNER JOIN request_item USING (RequestID) INNER JOIN item USING (ItemID) WHERE ' + w + ')' if w != '' else ''} GROUP BY request_item.ItemID, RequestID ORDER BY RequestID DESC, ItemID")
         requests = db.fetchall()
-        print(requests)
     except Exception as e:
         current_app.logger.error(str(e))
         return { "error": str(e) }, 500
     finally:
         if cxn is not None: cxn.close()
 
-    return { "requests": format_requests(requests, "user" in session) }
-
-# route for request approval
-@bp_request.route('/approve', methods = ["POST"])
-@login_required
-def approve_request ():
-    req = request.get_json()['RequestID']
-    cxn = None
-    try:
-        cxn = connect_db()
-        db = cxn.cursor()
-
-        db.execute(f"SELECT StatusID FROM request WHERE RequestID = {req}")
-        f = db.fetchone()
-        if f is None: raise RequestNotFoundError(request = req)
-        if f[0] != 1: raise RequestStatusError(from_status = f[0], to_status = 2)
-        
-        db.execute(f"UPDATE request SET StatusID = 2, ActingAdmin = '{session['user']['Username']}', DateApproved = CURDATE() WHERE RequestID = {req}")
-        cxn.commit()
-    except Exception as e:
-        current_app.logger.error(str(e))
-        return { "error": str(e) }, 500
-    finally:
-        if cxn is not None: cxn.close()
-        
-    return Response(status = 200)
+    return { "requests": format_requests(requests, "user" in session.keys()) }
 
 # route for request denial
 @bp_request.route('/deny', methods = ["POST"])

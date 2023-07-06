@@ -44,7 +44,7 @@
                     </button>
                 </div>
                 <div>Unit Price</div>
-                {% if session['user'] %}
+                {% if 'user' in session.keys() %}
                 <div>Available Stock</div>
                 {% endif %}
                 <div>Unit</div>
@@ -99,7 +99,7 @@
                     </button>
                 </div>
                 <div>Unit Price</div>
-                {% if session['user'] %}
+                {% if 'user' in session.keys() %}
                 <div>Available Stock</div>
                 {% endif %}
                 <div>Unit</div>
@@ -111,8 +111,8 @@
     </div>
 </div>
 
-<div id="purpose-box">
-    <label for="name" style="padding-left: 0.3rem"><b>Name of requestor:</b></label>
+<div id="purpose-box" style="display: flex; flex-direction: column; row-gap: 10px;">
+    <label for="name" style="padding-left: 0.3rem"><b>Name of requester:</b></label>
     <input type="text" id="name" name="name" style="width: 100%" maxlength="50" required>
     <label for="purpose" style="padding-left: 0.3rem"><b>Purpose:</b></label>
     <input type="text" id="purpose" name="purpose" style="width: 100%" maxlength="50" required>
@@ -180,6 +180,7 @@
     }
 
     document.querySelector("#purpose").addEventListener("input",  enableSubmit);
+    document.querySelector("#name").addEventListener("input",  enableSubmit);
 
     function disableButtons () {
         if (document.querySelector(".selection-table .table-body").childElementCount > 0) {
@@ -189,7 +190,7 @@
     }
 
     function enableSubmit () {
-        document.querySelector("#submit-form [type=submit]").disabled = document.querySelector(".selection-table .table-body").childElementCount === 0 || Array.from(document.querySelectorAll(".selection-table .table-body > div :nth-child(9) input")).some(x => !x.checkValidity() || x.value === '') || !document.querySelector("#purpose").value != '';
+        document.querySelector("#submit-form [type=submit]").disabled = document.querySelector(".selection-table .table-body").childElementCount === 0 || Array.from(document.querySelectorAll(".selection-table .table-body > div :nth-child(8) input")).some(x => !x.checkValidity() || x.value === '') || !document.querySelector("#purpose").value != '' || !document.querySelector("#name").value != '';
     }
 
     document.querySelector("#search").addEventListener("submit", e => {

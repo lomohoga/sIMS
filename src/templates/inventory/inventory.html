@@ -5,7 +5,7 @@
     <h1 class="main-header">Inventory</h1>
 
     <div class="btn-group">
-        {% if session['user'] %}
+        {% if 'user' in session.keys() and session['user']['RoleID'] == 1 %}
             <a class="btn" href="{{ url_for('bp_inventory.add_items') }}">Add items</a>
             <a class="btn" href="{{ url_for('bp_inventory.dispose_items') }}">Dispose items</a>
             <a class="btn" href="{{ url_for('bp_inventory.update_items') }}">Update items</a>
@@ -54,7 +54,7 @@
                     </button>
                 </div>
                 <div>Unit Price</div>
-                {% if session['user'] %}
+                {% if 'user' in session.keys() %}
                 <div>Available Stock</div>
                 {% endif %}
                 <div>Unit</div>
@@ -74,7 +74,7 @@
     </div>
 </div>
 
-{% if session['user'] %}
+{% if 'user' in session.keys() and session['user']['RoleID'] == 1 %}
 <div style="display: flex; flex-direction: row; justify-content: space-between; align-content: space-between;">
     <button id="manage-categories" type="button" role="button" style="margin-bottom: 0;">Manage categories</button>
     <button id="generate_73" class="blue" title="Generate Appendix 73">Generate</button>
@@ -118,7 +118,7 @@
     });
 </script>
 
-{% if session['user'] %}
+{% if 'user' in session.keys() and session['user']['RoleID'] == 1 %}
 <script>
     document.querySelector("#manage-categories").addEventListener("click", () => {
         window.location.href = "/categories";

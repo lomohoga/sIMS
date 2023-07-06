@@ -12,7 +12,7 @@ def format_items (items):
             "ItemDescription": item[3],
             "ShelfLife": locale.format_string("%d", item[4], grouping = True) if item[4] != None else "\u2014",
             "Price": locale.currency(item[5], grouping = True),
-            "AvailableStock": locale.format_string("%d", item[6], grouping = True) if "user" in session else None,
+            "AvailableStock": locale.format_string("%d", item[6], grouping = True) if "user" in session.keys() else None,
             "Unit": item[7]
         } for item in items
     ]
@@ -39,7 +39,7 @@ def format_requests (requests, custodian = True):
             "ItemDescription": req[8],
             "RequestQuantity": locale.format_string("%d", req[9], grouping = True),
             "QuantityIssued": locale.format_string("%d", req[10], grouping = True) if req[10] is not None else '\u2014',
-            "AvailableStock": locale.format_string("%d", req[11], grouping = True) if "user" in session else None,
+            "AvailableStock": locale.format_string("%d", req[11], grouping = True) if "user" in session.keys() else None,
             "Unit": req[12],
             "Remarks": req[13],
         }

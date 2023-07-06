@@ -7,7 +7,7 @@
         <script src="{{ url_for('static', filename = 'script_table.js') }}"></script>
     </head>
 
-    {% if session['user'] %}
+    {% if 'user' in session.keys() %}
     <dialog id="modal-change-password">
         <div class="modal-back"></div>
         <div class="modal-main">
@@ -75,7 +75,7 @@
                 </a>
             </div>
 
-            {% if session['user'] %}
+            {% if 'user' in session.keys() %}
             <div id="profile">
                 <button type="button" role="button">
                     <span class="info" id="profile-name">{{ session['user']['FirstName'] }} {{ session['user']['LastName'] }}</span>
@@ -89,7 +89,7 @@
                 </div>
             </div>
             {% else %}
-            <button>Log in</button>
+            <button style="flex-grow: 0; margin-right: 0.5rem;" id="home-login">Log in</button>
             {% endif %}
         </header>
 
@@ -97,21 +97,21 @@
             <nav>
                 <a class="link {{ 'active' if active == 'inventory' }}" href="{{ url_for('bp_inventory.inventory') }}">Inventory</a>
 
-                {% if session['user'] and session['user']['RoleID'] == 1 %}
+                {% if 'user' in session.keys() and session['user']['RoleID'] == 1 %}
                     <a class="link {{ 'active' if active == 'deliveries' }}" href="{{ url_for('bp_delivery.deliveries') }}">Deliveries</a>
                 {% endif %}
 
                 <a class="link {{ 'active' if active == 'requests' }}" href="{{ url_for('bp_request.requests') }}">Item Requests</a>
                 
-                {% if session['user'] and session['user']['RoleID'] == 0 %}
+                {% if 'user' in session.keys() and session['user']['RoleID'] == 0 %}
                     <a class="link {{ 'active' if active == 'users' }}" href="{{ url_for('bp_user.show_users') }}">Users</a>
                 {% endif %}
 
-                {% if session['user'] and session['user']['RoleID'] == 1 %}
+                {% if 'user' in session.keys() and session['user']['RoleID'] == 1 %}
                 <a class="link {{ 'active' if active == 'forms' }}" href="{{ url_for('bp_form.forms') }}">Forms</a>
                 {% endif %}
                 
-                {% if session['user'] %}
+                {% if 'user' in session.keys() %}
                 <a class="link logout" href="{{ url_for('bp_auth.logout') }}">Log out</a>
                 {% endif %}
             </nav>
@@ -133,7 +133,7 @@
     </body>
 </html>
 
-{% if 'user' in session %}
+{% if 'user' in session.keys() %}
 <script>
     function changeEmailValidity () {
         let t = document.querySelector("#form-change-email");

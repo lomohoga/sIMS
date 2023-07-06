@@ -48,7 +48,6 @@
     <b>Filter:</b>
     <button id="filter-all" role="button" type="button" class="selected">All</button>
     <button class="yellow" role="button" type="button">Pending</button>
-    <button class="yellow" role="button" type="button">Approved</button>
     <button class="yellow" role="button" type="button">Issued</button>
     <button class="green" role="button" type="button">Completed</button>
     <button class="red" role="button" type="button">Denied</button>
@@ -56,7 +55,7 @@
 </div>
 
 <div class="table-wrapper">
-    <div class="table-main request-table {{ 'custodian' if session['user'] else 'user' }}">
+    <div class="table-main request-table {{ 'user' if 'user' not in session.keys() else 'admin' if session['user']['RoleID'] == 0 else 'custodian' }}">
         <div class="table-header">
             <div class="table-row">
                 <div class="table-sortable">
@@ -65,7 +64,7 @@
                         <i class="bi bi-chevron-expand"></i>
                     </button>
                 </div>
-                {% if session['user'] %}
+                {% if 'user' in session.keys() %}
                     <div class="table-sortable">
                         <button role="button" class="sort-btn">
                             Requested By
@@ -86,13 +85,14 @@
                 <div>Item Description</div>
                 <div>Request Quantity</div>
                 <div>Quantity Issued</div>
-                {% if session['user'] %}
+                {% if 'user' in session.keys() %}
                 <div>Available Stock</div>
                 {% endif %}
                 <div>Unit</div>
-                {% if session['user'] %}
+                {% if 'user' in session.keys() and session['user']['RoleID'] == 1 %}
                     <div style="grid-column: -1 / -3;">Actions</div>
-                {% else %}
+                {% endif %}
+                {% if 'user' not in session.keys() %}
                     <div>Actions</div>
                 {% endif %}
             </div>
@@ -117,8 +117,7 @@
 
 <script>
     let currentSort = [0, true];
-    let privileges = +"{{ 1 if 'user' in session else 2 }}";
-    console.log(privileges)
+    let privileges = +"{{ 2 if 'user' not in session.keys() else session['user']['RoleID'] }}";
 
     document.querySelectorAll(".request-table .sort-btn").forEach(x => {
         const p = x.parentElement;

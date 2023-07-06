@@ -158,24 +158,18 @@ CREATE TABLE `request` (
   `DateApproved` date DEFAULT NULL,
   `IssuedBy` varchar(30) DEFAULT NULL,
   `DateIssued` date DEFAULT NULL,
-  `ReceivedBy` varchar(30) DEFAULT NULL,
   `DateReceived` date DEFAULT NULL,
   `TimeReceived` time NOT NULL DEFAULT (curtime()),
-  `CancelledBy` varchar(30) DEFAULT NULL,
   `DateCancelled` date DEFAULT NULL,
   `Purpose` varchar(50) NOT NULL,
   `hasPropertyApproved` bit(1) DEFAULT 0,
   PRIMARY KEY (`RequestID`),
   KEY `ApprovedBy` (`ActingAdmin`),
   KEY `IssuedBy` (`IssuedBy`),
-  KEY `ReceivedBy` (`ReceivedBy`),
   KEY `StatusID` (`StatusID`),
-  KEY `CancelledBy` (`CancelledBy`),
   CONSTRAINT `request_ibfk_2` FOREIGN KEY (`ActingAdmin`) REFERENCES `user` (`Username`) ON UPDATE CASCADE ON DELETE SET NULL, 
   CONSTRAINT `request_ibfk_3` FOREIGN KEY (`IssuedBy`) REFERENCES `user` (`Username`) ON UPDATE CASCADE ON DELETE SET NULL,
-  CONSTRAINT `request_ibfk_4` FOREIGN KEY (`ReceivedBy`) REFERENCES `user` (`Username`) ON UPDATE CASCADE ON DELETE SET NULL,
-  CONSTRAINT `request_ibfk_5` FOREIGN KEY (`StatusID`) REFERENCES `request_status` (`StatusID`) ON UPDATE CASCADE,
-  CONSTRAINT `request_ibfk_6` FOREIGN KEY (`CancelledBy`) REFERENCES `user` (`Username`) ON UPDATE CASCADE ON DELETE SET NULL
+  CONSTRAINT `request_ibfk_5` FOREIGN KEY (`StatusID`) REFERENCES `request_status` (`StatusID`) ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

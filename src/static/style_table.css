@@ -154,6 +154,10 @@
     grid-template-columns: 0.375fr 0.75fr 0.5fr 0.625fr 0.75fr 0.7fr 1.5fr 0.5fr 0.5fr 0.5fr 0.375fr;
 }
 
+.request-table.admin .table-row {
+    grid-template-columns: 0.375fr 0.7fr 0.75fr 0.5fr 0.625fr 0.75fr 0.7fr 1.5fr 0.375fr 0.375fr 0.375fr 0.375fr;
+}
+
 .request-table.forms .table-row {
     grid-template-columns: 0.375fr 0.5fr 0.75fr 0.5fr 0.625fr 0.75fr 0.7fr 1.6fr 0.5fr 0.5fr 0.5fr 0.5fr 0.6fr;
 }

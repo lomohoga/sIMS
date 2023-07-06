@@ -124,6 +124,7 @@
             if (i === 3) {
                 el = document.createElement("textarea");
                 el.rows = 1;
+                el.maxLength = 100;
             }
             else if(i === 2){
                 el = document.createElement("select");
@@ -137,15 +138,16 @@
                     }
                     el.appendChild(op);
                 }
+            }
+            else if(i === 5){
+                el = document.createElement("div");
             } 
             else {
                 el = document.createElement("input");
 
                 if (i === 0) { el.type = "text"; el.maxLength = 16; }
                 if (i === 1) { el.type = "text"; el.maxLength = 20; }
-                if (i === 3) { el.type = "text"; el.maxLength = 100; }
                 if (i === 4) { el.type = "number"; el.min = 1; el.step = 1; }
-                if (i === 5) { el.type = "number"; el.min = 0; el.step = 0.01; }
                 if (i === 6) { el.type = "text"; el.maxLength = 20; }
             }
 
@@ -209,7 +211,7 @@
                     newRow.children[i].lastChild.classList.add("extend");
                 } else newRow.children[i].firstChild.value = row.children[i].innerText;
             }
-            else if (i === 5) newRow.children[i].firstChild.value = row.children[i].innerText.replaceAll(/[^0-9\.]/g, "");
+            else if (i === 5) newRow.children[i].innerHTML = row.children[i].innerHTML;
             else if (i === 2) continue;
             else newRow.children[i].firstChild.value = row.children[i].innerText;
         }
@@ -287,7 +289,6 @@
                 "Category": children[2].firstChild.value === 'None' ? null : children[2].firstChild.value,
                 "ItemDescription": children[3].firstChild.value,
                 "ShelfLife": children[4].lastChild.value === "-1" ? null : +children[4].firstChild.value * +children[3].lastChild.value,
-                "Price": +children[5].firstChild.value,
                 "Unit": children[6].firstChild.value,
             }
         }

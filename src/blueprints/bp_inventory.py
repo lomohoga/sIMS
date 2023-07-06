@@ -72,40 +72,6 @@ def add_items ():
             if cxn is not None: cxn.close()
         
         return Response(status = 200)
-
-# route for item removal
-@bp_inventory.route('/remove', methods = ["GET", "POST"])
-@login_required
-def remove_items ():
-    if request.method == "GET":
-        if session['user']['RoleID'] != 1: return render_template("error.html", errcode = 403, errmsg = "You do not have permission to remove items from the database."), 403
-        else: return render_template("inventory/remove.html")
-
-    if request.method == "POST":
-        items = request.get_json()["items"]
-        cxn = None
-        try:
-            cxn = connect_db()
-            db = cxn.cursor()
-
-            db.execute(f"SELECT RoleID FROM user WHERE Username = '{session['user']['Username']}'")
-            f = db.fetchone()
-            if f is None: raise SelfNotFoundError(username = session['user']['Username'])
-            if f[0] == 2 and f[0] != session['user']['RoleID']: raise SelfRoleError(username = session['user']['Username'], role = f[0])
-
-            for x in items:
-                db.execute(f"SELECT * FROM item WHERE ItemID = '{x}'")
-                if db.fetchone() is None: raise ItemNotFoundError(item = x)
-
-                db.execute(f"DELETE FROM item WHERE ItemID = '{x}'")
-            cxn.commit()
-        except Exception as e:
-            current_app.logger.error(str(e))
-            return { "error": str(e) }, 500
-        finally:
-            if cxn is not None: cxn.close()
-
-        return Response(status = 200)
     
 # route for item disposal
 @bp_inventory.route('/dispose', methods = ["GET", "POST"])
@@ -128,7 +94,7 @@ def dispose_items ():
             if f[0] == 2 and f[0] != session['user']['RoleID']: raise SelfRoleError(username = session['user']['Username'], role = f[0])
 
             #Create request here
-            db.execute(f"INSERT INTO request (RequestedBy, StatusID, ActingAdmin, IssuedBy, DateIssued, ReceivedBy, DateReceived, Purpose) VALUES ('{session['user']['Username']}', 4, '{session['user']['Username']}', '{session['user']['Username']}', CURDATE(), '{session['user']['Username']}', CURDATE(), 'For disposal')")
+            db.execute(f"INSERT INTO request (RequestedBy, StatusID, ActingAdmin, IssuedBy, DateIssued, DateReceived, Purpose) VALUES ('{session['user']['FirstName'].upper() + ' ' + session['user']['LastName'].upper() }', 4, '{session['user']['Username']}', '{session['user']['Username']}', CURDATE(), CURDATE(), 'For disposal')")
             db.execute("SELECT LAST_INSERT_ID()")
             requestID = db.fetchone()[0]
             hasProperty = False
@@ -186,9 +152,9 @@ def update_items ():
                 if db.fetchone() is not None and v != values[v]['ItemID']: raise ExistingItemError(item = v)
 
                 if(values[v]["Category"] is None):
-                    db.execute(f"UPDATE item SET ItemID = '{values[v]['ItemID']}', ItemName = '{escape(values[v]['ItemName'])}', Category = NULL, ItemDescription = '{escape(values[v]['ItemDescription'])}', ShelfLife = {'NULL' if values[v]['ShelfLife'] is None else values[v]['ShelfLife']}, Price = {values[v]['Price']}, Unit = '{values[v]['Unit']}' WHERE ItemID = '{v}'")
+                    db.execute(f"UPDATE item SET ItemID = '{values[v]['ItemID']}', ItemName = '{escape(values[v]['ItemName'])}', Category = NULL, ItemDescription = '{escape(values[v]['ItemDescription'])}', ShelfLife = {'NULL' if values[v]['ShelfLife'] is None else values[v]['ShelfLife']}, Unit = '{values[v]['Unit']}' WHERE ItemID = '{v}'")
                 else:
-                    db.execute(f"UPDATE item SET ItemID = '{values[v]['ItemID']}', ItemName = '{escape(values[v]['ItemName'])}', Category = '{values[v]['Category']}', ItemDescription = '{escape(values[v]['ItemDescription'])}', ShelfLife = {'NULL' if values[v]['ShelfLife'] is None else values[v]['ShelfLife']}, Price = {values[v]['Price']}, Unit = '{values[v]['Unit']}' WHERE ItemID = '{v}'")
+                    db.execute(f"UPDATE item SET ItemID = '{values[v]['ItemID']}', ItemName = '{escape(values[v]['ItemName'])}', Category = '{values[v]['Category']}', ItemDescription = '{escape(values[v]['ItemDescription'])}', ShelfLife = {'NULL' if values[v]['ShelfLife'] is None else values[v]['ShelfLife']}, Unit = '{values[v]['Unit']}' WHERE ItemID = '{v}'")
             cxn.commit()
         except Exception as e:
             current_app.logger.error(str(e))
@@ -201,8 +167,7 @@ def update_items ():
 # route for item request
 @bp_inventory.route('/request', methods = ["GET", "POST"])
 def request_items ():
-    if (request.method == "GET"):
-        return render_template("inventory/request.html")
+    if (request.method == "GET"): return render_template("inventory/request.html")
         
     if (request.method == "POST"):
         req = request.get_json()["items"]
@@ -213,7 +178,7 @@ def request_items ():
             cxn = connect_db()
             db = cxn.cursor()
 
-            db.execute(f"INSERT INTO request (RequestedBy, Purpose) VALUES ('{name}', '{purpose}')")
+            db.execute(f"INSERT INTO request (RequestedBy, Purpose) VALUES ('{name.upper()}', '{purpose}')")
             db.execute("SELECT LAST_INSERT_ID()")
             requestID = db.fetchone()[0]
 
