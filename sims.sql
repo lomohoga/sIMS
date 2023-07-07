@@ -309,7 +309,7 @@ CREATE TABLE `user` (
 
 LOCK TABLES `user` WRITE;
 /*!40000 ALTER TABLE `user` DISABLE KEYS */;
-INSERT INTO `user` VALUES ('asaito','0d8dee449758d4fc3bad65c9262d30a5a85d9abeb51cccf581f683833d80ce38','Asuka','Saito','asaito@gmail.com',2,0,0),('bajo','cf0e2882426fd53ac7982711e493d42f7b740abdd7bd355a5569fbf32b65374c','Braullo','Jo','braullojo@gmail.com',1,0,0),('hpham','65f28cb7430292b6e09d28470d1cb1fc19c7d602b206d4ba9de3e6791fbb42a8','Hanni','Pham','braullojo.bj@gmail.com',0,0,0);
+INSERT INTO `user` VALUES ('bajo','cf0e2882426fd53ac7982711e493d42f7b740abdd7bd355a5569fbf32b65374c','Braullo','Jo','braullojo@gmail.com',1,0,0),('admin','65f28cb7430292b6e09d28470d1cb1fc19c7d602b206d4ba9de3e6791fbb42a8','Hanni','Pham','braullojo.bj@gmail.com',0,0,0);
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 UNLOCK TABLES;
 

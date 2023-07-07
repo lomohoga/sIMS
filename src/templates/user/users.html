@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block main %}
-<dialog id="modal-users">
+<!-- <dialog id="modal-users">
     <div class="modal-back"></div>
     <div class="modal-main">
         <button type="button" role="button" class="modal-close">&times;</button>
@@ -15,7 +15,7 @@
             </span>
         </form>
     </div>
-</dialog>
+</dialog> -->
 
 <div id="content-top">
     <h1 class="main-header">Users</h1>
@@ -107,18 +107,18 @@
 
     // modal events
 
-    document.querySelector("#modal-users").addEventListener("close", () => {
-        document.querySelectorAll("#modal-users input").forEach(x => x.removeAttribute("disabled"));
+    // document.querySelector("#modal-users").addEventListener("close", () => {
+    //     document.querySelectorAll("#modal-users input").forEach(x => x.removeAttribute("disabled"));
 
-        document.querySelector("#modal-users input[type=submit]").classList.remove("btn-red", "btn-green");
-        document.querySelector("#modal-users input[type=submit]").replaceWith(document.querySelector("#modal-users input[type=submit]").cloneNode());
+    //     document.querySelector("#modal-users input[type=submit]").classList.remove("btn-red", "btn-green");
+    //     document.querySelector("#modal-users input[type=submit]").replaceWith(document.querySelector("#modal-users input[type=submit]").cloneNode());
 
-        document.querySelector(".modal-msg").innerHTML = "";
-    });
+    //     document.querySelector(".modal-msg").innerHTML = "";
+    // });
 
-    document.querySelector("#modal-users .modal-back").addEventListener("click", () => document.querySelector("#modal-users").close());
-    document.querySelector("#modal-users .modal-close").addEventListener("click", () => document.querySelector("#modal-users").close());
-    document.querySelector("#modal-users .cancel").addEventListener("click", () => document.querySelector("#modal-users").close());
+    // document.querySelector("#modal-users .modal-back").addEventListener("click", () => document.querySelector("#modal-users").close());
+    // document.querySelector("#modal-users .modal-close").addEventListener("click", () => document.querySelector("#modal-users").close());
+    // document.querySelector("#modal-users .cancel").addEventListener("click", () => document.querySelector("#modal-users").close());
 
     window.addEventListener("load", () => populateUsers(document.querySelector(".user-table .table-body")));
 </script>

@@ -792,108 +792,109 @@ async function populateUsers (tbody, keyword = "", { buttons = false } = {}) {
             btn.classList.add("select-row");
             div.appendChild(btn);
             tr.appendChild(div);
-        } else {
-            if (user['Role'] === 'Custodian') {
-                btn.innerText = "Demote";
-                btn.classList.add("btn-red");
-                btn.addEventListener("click", e => {
-                    e.preventDefault();
+        } 
+        // else {
+        //     if (user['Role'] === 'Custodian') {
+        //         btn.innerText = "Demote";
+        //         btn.classList.add("btn-red");
+        //         btn.addEventListener("click", e => {
+        //             e.preventDefault();
 
-                    let modal = document.querySelector("#modal-users");
-                    modal.showModal();
-                    modal.querySelector("h1").innerText = "Demote user";
-                    modal.querySelector("p").innerHTML = `Are you sure you want to demote user <b>${user['Username']}</b> to personnel?`;
-                    modal.querySelector("input[type=submit]").value = "Demote user";
-                    modal.querySelector("input[type=submit]").classList.add("btn-red");
-                    modal.querySelector("input[type=submit]").style.transitionDuration = "0s";
-                    modal.querySelector("input[type=submit]").clientHeight;
-                    modal.querySelector("input[type=submit]").style.transitionDuration = "";
-                    modal.querySelector(".modal-msg").classList.remove("error");
-                    modal.querySelector(".modal-msg").innerHTML = '';
+        //             let modal = document.querySelector("#modal-users");
+        //             modal.showModal();
+        //             modal.querySelector("h1").innerText = "Demote user";
+        //             modal.querySelector("p").innerHTML = `Are you sure you want to demote user <b>${user['Username']}</b> to personnel?`;
+        //             modal.querySelector("input[type=submit]").value = "Demote user";
+        //             modal.querySelector("input[type=submit]").classList.add("btn-red");
+        //             modal.querySelector("input[type=submit]").style.transitionDuration = "0s";
+        //             modal.querySelector("input[type=submit]").clientHeight;
+        //             modal.querySelector("input[type=submit]").style.transitionDuration = "";
+        //             modal.querySelector(".modal-msg").classList.remove("error");
+        //             modal.querySelector(".modal-msg").innerHTML = '';
 
-                    modal.querySelector("input[type=submit").addEventListener("click", f => {
-                        f.preventDefault();
+        //             modal.querySelector("input[type=submit").addEventListener("click", f => {
+        //                 f.preventDefault();
 
-                        modal.querySelectorAll("form input").forEach(x => x.disabled = true);
-                        modal.querySelector(".modal-msg").classList.remove("error");
-                        modal.querySelector(".modal-msg").innerHTML = "Please wait\u2026";
+        //                 modal.querySelectorAll("form input").forEach(x => x.disabled = true);
+        //                 modal.querySelector(".modal-msg").classList.remove("error");
+        //                 modal.querySelector(".modal-msg").innerHTML = "Please wait\u2026";
 
-                        fetch("./demote", {
-                            "method": "POST",
-                            "headers": {
-                                "Content-Type": "application/json"
-                            },
-                            "body": JSON.stringify({ "username": user['Username'] })
-                        })
-                        .then(async res => {
-                            if (res.status === 200) {
-                                modal.close();
-                                populateUsers(tbody);
-                                document.querySelector("#search").reset();
-                            } else if (res.status === 500) {
-                                modal.querySelector(".modal-msg").classList.add("error");
-                                modal.querySelector(".modal-msg").innerHTML = `<b>ERROR:</b> ${(await res.json())['error']}`;
-                            }
-                        })
-                        .catch(() => {
-                            modal.querySelector(".modal-msg").classList.add("error");
-                            modal.querySelector(".modal-msg").innerHTML = "<b>ERROR:</b> Server unavailable. Please try again.";
-                        });
-                    });
-                });
-            } else {
-                btn.innerText = "Promote";
-                btn.classList.add("btn-green");
-                btn.addEventListener("click", e => {
-                    e.preventDefault();
+        //                 fetch("./demote", {
+        //                     "method": "POST",
+        //                     "headers": {
+        //                         "Content-Type": "application/json"
+        //                     },
+        //                     "body": JSON.stringify({ "username": user['Username'] })
+        //                 })
+        //                 .then(async res => {
+        //                     if (res.status === 200) {
+        //                         modal.close();
+        //                         populateUsers(tbody);
+        //                         document.querySelector("#search").reset();
+        //                     } else if (res.status === 500) {
+        //                         modal.querySelector(".modal-msg").classList.add("error");
+        //                         modal.querySelector(".modal-msg").innerHTML = `<b>ERROR:</b> ${(await res.json())['error']}`;
+        //                     }
+        //                 })
+        //                 .catch(() => {
+        //                     modal.querySelector(".modal-msg").classList.add("error");
+        //                     modal.querySelector(".modal-msg").innerHTML = "<b>ERROR:</b> Server unavailable. Please try again.";
+        //                 });
+        //             });
+        //         });
+        //     } else {
+        //         btn.innerText = "Promote";
+        //         btn.classList.add("btn-green");
+        //         btn.addEventListener("click", e => {
+        //             e.preventDefault();
 
-                    let modal = document.querySelector("#modal-users");
-                    modal.showModal();
-                    modal.querySelector("h1").innerText = "Promote user";
-                    modal.querySelector("p").innerHTML = `Are you sure you want to promote user <b>${user['Username']}</b> to custodian?`;
-                    modal.querySelector("input[type=submit]").value = "Promote user";
-                    modal.querySelector("input[type=submit]").classList.add("btn-green");
-                    modal.querySelector("input[type=submit]").style.transitionDuration = "0s";
-                    modal.querySelector("input[type=submit]").clientHeight;
-                    modal.querySelector("input[type=submit]").style.transitionDuration = "";
-                    modal.querySelector(".modal-msg").classList.remove("error");
-                    modal.querySelector(".modal-msg").innerHTML = '';
+        //             let modal = document.querySelector("#modal-users");
+        //             modal.showModal();
+        //             modal.querySelector("h1").innerText = "Promote user";
+        //             modal.querySelector("p").innerHTML = `Are you sure you want to promote user <b>${user['Username']}</b> to custodian?`;
+        //             modal.querySelector("input[type=submit]").value = "Promote user";
+        //             modal.querySelector("input[type=submit]").classList.add("btn-green");
+        //             modal.querySelector("input[type=submit]").style.transitionDuration = "0s";
+        //             modal.querySelector("input[type=submit]").clientHeight;
+        //             modal.querySelector("input[type=submit]").style.transitionDuration = "";
+        //             modal.querySelector(".modal-msg").classList.remove("error");
+        //             modal.querySelector(".modal-msg").innerHTML = '';
 
-                    modal.querySelector("input[type=submit").addEventListener("click", f => {
-                        f.preventDefault();
+        //             modal.querySelector("input[type=submit").addEventListener("click", f => {
+        //                 f.preventDefault();
 
-                        modal.querySelectorAll("form input").forEach(x => x.disabled = true);
-                        modal.querySelector(".modal-msg").classList.remove("error");
-                        modal.querySelector(".modal-msg").innerHTML = "Please wait\u2026";
+        //                 modal.querySelectorAll("form input").forEach(x => x.disabled = true);
+        //                 modal.querySelector(".modal-msg").classList.remove("error");
+        //                 modal.querySelector(".modal-msg").innerHTML = "Please wait\u2026";
 
-                        fetch("./promote", {
-                            "method": "POST",
-                            "headers": {
-                                "Content-Type": "application/json"
-                            },
-                            "body": JSON.stringify({ "username": user['Username'] })
-                        })
-                        .then(async res => {
-                            if (res.status === 200) {
-                                modal.close();
-                                populateUsers(tbody);
-                                document.querySelector("#search").reset();
-                            } else if (res.status === 500) {
-                                modal.querySelector(".modal-msg").classList.add("error");
-                                modal.querySelector(".modal-msg").innerHTML = `<b>ERROR:</b> ${(await res.json())['error']}`;
-                            }
-                        })
-                        .catch(() => {
-                            modal.querySelector(".modal-msg").classList.add("error");
-                            modal.querySelector(".modal-msg").innerHTML = "<b>ERROR:</b> Server unavailable. Please try again.";
-                        });
-                    });
-                });
-            }
+        //                 fetch("./promote", {
+        //                     "method": "POST",
+        //                     "headers": {
+        //                         "Content-Type": "application/json"
+        //                     },
+        //                     "body": JSON.stringify({ "username": user['Username'] })
+        //                 })
+        //                 .then(async res => {
+        //                     if (res.status === 200) {
+        //                         modal.close();
+        //                         populateUsers(tbody);
+        //                         document.querySelector("#search").reset();
+        //                     } else if (res.status === 500) {
+        //                         modal.querySelector(".modal-msg").classList.add("error");
+        //                         modal.querySelector(".modal-msg").innerHTML = `<b>ERROR:</b> ${(await res.json())['error']}`;
+        //                     }
+        //                 })
+        //                 .catch(() => {
+        //                     modal.querySelector(".modal-msg").classList.add("error");
+        //                     modal.querySelector(".modal-msg").innerHTML = "<b>ERROR:</b> Server unavailable. Please try again.";
+        //                 });
+        //             });
+        //         });
+        //     }
 
-            div.appendChild(btn)        
-            tr.appendChild(div);
-        }
+        //     div.appendChild(btn)        
+        //     tr.appendChild(div);
+        // }
 
         tbody.appendChild(tr);
         rows.push(tr);

@@ -163,5 +163,5 @@
 }
 
 .user-table .table-row {
-    grid-template-columns: 0.5fr 0.5fr 0.5fr 0.75fr 0.25fr 0.25fr;
+    grid-template-columns: 0.5fr 0.5fr 0.5fr 0.75fr 0.25fr;
 }
